@@ -1,0 +1,67 @@
+<!-- INCLUDE overall_header.html -->
+
+<div style="float:right; padding:5px; margin-bottom:5px"><a href="{U_PRINT}"><strong>{L_PRINT}</strong></a></div>
+
+<div id="page-body">
+	<div class="clear"></div>
+	<div class="post bg2">
+		<div class="inner">
+			<div class="postbody" style="width: 100%;">
+				<ul class="post-buttons">
+					<!-- IF not S_APPROVED and S_CAN_APPROOVE -->
+					<li>
+						<a href="{U_APPROVE_ART}" title="{L_NEED_APPROOVE}" class="button button-icon-only"><i class="icon fa-info fa-fw" aria-hidden="true"></i><span>{L_NEED_APPROOVE}</span></a>
+					</li>
+					<!-- ENDIF -->
+					<!-- IF S_CAN_EDIT -->
+					<li>
+						<a href="{U_EDIT_ART}" title="{L_EDIT}" class="button button-icon-only"><i class="icon fa-pencil fa-fw" aria-hidden="true"></i><span class="sr-only">{L_EDIT}</span></a>
+					</li>
+					<!-- ENDIF -->
+					<!-- IF S_CAN_DELETE -->
+					<li>
+						<a href="{U_DELETE_ART}" title="{L_DELETE}" class="button button-icon-only"><i class="icon fa-times fa-fw" aria-hidden="true" style="color: #AA0000;"></i></i><span class="sr-only">{L_DELETE}</span></a>
+					</li>
+					<!-- ENDIF -->
+				</ul>
+				<h3 class="first">{ARTICLE_TITLE}</h3>
+				<p class="author" style="line-height: 1.5em"><strong>{L_ARTICLE_AUTHOR}:</strong> {ARTICLE_AUTHOR}&nbsp;<strong>{L_ARTICLE_DATE}:</strong> {ARTICLE_DATE}&nbsp;<strong>{L_VIEWS}{L_COLON}</strong> {VIEWS}<br />
+				<strong>{L_ARTICLE_DESCRIPTION}{L_COLON}</strong> {ARTICLE_DESCRIPTION}<br /><strong>{L_CATEGORY}{L_COLON}</strong> {ARTICLE_CATEGORY}<br />
+				<span style="border: 1px solid #cccccc;padding: 5px;position: absolute;">{U_ARTICLE}</span><br />
+				<!-- IF .postrow --><strong>{COMMENTS}</strong><!-- ENDIF --></p><hr />
+				<div class="content">{ARTICLE_TEXT}</div>
+			</div>
+		</div>
+	</div>
+
+	<form method="post" name="jumpbox" action="{S_ACTION}" onsubmit="if(document.jumpbox.id.value == -1){return false;}">
+		<fieldset style="float:right; margin: 5px 0px" class="jumpbox">
+			<label for="id" accesskey="j">{L_GO}{L_COLON}</label>
+			<select name="id" onchange="if(this.options[this.selectedIndex].value != -1){ document.forms['jumpbox'].submit() }">
+			{CATS_BOX}</select>
+			<input type="submit" value="{L_GO}" class="button2">
+		</fieldset>
+	</form>
+
+<!-- IF .postrow -->
+	<table class="table1" cellspacing="1">
+		<tr>
+			<th><strong>{L_COMMENTS}</strong></th>
+		</tr>
+		<!-- BEGIN postrow -->
+		<tr class="bg2">
+			<td><strong>{postrow.POSTER_NAME}</strong>, {L_POSTED}{L_COLON} {postrow.POST_DATE}&nbsp;&nbsp;&nbsp;<strong>{L_POST_SUBJECT}</strong>{L_COLON} {postrow.POST_SUBJECT}</td>
+		</tr>
+		<tr>
+			<td><span class="postbody">{postrow.MESSAGE}</span></td>
+		</tr>
+		<!-- END postrow -->
+	</table>
+<!-- ENDIF -->
+	<hr />
+	<div style="margin-top:10px">
+		<!-- IF .postrow --><strong>{COMMENTS}</strong>&nbsp;<!-- ENDIF --><a href="{U_COMMENTS}"><strong>{COUNT_COMMENTS}</strong></a><br />
+	</div>
+</div>
+<br />
+<!-- INCLUDE overall_footer.html -->

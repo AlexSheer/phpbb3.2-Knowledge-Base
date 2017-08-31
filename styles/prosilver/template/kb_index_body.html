@@ -1,0 +1,67 @@
+<!-- INCLUDE overall_header.html -->
+<div id="page-body">
+	<h2>
+		<a href="{U_LIBRARY}" class="nav">{L_LIBRARY}</a>
+	</h2>
+	<div class="action-bar top">
+		<!-- IF S_IS_SEARCH -->
+		<div class="search-box">
+			<form method="get" id="forum-search" action="{S_KB_SEARCH_ACTION}">
+				<fieldset>
+					<input class="inputbox search tiny" name="keywords" id="search_keywords" size="20" placeholder="{L_SEARCH}" type="search">
+					<button class="button button-search" type="submit" title="{L_SEARCH}">
+						<i class="icon fa-search fa-fw" aria-hidden="true"></i><span class="sr-only">{L_SEARCH}</span>
+					</button>
+					<a href="{U_KB_SEARCH}" class="button button-search-end" title="{L_SEARCH_ADV}">
+						<i class="icon fa-cog fa-fw" aria-hidden="true"></i><span class="sr-only">{L_SEARCH_ADV}</span>
+					</a>
+					<input type="hidden" name="sf" value="articles">
+				</fieldset>
+			</form>
+		</div>
+		<!-- ENDIF -->
+	</div>
+	<!-- IF .catrow -->
+	<div class="forabg">
+		<div class="inner">
+			<ul class="topiclist">
+				<li class="header">
+					<dl class="row-item">
+						<dt><div class="list-inner">{L_CATEGORY}</div></dt>
+						<dd class="posts">{L_ARTICLES}</dd>
+					</dl>
+				</li>
+			</ul>
+			<ul class="topiclist forums">
+				<!-- BEGIN catrow -->
+				<li class="row">
+					<dl>
+						<dt><div class="list-inner">
+							<a href="{catrow.U_CATEGORY}" class="forumtitle">{catrow.CAT_NAME}</a>
+							<!-- IF catrow.CAT_DESCRIPTION --><br />{catrow.CAT_DESCRIPTION}<!-- ENDIF -->
+							<!-- IF catrow.SUBCATS --><br /><span>{catrow.SUBCATS}</span><!-- ENDIF -->
+							</div>
+						</dt>
+							<dd class="topics">{catrow.CAT_ARTICLES}</dd>
+					</dl>
+				</li>
+				<!-- END catrow -->
+			</ul>
+		</div>
+	</div>
+	<!-- ELSE -->
+	<p class="error">{L_NO_CAT_YET}</p>
+	<!-- ENDIF -->
+	<br clear="all" />
+	<!-- IF CATS_BOX -->
+	<form method="post" name="jumpbox" action="{S_ACTION}" onsubmit="if(document.jumpbox.id.value == -1){return false;}">
+		<fieldset style="float:right; margin: 5px 0px" class="jumpbox">
+			<label for="id" accesskey="j">{L_GO}:</label>
+			<select name="id" onchange="if(this.options[this.selectedIndex].value != -1){ document.forms['jumpbox'].submit() }">
+			{CATS_BOX}</select>
+			<input type="submit" value="{L_GO}" class="button2">
+		</fieldset>
+	</form>
+	<!-- ENDIF -->
+</div>
+<!-- INCLUDE overall_footer.html -->
