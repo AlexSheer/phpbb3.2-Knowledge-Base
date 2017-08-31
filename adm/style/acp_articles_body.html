@@ -6,7 +6,7 @@
 	<p>{L_ARTICLE_MOVE_EXPLAIN}</p>
 	<form id="fselect" method="post" action="{U_MOVE_ACTION}">
 		<fieldset>
-			{L_SELECT_CAT}: <select name="to_id">{S_MOVE_CATEGORY_OPTIONS}</select>&nbsp;<input class="button1" type="submit" id="submit" name="submit" value="{L_GO}">
+			{L_SELECT_CAT}{L_COLON} <select name="to_id">{S_MOVE_CATEGORY_OPTIONS}</select>&nbsp;<input class="button1" type="submit" id="submit" name="submit" value="{L_GO}">
 			{S_FORM_TOKEN}
 		</fieldset>
 	</form>
@@ -50,7 +50,7 @@
 				 &bull; {PAGE_NUMBER}
 			<!-- ENDIF -->
 		</div>
-		<fieldset class="display-options">{L_SORT_BY}: {S_SORT_KEY} {S_SORT_DIR}
+		<fieldset class="display-options">{L_SORT_BY}{L_COLON} {S_SORT_KEY} {S_SORT_DIR}
 			<input class="button2" type="submit" value="{L_GO}" name="sort">
 		</fieldset>
 	</form>
