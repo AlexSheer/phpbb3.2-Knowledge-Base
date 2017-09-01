@@ -597,6 +597,7 @@ class posting
 		{
 			$error = false;
 			$num_attachments = sizeof($attachment_data);
+
 			if ($num_attachments >= $this->kb_data['max_attachments'] && !$this->auth->acl_get('a_manage_kb'))
 			{
 				$error = sprintf($this->user->lang['MAX_NUM_ATTACHMENTS'], $num_attachments);
@@ -614,50 +615,63 @@ class posting
 
 				$upload_file = (isset($this->files_factory)) ? $fileupload->handle_upload('files.types.form', 'fileupload') : $fileupload->form_upload('fileupload');
 
-				$is_image = $this->kb->check_is_img($upload_file->get('extension'));
 				$ext = $upload_file->get('extension');
-				$upload_file->clean_filename('unique', $this->user->data['user_id'] . '_');
-				if ($upload_file->move_file($upload_dir, false, !$is_image))
+				if (!in_array($upload_file->get('extension'), $allowed_extensions))
 				{
-					if ($this->kb_data['thumbnail'] && $is_image)
-					{
-						include($this->phpbb_root_path . 'includes/functions_posting.' . $this->php_ext);
-						$thumbnail = create_thumbnail($this->phpbb_root_path . $upload_dir . $upload_file->get('realname'), $this->phpbb_root_path . $upload_dir . 'thumb_' . $upload_file->get('realname'), $upload_file->get('mimetype'));
-					}
-
-					$sql_ary = array(
-						'poster_id'				=> $this->user->data['user_id'],
-						'physical_filename'		=> $upload_file->get('realname'),
-						'real_filename'			=> $upload_file->get('uploadname'),
-						'filesize'				=> $filename['size'],
-						'filetime'				=> time(),
-						'extension'				=> $upload_file->get('extension'),
-						'mimetype'				=> $upload_file->get('mimetype'),
-						'attach_comment'		=> '',
-						'thumbnail'				=> ($thumbnail) ? 1: 0,
-					);
-
-					$this->db->sql_query('INSERT INTO ' . $this->attachments_table . ' ' . $this->db->sql_build_array('INSERT', $sql_ary));
-					$new = $this->db->sql_nextid();
-					$new_entry = array(
-						'attach_id'				=> $new,
-						'is_orphan'				=> 1,
-						'real_filename'			=> $upload_file->get('uploadname'),
-						'physical_filename'		=> $upload_file->get('realname'),
-						'filesize'				=> $filename['size'],
-						'filetime'				=> time(),
-						'extension'				=> $upload_file->get('extension'),
-						'mimetype'				=> $upload_file->get('mimetype'),
-						'attach_comment'		=> '',
-						'thumbnail'				=> ($thumbnail) ? 1: 0,
-					);
-					$attachment_data = array_merge(array(0 => $new_entry), $attachment_data);
-					$download_url = 'kb_file?id=' . $new . '';
-					$json_response->send(array('data' => $attachment_data, 'download_url' => $download_url));
+					$error = sprintf($this->user->lang['DISALLOWED_EXTENSION'], $ext);
 				}
 				else
 				{
-					$error = sprintf($this->user->lang['DISALLOWED_EXTENSION'], $ext);
+					$is_image = $this->kb->check_is_img($upload_file->get('extension'));
+					$upload_file->clean_filename('unique', $this->user->data['user_id'] . '_');
+					$result = $upload_file->move_file($upload_dir, false, !$is_image);
+					if ($result && $is_image)
+					{
+						$size =  getimagesize($upload_dir . $upload_file->get('realname'));
+						if (!$size)
+						{
+							$error = $this->user->lang['UNABLE_GET_IMAGE_SIZE'];
+							@unlink($upload_dir . $upload_file->get('realname'));
+						}
+					}
+					if ($result && !$error)
+					{
+						if ($this->kb_data['thumbnail'] && $is_image)
+						{
+							include($this->phpbb_root_path . 'includes/functions_posting.' . $this->php_ext);
+							$thumbnail = create_thumbnail($this->phpbb_root_path . $upload_dir . $upload_file->get('realname'), $this->phpbb_root_path . $upload_dir . 'thumb_' . $upload_file->get('realname'), $upload_file->get('mimetype'));
+						}
+
+						$sql_ary = array(
+							'poster_id'				=> $this->user->data['user_id'],
+							'physical_filename'		=> $upload_file->get('realname'),
+							'real_filename'			=> $upload_file->get('uploadname'),
+							'filesize'				=> $filename['size'],
+							'filetime'				=> time(),
+							'extension'				=> $upload_file->get('extension'),
+							'mimetype'				=> $upload_file->get('mimetype'),
+							'attach_comment'		=> '',
+							'thumbnail'				=> ($thumbnail) ? 1: 0,
+						);
+
+						$this->db->sql_query('INSERT INTO ' . $this->attachments_table . ' ' . $this->db->sql_build_array('INSERT', $sql_ary));
+						$new = $this->db->sql_nextid();
+						$new_entry = array(
+							'attach_id'				=> $new,
+							'is_orphan'				=> 1,
+							'real_filename'			=> $upload_file->get('uploadname'),
+							'physical_filename'		=> $upload_file->get('realname'),
+							'filesize'				=> $filename['size'],
+							'filetime'				=> time(),
+							'extension'				=> $upload_file->get('extension'),
+							'mimetype'				=> $upload_file->get('mimetype'),
+							'attach_comment'		=> '',
+							'thumbnail'				=> ($thumbnail) ? 1: 0,
+						);
+						$attachment_data = array_merge(array(0 => $new_entry), $attachment_data);
+						$download_url = 'kb_file?id=' . $new . '';
+						$json_response->send(array('data' => $attachment_data, 'download_url' => $download_url));
+					}
 				}
 			}
 			if ($error)
