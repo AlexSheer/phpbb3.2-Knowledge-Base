@@ -387,7 +387,7 @@ class posting
 					$msg .= '<br /><br />' . sprintf($this->user->lang['RETURN_CAT'], '<a href="' . $root . '">', '</a>');
 					$this->phpbb_log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_LIBRARY_ADD_ARTICLE', time(), array($article_title, $category_name));
 
-					//meta_refresh(3, $redirect);
+					meta_refresh(3, $redirect);
 					trigger_error($msg);
 				}
 			}
@@ -628,7 +628,7 @@ class posting
 					$sql_ary = array(
 						'poster_id'				=> $this->user->data['user_id'],
 						'physical_filename'		=> $upload_file->get('realname'),
-						'real_filename'			=> $filename['name'],
+						'real_filename'			=> $upload_file->get('uploadname'),
 						'filesize'				=> $filename['size'],
 						'filetime'				=> time(),
 						'extension'				=> $upload_file->get('extension'),
@@ -642,7 +642,7 @@ class posting
 					$new_entry = array(
 						'attach_id'				=> $new,
 						'is_orphan'				=> 1,
-						'real_filename'			=> $filename['name'],
+						'real_filename'			=> $upload_file->get('uploadname'),
 						'physical_filename'		=> $upload_file->get('realname'),
 						'filesize'				=> $filename['size'],
 						'filetime'				=> time(),
@@ -673,6 +673,7 @@ class posting
 			}
 		}
 		$this->get_kb_submitted_attachments($art_id, $attachment_data, $preview, $edit, $submit);
+		$this->plupload->set_upload_directories($this->config['upload_path'], $this->config['upload_path'] . '/plupload');
 	}
 
 	public function get_kb_submitted_attachments($art_id, &$attachment_data, $preview, $edit, $submit)
