@@ -16,7 +16,7 @@ class config_module
 
 	function main($id, $mode)
 	{
-		global $config, $db, $template, $request, $table_prefix, $user, $phpbb_log, $cache;
+		global $phpbb_root_path, $config, $db, $template, $request, $table_prefix, $user, $phpbb_log, $cache, $phpbb_filesystem;
 
 		$user->add_lang('acp/attachments');
 
@@ -25,6 +25,32 @@ class config_module
 		$this->tpl_name = 'acp_knowlegebase_body';
 		$this->page_title = $user->lang('ACP_KNOWLEDGE_BASE_CONFIGURE');
 		$phpbb_log->set_log_table($table_prefix . 'kb_log');
+
+		$upload_dir = $phpbb_root_path . 'ext/sheer/knowledgebase/files/';
+
+		if (!file_exists($phpbb_root_path . $upload_dir))
+		{
+			@mkdir($upload_dir, 0777);
+			@mkdir($upload_dir . 'plupload/', 0777);
+		}
+
+		$result = @tempnam($upload_dir, 'i_w');
+		if (!$result)
+		{
+			try
+			{
+				$phpbb_filesystem->phpbb_chmod($upload_dir, CHMOD_READ | CHMOD_WRITE);
+				$phpbb_filesystem->phpbb_chmod($upload_dir . 'plupload/', CHMOD_READ | CHMOD_WRITE);
+			}
+			catch (\phpbb\filesystem\exception\filesystem_exception $e)
+			{
+				// Do nothing
+			}
+		}
+		else
+		{
+			@unlink($result);
+		}
 
 		$sql = 'SELECT *
 			FROM ' . $table_prefix . 'kb_config';
