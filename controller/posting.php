@@ -609,11 +609,6 @@ class posting
 				$error[] = sprintf($this->user->lang['MAX_NUM_ATTACHMENTS'], $num_attachments);
 			}
 
-			//if (!$filename['size'])
-			//{
-			//	$error[] = $this->user->lang['EMPTY_FILEUPLOAD'];
-			//}
-
 			if (!sizeof($error))
 			{
 				$allowed_extensions = $this->kb_data['extensions'];
@@ -646,17 +641,6 @@ class posting
 
 					if ($result)
 					{
-						//if ($is_image)
-						//{
-						//	$size =  getimagesize($upload_dir . $upload_file->get('realname'));
-						//	if (!$size)
-						//	{
-						//		$error[] = $this->user->lang['UNABLE_GET_IMAGE_SIZE'];
-						//		@unlink($upload_dir . $upload_file->get('realname'));
-						//	}
-						//}
-						//if (!sizeof($error))
-						//{
 						if ($this->kb_data['thumbnail'] && $is_image)
 						{
 							include($this->phpbb_root_path . 'includes/functions_posting.' . $this->php_ext);
@@ -692,12 +676,7 @@ class posting
 						$attachment_data = array_merge(array(0 => $new_entry), $attachment_data);
 						$download_url = 'kb_file?id=' . $new . '';
 						$json_response->send(array('data' => $attachment_data, 'download_url' => $download_url));
-					//}
 					}
-					//else
-					//{
-					//	$error[] = $this->user->lang['NOT_UPLOADED'];
-					//}
 				}
 			}
 
