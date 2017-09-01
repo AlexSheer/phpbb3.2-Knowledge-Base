@@ -595,20 +595,26 @@ class posting
 		}
 		else if ($add_file)
 		{
-			$error = false;
+			$error = array();
+
+			if ((empty($filename) || $filename['name'] === 'none'))
+			{
+				$error[] = $this->user->lang['NO_UPLOAD_FORM_FOUND'];
+			}
+
 			$num_attachments = sizeof($attachment_data);
 
 			if ($num_attachments >= $this->kb_data['max_attachments'] && !$this->auth->acl_get('a_manage_kb'))
 			{
-				$error = sprintf($this->user->lang['MAX_NUM_ATTACHMENTS'], $num_attachments);
+				$error[] = sprintf($this->user->lang['MAX_NUM_ATTACHMENTS'], $num_attachments);
 			}
 
-			if (!$filename['size'])
-			{
-				$error = $this->user->lang['EMPTY_FILEUPLOAD'];
-			}
+			//if (!$filename['size'])
+			//{
+			//	$error[] = $this->user->lang['EMPTY_FILEUPLOAD'];
+			//}
 
-			if (!$error)
+			if (!sizeof($error))
 			{
 				$allowed_extensions = $this->kb_data['extensions'];
 
@@ -623,26 +629,34 @@ class posting
 				$ext = $upload_file->get('extension');
 				if (!in_array($upload_file->get('extension'), $allowed_extensions))
 				{
-					$error = sprintf($this->user->lang['DISALLOWED_EXTENSION'], $ext);
+					$error[] = sprintf($this->user->lang['DISALLOWED_EXTENSION'], $ext);
 				}
 				else
 				{
 					$is_image = $this->kb->check_is_img($upload_file->get('extension'));
 					$upload_file->clean_filename('unique', $this->user->data['user_id'] . '_');
 					$result = $upload_file->move_file($upload_dir, false, !$is_image);
+
+					if (sizeof($upload_file->error))
+					{
+						$upload_file->remove();
+						$error = array_merge($error, $upload_file->error);
+						$result = false;
+					}
+
 					if ($result)
 					{
-						if ($is_image)
-						{
-							$size =  getimagesize($upload_dir . $upload_file->get('realname'));
-							if (!$size)
-							{
-								$error = $this->user->lang['UNABLE_GET_IMAGE_SIZE'];
-								@unlink($upload_dir . $upload_file->get('realname'));
-							}
-						}
-						if (!$error)
-						{
+						//if ($is_image)
+						//{
+						//	$size =  getimagesize($upload_dir . $upload_file->get('realname'));
+						//	if (!$size)
+						//	{
+						//		$error[] = $this->user->lang['UNABLE_GET_IMAGE_SIZE'];
+						//		@unlink($upload_dir . $upload_file->get('realname'));
+						//	}
+						//}
+						//if (!sizeof($error))
+						//{
 						if ($this->kb_data['thumbnail'] && $is_image)
 						{
 							include($this->phpbb_root_path . 'includes/functions_posting.' . $this->php_ext);
@@ -678,22 +692,23 @@ class posting
 						$attachment_data = array_merge(array(0 => $new_entry), $attachment_data);
 						$download_url = 'kb_file?id=' . $new . '';
 						$json_response->send(array('data' => $attachment_data, 'download_url' => $download_url));
+					//}
 					}
-					}
-					else
-					{
-						$error = $this->user->lang['NOT_UPLOADED'];
-					}
+					//else
+					//{
+					//	$error[] = $this->user->lang['NOT_UPLOADED'];
+					//}
 				}
 			}
-			if ($error)
+
+			if (sizeof($error))
 			{
 				$json_response->send(array(
 					'jsonrpc' => '2.0',
 					'id' => 'id',
 					'error' => array(
 						'code' => 105,
-						'message' => current(array($error)),
+						'message' => current($error),
 					),
 				));
 			}
