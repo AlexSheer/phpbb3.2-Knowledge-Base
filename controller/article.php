@@ -181,7 +181,7 @@ class article
 			'U_DELETE_ART'			=> append_sid("{$this->phpbb_root_path}knowledgebase/posting", "id=$cat_id&amp;k=$art_id&amp;mode=delete"),
 			'U_APPROVE_ART'			=> append_sid("{$this->phpbb_root_path}knowledgebase/approve", "id=$art_id"),
 			'U_PRINT'				=> append_sid("{$this->phpbb_root_path}knowledgebase/article", 'k=' . $row['article_id'] . '&amp;mode=print'),
-			'U_ARTICLE'				=> '[url=' . generate_board_url() . '/knowledgebase/article?k=' . $row['article_id'] . '[/url]' . $row['article_title'] . '',
+			'U_ARTICLE'				=> '[url=' . generate_board_url() . '/knowledgebase/article?k=' . $row['article_id'] . ']' . $row['article_title'] . '[/url]',
 			'COMMENTS'				=> ($comment_topic_id) ? '' . $this->user->lang['COMMENTS'] . ': ' . $count . '' : '',
 			'U_COMMENTS'			=> $temp_url,
 			'S_CAN_EDIT'			=> ($this->kb->acl_kb_get($cat_id, 'kb_m_edit')   || ($this->user->data['user_id'] == $row['author_id'] && $this->kb->acl_kb_get($cat_id, 'kb_u_edit')   || $this->auth->acl_get('a_manage_kb'))) ? true : false,
