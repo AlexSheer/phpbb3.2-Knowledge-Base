@@ -346,7 +346,7 @@ class admin_controller
 			}
 		}
 		// Just get the files with is_orphan set and older than 3 hours
-		$sql = 'SELECT attach_id, real_filename, physical_filename, filesize, filetime
+		$sql = 'SELECT attach_id, real_filename, physical_filename, filesize, filetime, extension
 			FROM ' . $this->attachments_table . '
 			WHERE is_orphan = 1
 				AND filetime < ' . (time() - 3*60*60) . '
@@ -355,12 +355,15 @@ class admin_controller
 
 		while ($row = $this->db->sql_fetchrow($result))
 		{
+			$img_src = ($this->kb->check_is_img($row['extension'])) ? '<span class="kb_preview"><img src="' . $this->phpbb_root_path . 'knowledgebase/kb_file?id=' . $row['attach_id'] . '"></span>' : '';
+
 			$this->template->assign_block_vars('orphan', array(
 				'FILESIZE'			=> get_formatted_filesize($row['filesize']),
 				'FILETIME'			=> $this->user->format_date($row['filetime']),
 				'REAL_FILENAME'		=> utf8_basename($row['real_filename']),
 				'PHYSICAL_FILENAME'	=> utf8_basename($row['physical_filename']),
 				'ATTACH_ID'			=> $row['attach_id'],
+				'IMG_SRC'			=> $img_src,
 				'POST_IDS'			=> (!empty($post_ids[$row['attach_id']])) ? $post_ids[$row['attach_id']] : '',
 				'U_FILE'			=> append_sid("{$this->phpbb_root_path}knowledgebase/kb_file?id=$row[attach_id]"),
 				)
