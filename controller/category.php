@@ -82,7 +82,7 @@ class category
 
 		if (!$cat_id)
 		{
-			redirect(append_sid("{$this->phpbb_root_path}knowledgebase"));
+			redirect($this->helper->route('sheer_knowledgebase_index'));
 		}
 		$sql_where = ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve')) ? '' : 'AND a.approved = 1';
 
@@ -110,15 +110,16 @@ class category
 		$article_count = $row['article_count'];
 		$this->db->sql_freeresult($result);
 
-		$pagination_url = append_sid("{$this->phpbb_root_path}knowledgebase/category", 'id='.$cat_id.'');
+		$pagination_url = $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id));
 		if ($article_count)
 		{
 			$this->pagination->generate_template_pagination($pagination_url, 'pagination', 'start', $article_count, $per_page, $start);
 		}
+		$current_page_number =  $this->pagination->get_on_page($per_page, $start);
 
 		$this->template->assign_block_vars('navlinks', array(
 			'FORUM_NAME'	=> $this->user->lang['LIBRARY'],
-			'U_VIEW_FORUM'	=> append_sid("{$this->phpbb_root_path}knowledgebase"),
+			'U_VIEW_FORUM'	=> $this->helper->route('sheer_knowledgebase_index'),
 			)
 		);
 
@@ -128,7 +129,7 @@ class category
 			$parents_cats[] = $row['category_id'];
 			$this->template->assign_block_vars('navlinks', array(
 				'FORUM_NAME'	=> $row['category_name'],
-				'U_VIEW_FORUM'	=> append_sid("{$this->phpbb_root_path}knowledgebase/category?id=$row[category_id]"),
+				'U_VIEW_FORUM'	=> $this->helper->route('sheer_knowledgebase_category', array('id' => $row['category_id'])),
 				)
 			);
 		}
@@ -150,7 +151,7 @@ class category
 			$this->template->assign_block_vars('cat_row', array(
 				'CAT_ID'	=> $cat_row['category_id'],
 				'CAT_NAME'	=> $cat_row['category_name'],
-				'U_CAT'		=> append_sid("{$this->phpbb_root_path}knowledgebase/category", "id=$cat_row[category_id]"),
+				'U_CAT'		=> $this->helper->route('sheer_knowledgebase_category', array('id' => $row['category_id'])),
 				'ARTICLES'	=> $cat_row['number_articles'],
 				'SUBCATS'	=> $this->kb->get_cat_list ($cat_row['parent_id'], $exclude_cats),
 				)
@@ -166,22 +167,24 @@ class category
 			FROM ' . $this->articles_table . ' a, ' . USERS_TABLE . ' u
 			WHERE a.article_category_id = ' . (int) $cat_id . '
 			' . $sql_where . '
-			AND u.user_id = a.author_id ORDER BY a.article_date DESC';
+			AND u.user_id = a.author_id
+			ORDER BY a.display_order ASC';
 
 		$result = $this->db->sql_query_limit($sql, $per_page, $start);
 		while($art_row = $this->db->sql_fetchrow($result))
 		{
 			$art_id		= $art_row['article_id'];
 			$this->template->assign_block_vars('art_row', array(
-				'U_ARTICLE'				=> append_sid("{$this->phpbb_root_path}knowledgebase/article", 'k=' . $art_row['article_id'] . ''),
+				'ID'					=> $art_id,
+				'ORDER_ID'				=> $art_row['display_order'],
+				'U_ARTICLE'				=> $this->helper->route('sheer_knowledgebase_article', array('k' => $art_row['article_id'])),
 				'ARTICLE_TITLE'			=> $art_row['article_title'],
-
 				'ARTICLE_AUTHOR'		=> get_username_string('full', $art_row['author_id'], $art_row['author'], $art_row['user_colour']),//$author_kb_art,
 				'ARTICLE_DESCRIPTION'	=> $art_row['article_description'],
 				'ARTICLE_DATE'			=> $this->user->format_date($art_row['article_date']),
 				'ART_VIEWS'				=> $art_row['views'],
-				'U_DELETE'				=> append_sid("{$this->phpbb_root_path}knowledgebase/posting", "id=$cat_id&amp;mode=delete&amp;k=$art_id"),
-				'U_EDIT_ART'			=> append_sid("{$this->phpbb_root_path}knowledgebase/posting", "id=$cat_id&amp;mode=edit&amp;k=$art_id"),
+				'U_DELETE'				=> $this->helper->route('sheer_knowledgebase_posting', array('id' => $cat_id, 'mode' => 'delete', 'k' => $art_id)),
+				'U_EDIT_ART'			=> $this->helper->route('sheer_knowledgebase_posting', array('id' => $cat_id, 'mode' => 'edit', 'k' => $art_id)),
 				'S_CAN_DELETE'			=> ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_delete') || ($this->kb->acl_kb_get($cat_id, 'kb_u_delete') && $this->user->data['user_id'] == $author_id)) ? true : false,
 				'S_CAN_EDIT'			=> ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_edit')   || ($this->kb->acl_kb_get($cat_id, 'kb_u_edit')   && $this->user->data['user_id'] == $author_id)) ? true : false,
 				'S_APPROVED'			=> ($art_row['approved']) ? true : false,
@@ -195,6 +198,8 @@ class category
 			$this->template->assign_block_vars('no_articles', array('COMMENT' => $this->user->lang['NO_ARTICLES']));
 		}
 
+		$move_allowed = ($this->kb->acl_kb_get($cat_id, 'kb_m_edit') || $this->auth->acl_get('a_manage_kb'));
+
 		$this->template->assign_vars(array(
 			'CATS_DROPBOX'			=> $this->kb->make_category_dropbox($cat_id, false, true, false, false),
 			'CATS_BOX'				=> $this->kb->make_category_select($cat_id, false, true, false, false),
@@ -202,13 +207,16 @@ class category
 			'CATEGORY_ID'			=> $row['category_id'],
 			'TOTAL_ITEMS'			=> $this->user->lang('TOTAL_ITEMS', (int) $article_count),
 			'PAGE_NUMBER'			=> $this->pagination->on_page($article_count, $per_page, $start),
-			'U_ADD_ARTICLE'			=> append_sid("{$this->phpbb_root_path}knowledgebase/posting", 'id=' . $cat_id),
-			'U_KB'					=> append_sid("{$this->phpbb_root_path}knowledgebase/"),
-			'U_KB_SEARCH'			=> append_sid("{$this->phpbb_root_path}knowledgebase/library_search"),
+			'U_ADD_ARTICLE'			=> $this->helper->route('sheer_knowledgebase_posting', array('id' => $cat_id)),
+			'U_KB'					=> $this->helper->route('sheer_knowledgebase_index'),
+			'U_KB_SEARCH'			=> $this->helper->route('sheer_knowledgebase_library_search'),
 			'S_CAN_ADD'				=> ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_u_add')) ? true : false,
-			'S_ACTION'				=> append_sid("{$this->phpbb_root_path}knowledgebase/category", 'id=' . $cat_id),
+			'S_ACTION'				=> $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id)),
 			'S_IS_SEARCH'			=> ($this->config['kb_search']) ? true : false,
-			'S_KB_SEARCH_ACTION'	=> append_sid("{$this->phpbb_root_path}knowledgebase/library_search"),
+			'S_KB_SEARCH_ACTION'	=> $this->helper->route('sheer_knowledgebase_library_search'),
+			'S_KNOWLEDGEBASE'		=> true,
+			'S_CAN_MOVE'			=> ($move_allowed) ? true : false,
+			'CURRENT_PAGE_NUMBER'	=> $current_page_number,
 			)
 		);
 

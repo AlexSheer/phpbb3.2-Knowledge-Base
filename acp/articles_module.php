@@ -158,7 +158,7 @@ class articles_module
 
 		if ($submit)
 		{
-			$phpbb_ext_kb->kb_move_article($article_id, $info['article_title'], $info['article_category_id'], $to_id);
+			$phpbb_ext_kb->kb_move_article($article_id, $info['article_title'], $info['article_category_id'], $to_id, $info['display_order']);
 			meta_refresh(3, $this->u_action);
 			trigger_error($user->lang['ARTICLE_MOVED']);
 		}
@@ -166,7 +166,7 @@ class articles_module
 		$template->assign_vars(array(
 			'S_MOVE_ART'				=> true,
 			'S_MOVE_CATEGORY_OPTIONS'	=> $phpbb_ext_kb->make_category_select(0, $info['article_category_id'], false, true, false),
-			'S_ACTION'				=> ''.$this->u_action.'&amp;action=move&amp;aid='.$article_id.'',
+			'S_ACTION'					=> $this->u_action . '&amp;action=move&amp;aid=' . $article_id,
 			)
 		);
 	}
@@ -181,7 +181,7 @@ class articles_module
 		$article = $phpbb_ext_kb->get_kb_article_info($article_id);
 
 		$template->assign_vars(array(
-			'S_ACTION'	=> ''.$this->u_action.'&amp;action=delete&amp;aid='.$article_id.'',
+			'S_ACTION'	=> $this->u_action . '&amp;action=delete&amp;aid=' . $article_id,
 			)
 		);
 

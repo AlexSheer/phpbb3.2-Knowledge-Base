@@ -127,6 +127,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 		}
 
 		$error = false;
+		$this->articles_table = $table_prefix .'kb_articles';
 	}
 
 	/**
@@ -567,7 +568,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 				KB_SEARCH_WORDLIST_TABLE	=> array(),
 			),
 			'LEFT_JOIN' => array(array(
-				'FROM'	=> array(ARTICLES_TABLE => 'p'),
+				'FROM'	=> array($this->articles_table => 'p'),
 				'ON'	=> 'm0.article_id = p.article_id',
 			)),
 		);
@@ -984,7 +985,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 							$sql = 'SELECT COUNT(DISTINCT t.category_id) as total_results';
 						}
 
-						$sql .= ' FROM ' . KB_CAT_TABLE . ' t, ' . ARTICLES_TABLE . " p
+						$sql .= ' FROM ' . KB_CAT_TABLE . ' t, ' . $this->articles_table . " p
 							WHERE $sql_author
 								$sql_category_id
 								$sql_fora
@@ -1008,7 +1009,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 		if ($type == 'posts')
 		{
 			$sql = "SELECT $select
-				FROM " . $sql_sort_table . ARTICLES_TABLE . " p
+				FROM " . $sql_sort_table . $this->articles_table . " p
 				WHERE $sql_author
 					$sql_category_id
 					$sql_fora
@@ -1020,7 +1021,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 		else
 		{
 			$sql = "SELECT $select
-				FROM " . $sql_sort_table . KB_CAT_TABLE . ' t, ' . ARTICLES_TABLE . " p
+				FROM " . $sql_sort_table . KB_CAT_TABLE . ' t, ' . $this->articles_table . " p
 				WHERE $sql_author
 					$sql_category_id
 					AND t.category_id = p.article_category_id

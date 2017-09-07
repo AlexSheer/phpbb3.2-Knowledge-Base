@@ -8,7 +8,7 @@
  *
  */
 
-namespac sheer\knowledgebase\controller;
+namespace sheer\knowledgebase\controller;
 
 use Symfony\Component\HttpFoundation\Response;
 

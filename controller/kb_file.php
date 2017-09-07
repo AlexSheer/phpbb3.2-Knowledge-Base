@@ -57,6 +57,7 @@ class kb_file
 		$this->phpbb_root_path	= $phpbb_root_path;
 		$this->php_ext			= $php_ext;
 		$this->attachments_table= $attachments_table;
+		//keyshaneverass@mail.com
 	}
 
 	public function main()

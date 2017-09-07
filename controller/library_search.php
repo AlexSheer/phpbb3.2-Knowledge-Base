@@ -32,6 +32,9 @@ class library_search
 	/** @var \phpbb\user $user User object */
 	protected $user;
 
+	/** @var helper */
+	protected $helper;
+
 	//** @var string phpbb_root_path */
 	protected $phpbb_root_path;
 
@@ -57,6 +60,7 @@ class library_search
 		\phpbb\auth\auth $auth,
 		\phpbb\template\template $template,
 		\phpbb\user $user,
+		\phpbb\controller\helper $helper,
 		\phpbb\cache\service $cache,
 		\phpbb\pagination $pagination,
 		$phpbb_root_path,
@@ -71,6 +75,7 @@ class library_search
 		$this->auth				= $auth;
 		$this->template			= $template;
 		$this->user				= $user;
+		$this->helper			= $helper;
 		$this->phpbb_cache		= $cache;
 		$this->pagination		= $pagination;
 		$this->phpbb_root_path	= $phpbb_root_path;
@@ -272,9 +277,9 @@ class library_search
 						'MESSAGE'	=> $message,
 						'DATE'		=> $this->user->format_date($row['article_date']),
 						'TITLE'		=> $row['article_title'],
-						'U_VIEW'	=> append_sid("{$this->phpbb_root_path}knowledgebase/article", "k=$article_id"),
+						'U_VIEW'	=> $this->helper->route('sheer_knowledgebase_article', array('k' => $article_id)),
 						'CATEGORY'	=> $category['category_name'],
-						'U_CAT'		=> append_sid("{$this->phpbb_root_path}knowledgebase/category", "id=$category_id"),
+						'U_CAT'		=> $this->helper->route('sheer_knowledgebase_category', array('id' => $category_id)),
 						'USER_FULL'	=> get_username_string('full', $row['user_id'], $row['username'], $row['user_colour']),
 						'ID'		=> $article_id,
 						)
@@ -316,7 +321,7 @@ class library_search
 			'S_SELECT_SORT_KEY'		=> $s_sort_key,
 			'S_SELECT_SORT_DIR'		=> $s_sort_dir,
 			'S_SEARCH_ACTION'		=> $search_url,
-			'U_KB_SEARCH'			=> append_sid("{$this->phpbb_root_path}knowledgebase/library_search"),
+			'U_KB_SEARCH'			=> $this->helper->route('sheer_knowledgebase_library_search'),
 			'ERROR'					=> (sizeof($error)) ? implode('<br />', $error) : '',
 			'CATS_BOX'				=> $this->kb->make_category_select(0, false, false, false, false),
 			)
@@ -324,13 +329,13 @@ class library_search
 
 		$this->template->assign_block_vars('navlinks', array(
 			'FORUM_NAME'	=> $this->user->lang['LIBRARY'],
-			'U_VIEW_FORUM'	=> append_sid("{$this->phpbb_root_path}knowledgebase"),
+			'U_VIEW_FORUM'	=> $this->helper->route('sheer_knowledgebase_index'),
 			)
 		);
 
 		$this->template->assign_block_vars('navlinks', array(
 			'FORUM_NAME'	=> $this->user->lang['SEARCH'],
-			'U_VIEW_FORUM'	=> append_sid("{$this->phpbb_root_path}knowledgebase/library_search"),
+			'U_VIEW_FORUM'	=> $this->helper->route('sheer_knowledgebase_library_search'),
 			)
 		);
 

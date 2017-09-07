@@ -111,7 +111,7 @@ class index
 			$this->db->sql_freeresult($res);
 
 			$this->template->assign_block_vars('catrow', array(
-				'U_CATEGORY'		=> append_sid("{$this->phpbb_root_path}knowledgebase/category", 'id=' . $catrow['category_id'] . ''),
+				'U_CATEGORY'		=> $this->helper->route('sheer_knowledgebase_category', array('id' => $catrow['category_id'])),
 				'CAT_NAME'			=> $catrow['category_name'],
 				'CAT_ARTICLES'		=> $art_row['articles'],
 				'CAT_DESCRIPTION' 	=> $catrow['category_details'],
@@ -127,10 +127,10 @@ class index
 		));
 
 		$this->template->assign_vars(array(
-			'S_ACTION'				=> append_sid("{$this->phpbb_root_path}knowledgebase/category", 'id=' . $category_id . ''),
-			'U_KB_SEARCH'			=> append_sid("{$this->phpbb_root_path}knowledgebase/library_search"),
+			'S_ACTION'				=> $this->helper->route('sheer_knowledgebase_category', array('id' => $catrow['category_id'])),
+			'U_KB_SEARCH'			=> $this->helper->route('sheer_knowledgebase_library_search'),
 			'S_IS_SEARCH'			=> ($this->config['kb_search']) ? true : false,
-			'S_KB_SEARCH_ACTION'	=> append_sid("{$this->phpbb_root_path}knowledgebase/library_search"),
+			'S_KB_SEARCH_ACTION'	=> $this->helper->route('sheer_knowledgebase_library_search'),
 			'CATS_DROPBOX'			=> $this->kb->make_category_dropbox(0, false, true, false, false),
 			'CATS_BOX'				=> $this->kb->make_category_select(0, false, true, false, false),
 			)
@@ -138,7 +138,7 @@ class index
 
 		$this->template->assign_block_vars('navlinks', array(
 			'FORUM_NAME'	=> $this->user->lang['LIBRARY'],
-			'U_VIEW_FORUM'	=> append_sid("{$this->phpbb_root_path}knowledgebase"),
+			'U_VIEW_FORUM'	=> $this->helper->route('sheer_knowledgebase_index'),
 			)
 		);
 

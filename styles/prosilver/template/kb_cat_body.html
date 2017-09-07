@@ -66,51 +66,49 @@
 		</div>
 		<!-- ENDIF -->
 	</div>
-	<div class="forumbg forumbg-table">
+
+	<div class="forumbg" id="forumbg">
 		<div class="inner">
-			<table class="table1" cellspacing="1" id="memberlist">
-				<thead>
-				<tr>
-					<th class="name">{L_ARTICLE}</th>
-					<th class="posts">{L_ARTICLE_AUTHOR}</th>
-					<th class="joned">{L_ARTICLE_DATE}</th>
-					<th class="wievs">{L_VIEWS}</th>
-					<!-- IF S_USER_LOGGED_IN and not S_IS_BOT -->
-					<th class="posts">{L_EDIT}</th>
-					<th class="posts">{L_DELETE}</th>
-					<!-- ENDIF -->
-				</tr>
-				</thead>
-				<tbody>
-				<!-- BEGIN art_row -->
-				<tr class="bg1">
-					<td class="name"><a href="{art_row.U_ARTICLE}"><strong>{art_row.ARTICLE_TITLE}</strong></a><!-- IF not art_row.S_APPROVED --><ul class="post-buttons" style="float: left; margin-top: -4px; margin-right: 4px;"><li><a href="{art_row.U_ARTICLE}" title="{L_NEED_APPROOVE}" class="button button-icon-only"><i class="icon fa-info fa-fw" aria-hidden="true"></i><span class="sr-only">{L_NEED_APPROOVE}</span></a></li></ul><!-- ENDIF --></td>
-					<td class="wievs">{art_row.ARTICLE_AUTHOR}</td>
-					<td class="joned">{art_row.ARTICLE_DATE}</td>
-					<td class="posts">{art_row.ART_VIEWS}</td>
-					<!-- IF S_USER_LOGGED_IN and not S_IS_BOT -->
-					<td class="posts"><!-- IF art_row.S_CAN_EDIT --><ul class="post-buttons"><li><a href="{art_row.U_EDIT_ART}" title="{L_EDIT}" class="button button-icon-only"><i class="icon fa-pencil fa-fw" aria-hidden="true"></i><span class="sr-only">{L_EDIT}</span></a></li></ul><!-- ENDIF --></td>
-					<td class="posts"><!-- IF art_row.S_CAN_DELETE --><ul class="post-buttons"><li><a href="{art_row.U_DELETE}" title="{L_DELETE}" class="button button-icon-only"><i class="icon fa-times fa-fw" aria-hidden="true" style="color: #AA0000;"></i></i><span class="sr-only">{L_DELETE}</span></a></li></ul><!-- ENDIF --></td>
-					<!-- ENDIF -->
-				</tr>
-				<!-- END art_row -->
-				<!-- BEGIN no_articles -->
-				<tr class="bg1">
-					<td colspan="6">{no_articles.COMMENT}</td>
-				</tr>
-				<!-- END no_articles -->
-				</tbody>
-			</table>
-		</div>
+			<ul class="topiclist">
+				<li class="header">
+					<dl class="row-item">
+						<dt><div class="list-inner">&nbsp;{L_ARTICLE}</div></dt>
+						<dd class="posts">{L_ARTICLE_AUTHOR}</dd>
+						<dd class="joined">{L_ARTICLE_DATE}</dd>
+						<dd class="views">{L_VIEWS}</dd>
+					</dl>
+				</li>
+			</ul>
+		<ul class="topiclist topics"<!-- IF S_CAN_MOVE--> id="sortable"<!-- ENDIF -->>
+		<!-- BEGIN art_row -->
+			<li class="row bg1" id="{art_row.ID}">
+				<dl class="row-item">
+					<dt>
+						<!--//<span>Move{art_row.ID}-{art_row.ORDER_ID}</span>//-->
+						<!-- IF S_CAN_MOVE--><span>{L_MOVE}</span><!-- ENDIF -->
+						<div<!-- IF S_CAN_MOVE--> class="list-inner"<!-- ENDIF -->>&nbsp;
+							<a class="topictitle" href="{art_row.U_ARTICLE}">{art_row.ARTICLE_TITLE}</a><!-- IF not art_row.S_APPROVED --><ul class="post-buttons" style="float: left;"><li><a href="{art_row.U_ARTICLE}" title="{L_NEED_APPROOVE}" class="button button-icon-only"><i class="icon fa-info fa-fw" aria-hidden="true"></i><span class="sr-only">{L_NEED_APPROOVE}</span></a></li></ul><!-- ENDIF -->
+						</div>
+					</dt>
+					<dd class="posts">{art_row.ARTICLE_AUTHOR}</dd>
+					<dd class="joined">{art_row.ARTICLE_DATE}</dd>
+					<dd class="views">{art_row.ART_VIEWS}</dd>
+					<dd><!-- IF art_row.S_CAN_EDIT --><ul class="post-buttons"><li><a href="{art_row.U_EDIT_ART}" title="{L_EDIT}" class="button button-icon-only"><i class="icon fa-pencil fa-fw" aria-hidden="true"></i><span class="sr-only">{L_EDIT}</span></a></li></ul><!-- ENDIF -->&nbsp;<!-- IF art_row.S_CAN_DELETE --><ul class="post-buttons"><li><a href="{art_row.U_DELETE}" title="{L_DELETE}" class="button button-icon-only"><i class="icon fa-times fa-fw" aria-hidden="true" style="color: #AA0000;"></i></i><span class="sr-only">{L_DELETE}</span></a></li></ul><!-- ENDIF --></dd>
+				</dl>
+			</li>
+		<!-- END art_row -->
+		</ul>
 	</div>
+</div>
 	<div class="pagination">
-		{TOTAL_ITEMS}
+		{PAGE_NUMBER}&nbsp;&bull;&nbsp;{TOTAL_ITEMS}
 		<!-- IF .pagination -->
 			<!-- INCLUDE pagination.html -->
 		<!-- ELSE -->
 			&bull; {PAGE_NUMBER}
 		<!-- ENDIF -->
 	</div>
+	<div id="page">{CURRENT_PAGE_NUMBER}</div>
 	<br clear="all" />
 	<form method="post" name="jumpbox" action="{S_ACTION}" onsubmit="if(document.jumpbox.id.value == -1){return false;}">
 		<fieldset style="float:right; margin: 5px 0px" class="jumpbox">

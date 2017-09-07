@@ -7,7 +7,6 @@
 			function show_extensions(elem)
 			{
 				var str = '';
-
 				for (i = 0; i < elem.length; i++)
 				{
 					var element = elem.options[i];
@@ -17,7 +16,6 @@
 						{
 							str = str + ', ';
 						}
-
 						str = str + element.innerHTML;
 					}
 				}
@@ -35,7 +33,6 @@
 					document.getElementById('ext').firstChild.nodeValue = str;
 				}
 			}
-
 		// ]]>
 		</script>
 
@@ -114,16 +111,20 @@
 	<!-- ENDIF -->
 	<fieldset>
 		<dl>
-			<dt><label for="parent">{L_CAT_PARENT}:</label></dt>
+			<dt><label for="parent">{L_CAT_PARENT}{L_COLON}</label></dt>
 			<dd><select id="parent" name="parent_id"><option value="0"<!-- IF not S_CATEGORY_PARENT_ID --> selected="selected"<!-- ENDIF -->>{L_NO_PARENT}</option>{S_PARENT_OPTIONS}</select></dd>
 		</dl>
 		<dl>
-			<dt><label for="category_name">{L_CAT_NAME}:</label></dt>
+			<dt><label for="category_name">{L_CAT_NAME}{L_COLON}</label></dt>
 			<dd><input class="text medium" type="text" id="category_name" name="category_name" value="{CATEGORY_NAME}" maxlength="255" /></dd>
 		</dl>
 		<dl>
-			<dt><label for="category_details">{L_CAT_DESCR}:</label></dt>
+			<dt><label for="category_details">{L_CAT_DESCR}{L_COLON}</label></dt>
 			<dd><textarea id="category_details" name="category_details" rows="2" cols="40">{CATEGORY_DESCR}</textarea></dd>
+		</dl>
+		<dl>
+			<dt><label for="cat_perm_from">{L_COPY_CAT_PERMISSIONS}{L_COLON}</label><br><span>{L_COPY_CAT_PERMISSIONS_EXPLAIN}</span></dt>
+			<dd><select id="cat_perm_from" name="cat_perm_from"><option value="0" selected="selected">{L_NO_COPY_PERMISSIONS}</option>{S_COPY_OPTIONS}</select></dd>
 		</dl>
 	</fieldset>
 
@@ -145,11 +146,11 @@
 	<!-- ENDIF -->
 	<fieldset>
 		<dl>
-			<dt><label>{L_CAT_NAME}:</label></dt>
+			<dt><label>{L_CAT_NAME}{L_COLON}</label></dt>
 			<dd><strong>{CATEGORY_NAME}</strong></dd>
 		</dl>
 		<dl>
-			<dt><label for="delete_action">{L_ACTION}:</label></dt>
+			<dt><label for="delete_action">{L_ACTION}{L_COLON}</label></dt>
 			<dd><label><input type="radio" class="radio" id="delete_action" name="action_posts" value="delete" checked="checked" /> {L_DELETE_ALL_ARTICLES}</label></dd>
 			<!-- IF S_MOVE_CATEGORY_OPTIONS -->
 				<dd><label><input type="radio" class="radio" name="action_posts" value="move" /> {L_MOVE_ARTICLES_TO}</label><select name="posts_to_id">{S_MOVE_CATEGORY_OPTIONS}</select></dd>
@@ -157,7 +158,7 @@
 		</dl>
 		<!-- IF S_HAS_SUBCATS -->
 		<dl>
-			<dt><label for="sub_delete_action">{L_ACTION}:</label></dt>
+			<dt><label for="sub_delete_action">{L_ACTION}{L_COLON}</label></dt>
 			<dd><label><input type="radio" class="radio" id="sub_delete_action" name="action_sub_cats" value="delete" checked="checked" /> {L_DELETE_SUBCATS}</label></dd>
 			<!-- IF S_CATS_LIST -->
 				<dd><label><input type="radio" class="radio" name="action_sub_cats" value="move" /> {L_MOVE_SUBCATS_TO}</label><select name="sub_cats_to_id">{S_CATS_LIST}</select></dd>
@@ -193,7 +194,7 @@
 				<td>
 					<strong><a href="{categories.U_CATEGORY}">{categories.CATEGORY_NAME}</a></strong>
 					<!-- IF categories.CATEGORY_DESCR --><br /><span>{categories.CATEGORY_DESCR}</span><!-- ENDIF -->
-					<br /><span>{L_ARTICLES}: <strong>{categories.ARTICLES}</strong></span>
+					<br /><span>{L_ARTICLES}{L_COLON} <strong>{categories.ARTICLES}</strong></span>
 					<!-- IF not categories.S_LAST_ROW --><hr /><!-- ENDIF -->
 				</td>
 				<td class="actions">
@@ -221,7 +222,7 @@
 		<!-- ENDIF -->
 		<!-- IF CATS_BOX -->
 		<fieldset class="quick">
-			{L_SELECT_CAT}: <select name="parent_id" onchange="if(this.options[this.selectedIndex].value != -1){ this.form.submit(); }">{CATS_BOX}</select>
+			{L_SELECT_CAT}{L_COLON} <select name="parent_id" onchange="if(this.options[this.selectedIndex].value != -1){ this.form.submit(); }">{CATS_BOX}</select>
 			<input class="button2" type="submit" value="{L_GO}" />
 			{S_FORM_TOKEN}
 		</fieldset>

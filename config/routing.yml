@@ -1,27 +1,31 @@
 sheer_knowledgebase_index:
-    pattern: /knowledgebase
+    path: /knowledgebase
     defaults: { _controller: sheer.knowledgebase.controller.index:main }
 
 sheer_knowledgebase_category:
-    pattern: /knowledgebase/category
+    path: /knowledgebase/category
     defaults: { _controller: sheer.knowledgebase.controller.category:cat }
 
 sheer_knowledgebase_article:
-    pattern: /knowledgebase/article
+    path: /knowledgebase/article
     defaults: { _controller: sheer.knowledgebase.controller.article:show }
 
 sheer_knowledgebase_posting:
-    pattern: /knowledgebase/posting
+    path: /knowledgebase/posting
     defaults: { _controller: sheer.knowledgebase.controller.posting:post_article }
 
 sheer_knowledgebase_library_search:
-    pattern: /knowledgebase/library_search
+    path: /knowledgebase/library_search
     defaults: { _controller: sheer.knowledgebase.controller.library_search:main }
 
 sheer_knowledgebase_approve:
-    pattern: /knowledgebase/approve
+    path: /knowledgebase/approve
     defaults: { _controller: sheer.knowledgebase.controller.approve:approve_article }
 
 sheer_knowledgebase_kb_file:
-    pattern: /knowledgebase/kb_file
+    path: /knowledgebase/kb_file
     defaults: { _controller: sheer.knowledgebase.controller.kb_file:main }
+
+sheer_knowledgebase_set_order:
+    path: /knowledgebase/set_order
+    defaults: { _controller: sheer.knowledgebase.controller.set_order:main }

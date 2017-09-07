@@ -317,11 +317,16 @@ class functions_kb
 		$cat_info = $this->get_cat_info($category_id);
 		$articles_count = $cat_info['number_articles'];
 
+		$sql = 'UPDATE ' . $this->articles_table . ' SET display_order = display_order - 1
+			WHERE article_category_id = ' . $category_id . '
+			AND display_order > ' . $info['display_order'];
+		$this->db->sql_query($sql);
+
 		$sql = 'DELETE FROM '. $this->articles_table .'
 			WHERE article_id = ' . (int) $id;
 		$this->db->sql_query($sql);
 
-		$sql = 'SELECT  attach_id, 	physical_filename, thumbnail
+		$sql = 'SELECT attach_id, physical_filename, thumbnail
 			FROM ' . $this->attachments_table . '
 			WHERE article_id = ' . $id;
 		$result = $this->db->sql_query($sql);
@@ -377,12 +382,22 @@ class functions_kb
 		return $row;
 	}
 
-	public function kb_move_article($k, $article_title, $cat_id, $id)
+	public function kb_move_article($k, $article_title, $cat_id, $id, $order)
 	{
 		// Change category id in the table of articles
 		$sql = 'UPDATE ' . $this->articles_table . '
-			SET article_category_id = ' . (int) $id . '
+			SET article_category_id = ' . (int) $id . ', display_order = 0
 			WHERE article_id = ' . (int) $k;
+		$this->db->sql_query($sql);
+
+		// Change display order in categories
+		$sql = 'UPDATE ' . $this->articles_table . ' SET display_order = display_order + 1
+			WHERE article_category_id = ' . $id;
+		$this->db->sql_query($sql);
+
+		$sql = 'UPDATE ' . $this->articles_table . ' SET display_order = display_order - 1
+			WHERE article_category_id = ' . $cat_id . '
+			AND display_order > ' . $order;
 		$this->db->sql_query($sql);
 
 		// recalculate the number of articles in source category
@@ -670,7 +685,7 @@ class functions_kb
 				$comment = ($value['attach_comment']) ?  '<dd>' . $value['attach_comment'] . '</dd>' : '';
 				if ($value['thumbnail'])
 				{
-					$text .=  '<dd><dl class="thumbnail"><dt><a href="kb_file?id=' . $value['attach_id'] . '"><img src="kb_file?id=' . $value['attach_id'] . '&amp;t=1"></a></dt>' . $comment . '</dl></dd>';
+					$text .= '<dd><dl class="thumbnail"><dt><a href="kb_file?id=' . $value['attach_id'] . '"><img src="kb_file?id=' . $value['attach_id'] . '&amp;t=1"></a></dt>' . $comment . '</dl></dd>';
 				}
 				else
 				{

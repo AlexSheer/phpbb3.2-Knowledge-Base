@@ -98,7 +98,6 @@ class listener implements EventSubscriberInterface
 	public function add_page_header_link($event)
 	{
 		$this->template->assign_vars(array(
-			//'U_LIBRARY'		=> append_sid("{$this->phpbb_root_path}knowledgebase"),
 			'U_LIBRARY'			=> $this->helper->route('sheer_knowledgebase_index'),
 		));
 	}
@@ -118,7 +117,7 @@ class listener implements EventSubscriberInterface
 		if ($on_page['session_page'] == 'app.php/knowledgebase')
 		{
 			$event['location'] = $this->user->lang['LIBRARY'];
-			$event['location_url'] = append_sid("{$this->phpbb_root_path}knowledgebase");
+			$event['location_url'] = $this->helper->route('sheer_knowledgebase_index');
 		}
 	}
 }

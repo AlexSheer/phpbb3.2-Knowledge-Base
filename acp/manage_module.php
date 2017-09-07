@@ -18,18 +18,17 @@ class manage_module
 	{
 		global $config, $db, $template, $request, $cache, $phpbb_root_path, $phpEx, $auth, $user, $phpbb_ext_kb, $phpbb_admin_path, $phpbb_log, $phpbb_container;
 
-		$config_table		= $phpbb_container->getParameter('tables.kb_config_table');
-		$articles_table		= $phpbb_container->getParameter('tables.articles_table');
-		$categories_table	= $phpbb_container->getParameter('tables.categories_table');
-		$options_table		= $phpbb_container->getParameter('tables.kb_options_table');
-		$kb_groups_table	= $phpbb_container->getParameter('tables.kb_groups_table');
-		$kb_users_table		= $phpbb_container->getParameter('tables.kb_users_table');
-		$kb_logs_table		= $phpbb_container->getParameter('tables.logs_table');
-		$attachments_table	= $phpbb_container->getParameter('tables.kb_attachments_table');
+		$config_table				= $phpbb_container->getParameter('tables.kb_config_table');
+		$articles_table				= $phpbb_container->getParameter('tables.articles_table');
+		$categories_table			= $phpbb_container->getParameter('tables.categories_table');
+		$this->options_table		= $phpbb_container->getParameter('tables.kb_options_table');
+		$this->kb_groups_table		= $phpbb_container->getParameter('tables.kb_groups_table');
+		$this->kb_users_table		= $phpbb_container->getParameter('tables.kb_users_table');
+		$kb_logs_table				= $phpbb_container->getParameter('tables.logs_table');
+		$attachments_table			= $phpbb_container->getParameter('tables.kb_attachments_table');
 
 		define ('ARTICLES_TABLE', $articles_table);
 		define ('KB_CAT_TABLE', $categories_table);
-		define ('KB_USERS_TABLE', $kb_users_table);
 		define ('KB_GROUPS_TABLE', $kb_groups_table);
 		if (!defined('KB_LOG_TABLE'))
 		{
@@ -49,9 +48,9 @@ class manage_module
 			$config_table,
 			$articles_table,
 			$categories_table,
-			$options_table,
-			$kb_groups_table,
-			$kb_users_table,
+			$this->options_table,
+			$this->kb_groups_table,
+			$this->kb_users_table,
 			$kb_logs_table,
 			$attachments_table
 		);
@@ -63,6 +62,7 @@ class manage_module
 		$update				= (isset($_POST['update'])) ? true : false;
 		$category_id		= $request->variable('f', '');
 		$this->parent_id	= $request->variable('parent_id', 0);
+		$copy_perm_from_id	= $request->variable('cat_perm_from', 0);
 
 		$phpbb_log->set_log_table(KB_LOG_TABLE);
 
@@ -98,7 +98,7 @@ class manage_module
 						'category_name'			=> utf8_normalize_nfc($request->variable('category_name', '', true)),
 						'category_details'		=> utf8_normalize_nfc($request->variable('category_details', '', true)),
 					);
-					$errors = $this->update_category_data($category_data);
+					$errors = $this->update_category_data($category_data, $copy_perm_from_id);
 					if (!sizeof($errors))
 					{
 						$cache->destroy('sql', KB_CAT_TABLE);
@@ -203,6 +203,7 @@ class manage_module
 					);
 				}
 
+				$copy_category_id = ($action == 'add') ? 0: $category_id;
 				$template->assign_vars(array(
 					'S_EDIT'				=> true,
 					'S_ERROR'				=> (sizeof($errors)) ? true : false,
@@ -216,6 +217,7 @@ class manage_module
 					'CATEGORY_NAME'			=> $category_data['category_name'],
 					'CATEGORY_DESCR'		=> $category_desc_data['text'],
 					'S_PARENT_OPTIONS'		=> $parents_list,
+					'S_COPY_OPTIONS'		=> $phpbb_ext_kb->make_category_select(false, $copy_category_id, false, true, false),
 				));
 
 			break;
@@ -357,7 +359,7 @@ class manage_module
 	/**
 	* Update category data
 	*/
-	function update_category_data(&$category_data)
+	function update_category_data(&$category_data, $copy_perm_from_id)
 	{
 		global $db, $template, $request, $cache, $phpbb_root_path, $phpEx, $auth, $user, $phpbb_ext_kb, $phpbb_log;
 		$errors = array();
@@ -396,7 +398,6 @@ class manage_module
 				{
 					trigger_error($user->lang['PARENT_NOT_EXIST'] . adm_back_link($this->u_action . '&amp;parent_id=' . $this->parent_id), E_USER_WARNING);
 				}
-				$db->sql_freeresult($result);
 
 				$sql = 'UPDATE ' . KB_CAT_TABLE . '
 					SET left_id = left_id + 2, right_id = right_id + 2
@@ -425,7 +426,7 @@ class manage_module
 
 			$sql = 'INSERT INTO ' . KB_CAT_TABLE . ' ' . $db->sql_build_array('INSERT', $category_data_sql);
 			$db->sql_query($sql);
-			$category_data['category_id'] = $db->sql_nextid();
+			$new_category_id = $category_data['category_id'] = $db->sql_nextid();
 			$phpbb_log->add('admin', $user->data['user_id'], $user->data['user_ip'], 'LOG_CATS_ADD', time(), array($category_data['category_name']));
 		}
 		else
@@ -480,6 +481,45 @@ class manage_module
 			$category_data['category_id'] = $category_id;
 			$phpbb_log->add('admin', $user->data['user_id'], $user->data['user_ip'], 'LOG_CATS_EDIT', time(), array($category_data['category_name']));
 		}
+
+		if ($copy_perm_from_id)
+		{
+			if (isset($new_category_id))
+			{
+				$category_id = $new_category_id;
+			}
+			else
+			{
+				$sql = 'DELETE FROM ' . $this->kb_groups_table . '
+					WHERE category_id = ' . $category_id;
+				$db->sql_query($sql);
+			}
+
+			$sql = 'SELECT group_id, auth_option_id, auth_setting
+				FROM ' . $this->kb_groups_table . '
+				WHERE category_id = ' . $copy_perm_from_id;
+			$result = $db->sql_query($sql);
+			while ($row = $db->sql_fetchrow($result))
+			{
+				$options[] = $row;
+			}
+			$db->sql_freeresult($result);
+
+			if (sizeof($options))
+			{
+				foreach ($options as $permission)
+				{
+					$sql_ary[] = array(
+						'category_id'		=> $category_id,
+						'group_id'			=> $permission['group_id'],
+						'auth_option_id'	=> $permission['auth_option_id'],
+						'auth_setting'		=> $permission['auth_setting'],
+					);
+				}
+				$db->sql_multi_insert($this->kb_groups_table, $sql_ary);
+			}
+		}
+
 		return $errors;
 	}
 
@@ -493,7 +533,7 @@ class manage_module
 		// count the number of articles in the sender
 		$sql = 'SELECT number_articles
 			FROM ' . KB_CAT_TABLE . '
-			WHERE category_id = '.$from_id.'';
+			WHERE category_id = ' . $from_id;
 		$result = $db->sql_query($sql);
 		$row = $db->sql_fetchrow($result);
 		if (empty($row))
@@ -505,7 +545,7 @@ class manage_module
 		$from_id_articles = $row['number_articles'];
 		// and recipient
 		$sql = 'SELECT number_articles FROM ' . KB_CAT_TABLE . '
-			WHERE category_id = '.$to_id.'';
+			WHERE category_id = ' . $to_id;
 		$result = $db->sql_query($sql);
 		$row = $db->sql_fetchrow($result);
 		if (empty($row))
@@ -515,16 +555,26 @@ class manage_module
 		}
 		$db->sql_freeresult($result);
 		$to_id_articles = $row['number_articles'];
+
+		$sql = 'SELECT MAX(display_order) AS ord FROM ' . ARTICLES_TABLE . ' WHERE article_category_id = ' . $to_id;
+		$result = $db->sql_query($sql);
+		$order = $db->sql_fetchfield('ord');
+		$db->sql_freeresult($result);
+
+		$sql = 'UPDATE ' . ARTICLES_TABLE . ' SET display_order = display_order + ' . $order . '
+			WHERE article_category_id = ' . $from_id ;
+		$db->sql_query($sql);
+
 		// change the id of articles
-		$sql = 'UPDATE '. ARTICLES_TABLE .'
-			SET article_category_id = '.$to_id.'
-			WHERE article_category_id = '.$from_id.'';
+		$sql = 'UPDATE ' . ARTICLES_TABLE . '
+			SET article_category_id = ' . $to_id . '
+			WHERE article_category_id = ' . $from_id;
 		$db->sql_query($sql);
 		// change the number of articles in the receiver
 		$to_id_articles = $to_id_articles + $from_id_articles;
 		$sql = 'UPDATE ' . KB_CAT_TABLE . '
-			SET number_articles = '.$to_id_articles.'
-			WHERE category_id = '.$to_id.'';
+			SET number_articles = ' . $to_id_articles . '
+			WHERE category_id = ' . $to_id;
 		$db->sql_query($sql);
 
 		return array();
@@ -718,12 +768,12 @@ class manage_module
 
 		// delete permissions
 		$sql = 'DELETE
-			FROM ' . KB_USERS_TABLE . '
+			FROM ' . $this->kb_users_table . '
 			WHERE category_id = '. $category_id;
 		$db->sql_query($sql);
 
 		$sql = 'DELETE
-			FROM ' . KB_GROUPS_TABLE . '
+			FROM ' . $this->kb_groups_table . '
 			WHERE category_id = '. $category_id;
 		$db->sql_query($sql);
 

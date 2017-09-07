@@ -53,9 +53,6 @@ class posting
 	//** @var string php_ext */
 	protected $php_ext;
 
-	/** @var notification_helper */
-	protected $notification_helper;
-
 	//** @var string \sheer\knowledgebase\inc\functions_kb */
 	protected $kb;
 
@@ -97,9 +94,8 @@ class posting
 		\phpbb\plupload\plupload $plupload,
 		$phpbb_root_path,
 		$php_ext,
-		\phpbb\controller\helper $helper,
 		\sheer\knowledgebase\inc\functions_kb $kb,
-		$notification_helper,
+		$helper,
 		$logs_table,
 		$categories_table,
 		$articles_table,
@@ -118,9 +114,8 @@ class posting
 		$this->plupload				= $plupload;
 		$this->phpbb_root_path		= $phpbb_root_path;
 		$this->php_ext				= $php_ext;
-		$this->helper				= $helper;
 		$this->kb					= $kb;
-		$this->notification_helper	= $notification_helper;
+		$this->helper				= $helper;
 		$this->logs_table			= $logs_table;
 		$this->categories_table		= $categories_table;
 		$this->articles_table		= $articles_table;
@@ -178,7 +173,7 @@ class posting
 			$this->auth->acl_get('a_manage_kb')
 		));
 
-		$action = $this->helper->route('sheer_knowledgebase_posting', array('id' => $cat_id));
+		$action = append_sid("{$this->phpbb_root_path}knowledgebase/posting", 'id=' . $cat_id . '');
 
 		$this->kb_parse_attachments($art_id, $attachment_data, $preview, $edit, $submit);
 
@@ -203,7 +198,7 @@ class posting
 					$kb_search->index_remove($art_id, $author_ids);
 				}
 				$msg = $this->user->lang['ARTICLE_DELETED'];
-				$root = $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id));
+				$root = append_sid("{$this->phpbb_root_path}knowledgebase/category",'id=' . $cat_id . '');
 				$msg .= '<br /><br />' . sprintf($this->user->lang['RETURN_CAT'], '<a href="' . $root . '">', '</a>');
 				$this->phpbb_cache->destroy('sql', $this->categories_table);
 				$this->phpbb_cache->destroy('sql', $this->articles_table);
@@ -218,12 +213,12 @@ class posting
 
 		if ($mode == 'edit')
 		{
-			$to_id = $this->request->variable('to_id', 0);
+			$to_id	= $this->request->variable('to_id', 0);
 			if (empty($art_id))
 			{
 				trigger_error ($this->user->lang['NO_ID_SPECIFIED']);
 			}
-			$action = $this->helper->route('sheer_knowledgebase_posting', array('mode' => 'edit', 'k' => $art_id, 'id' => $cat_id));
+			$action = append_sid("{$this->phpbb_root_path}knowledgebase/posting",'mode=edit&amp;k=' . $art_id . '&amp;id=' . $cat_id . '');
 
 			$sql = 'SELECT DISTINCT a.*, c.category_name, c.category_id
 				FROM ' . $this->articles_table . ' a, ' . $this->categories_table . ' c
@@ -258,7 +253,6 @@ class posting
 			$article_author_id		= $row['author_id'];
 			$views					= $row['views'];
 			$article_date			= $row['article_date'];
-			$order					= $row['display_order'];
 
 			$article_text = $this->decode_message($article_text, $row['bbcode_uid']);
 		}
@@ -282,7 +276,7 @@ class posting
 		}
 		else
 		{
-			trigger_error($user->lang['CAT_NO_EXISTS']);
+			trigger_error( $user->lang['CAT_NO_EXISTS']);
 		}
 
 		include($this->phpbb_root_path . 'includes/functions_posting.' . $this->php_ext);
@@ -316,7 +310,7 @@ class posting
 					'approved'				=> ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_u_add_noapprove')) ? 1 : 0,
 				);
 
-				$root = $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id));
+				$root = append_sid("{$this->phpbb_root_path}knowledgebase/category",'id=' . $cat_id . '');
 
 				if ($mode == 'edit')
 				{
@@ -324,41 +318,14 @@ class posting
 					$sql_data['author']					= $article_author;
 					$sql_data['views']					= $views;
 					$sql_data['article_date']			= $article_date;
+					$sql_data['article_category_id']	= $to_id;
 					$sql_data['edit_date']				= time();
-					$redirect = $this->helper->route('sheer_knowledgebase_article', array('k' => $art_id));
-
-					if ($cat_id != $to_id) // Move article to another category
-					{
-						$sql_data['article_category_id']	= $to_id;
-						$sql_data['display_order'] = 0;
-					}
+					$redirect = append_sid("{$this->phpbb_root_path}knowledgebase/article",'k=' . $art_id . '');
 
 					$sql = 'UPDATE ' . $this->articles_table . '
 						SET ' . $this->db->sql_build_array('UPDATE', $sql_data) . "
 						WHERE article_id = $art_id";
 					$this->db->sql_query($sql);
-
-					if ($cat_id != $to_id) // Move article to another category
-					{
-						$sql = 'UPDATE ' . $this->categories_table . '
-							SET number_articles = number_articles - 1
-							WHERE category_id = ' . (int) $cat_id;
-						$this->db->sql_query($sql);
-
-						$sql = 'UPDATE ' . $this->categories_table . '
-							SET number_articles = number_articles + 1
-							WHERE category_id = ' . (int) $to_id;
-						$this->db->sql_query($sql);
-
-						$sql = 'UPDATE ' . $this->articles_table . ' SET display_order = display_order + 1
-							WHERE article_category_id = ' . $to_id ;
-						$this->db->sql_query($sql);
-
-						$sql = 'UPDATE ' . $this->articles_table . ' SET display_order = display_order - 1
-							WHERE article_category_id = ' . $cat_id . '
-							AND display_order > ' . $order;
-						$this->db->sql_query($sql);
-					}
 
 					// Upd search index
 					if ($kb_search)
@@ -377,15 +344,11 @@ class posting
 				}
 				else
 				{
-					$sql = 'UPDATE ' . $this->articles_table . ' SET display_order = display_order + 1
-						WHERE article_category_id = ' . $cat_id;
-					$this->db->sql_query($sql);
-
-					$sql_data = array_merge($sql_data, array('display_order' => 1));
 					$sql = 'INSERT INTO ' . $this->articles_table . '
 						' . $this->db->sql_build_array('INSERT', $sql_data);
 					$this->db->sql_query($sql);
 					$new = $this->db->sql_nextid();
+					$redirect = append_sid("{$this->phpbb_root_path}knowledgebase/article",'k=' . $new . '');
 					$this->insert_attachments($attachment_data, $new);
 
 					$articles_count++;
@@ -394,10 +357,8 @@ class posting
 						WHERE category_id = ' . (int) $cat_id;
 					$this->db->sql_query($sql);
 
-					if ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_u_add_noapprove'))
+					if ($this->auth->acl_get('a_manage_kb') || $this->auth->acl_get('kb_u_add_noapprove'))
 					{
-						$redirect = $this->helper->route('sheer_knowledgebase_article', array('k' => $new));
-
 						if (isset($kb_search))
 						{
 							// Add search index
@@ -415,11 +376,9 @@ class posting
 					else
 					{
 						$msg = $this->user->lang['ARTICLE_NEED_APPROVE'];
-						$redirect = $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id));
-
 						// Add notification
 						$sql_data['article_id'] = $new;
-						$this->notification_helper->add_notification($sql_data, 'sheer.knowledgebase.notification.type.need_approval');
+						$this->helper->add_notification($sql_data, 'sheer.knowledgebase.notification.type.need_approval');
 					}
 
 					$this->phpbb_cache->destroy('sql', $this->categories_table);
@@ -452,7 +411,7 @@ class posting
 		}
 		if ($cancel)
 		{
-			redirect($this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id)));
+			redirect(append_sid("{$this->phpbb_root_path}knowledgebase/category",'id=' . $cat_id . ''));
 		}
 
 		if ($preview)
@@ -505,7 +464,7 @@ class posting
 			'PREVIEW_SUBJECT'		=> (isset($preview_title)) ? $preview_title : '',
 			'PREVIEW_MESSAGE'		=> (isset($preview_text)) ? $preview_text : '',
 			'S_BBCODE_ALLOWED'		=> ($bbcode_status) ? 1 : 0,
-			'BBCODE_STATUS'			=> ($bbcode_status) ? sprintf($this->user->lang['BBCODE_IS_ON'], '<a href="' . $this->helper->route('phpbb_help_bbcode_controller') . '">', '</a>') : sprintf($this->user->lang['BBCODE_IS_OFF'], '<a href="' . $this->helper->route('phpbb_help_bbcode_controller') . '">', '</a>'),
+			'BBCODE_STATUS'			=> ($bbcode_status) ? sprintf($this->user->lang['BBCODE_IS_ON'], '<a href="' . append_sid("{$this->phpbb_root_path}faq.$this->php_ext", 'mode=bbcode') . '">', '</a>') : sprintf($this->user->lang['BBCODE_IS_OFF'], '<a href="' . append_sid("{$this->phpbb_root_path}faq.$this->php_ext", 'mode=bbcode') . '">', '</a>'),
 			'IMG_STATUS'			=> ($img_status) ? $this->user->lang['IMAGES_ARE_ON'] : $this->user->lang['IMAGES_ARE_OFF'],
 			'FLASH_STATUS'			=> ($flash_status) ? $this->user->lang['FLASH_IS_ON'] : $this->user->lang['FLASH_IS_OFF'],
 			'SMILIES_STATUS'		=> ($smilies_status) ? $this->user->lang['SMILIES_ARE_ON'] : $this->user->lang['SMILIES_ARE_OFF'],
@@ -529,7 +488,7 @@ class posting
 
 			'CATS_BOX'				=> '<option value="0" disabled="disabled">' . $this->user->lang['CATEGORIES_LIST'] . '</option>' . $this->kb->make_category_select($cat_id, false, true, false, false) . '',
 
-			'U_KB'					=> $this->helper->route('sheer_knowledgebase_index'),
+			'U_KB'					=> append_sid("{$this->phpbb_root_path}knowledgebase"),
 			'S_POST_ACTION'			=> $action,
 			'S_VIEWTOPIC'			=> true, // Need for Extension Highslide (bb3mobi/highslide)
 			)
@@ -537,7 +496,7 @@ class posting
 
 		$this->template->assign_block_vars('navlinks', array(
 			'FORUM_NAME'	=> $this->user->lang['LIBRARY'],
-			'U_VIEW_FORUM'	=> $this->helper->route('sheer_knowledgebase_index'),
+			'U_VIEW_FORUM'	=> append_sid("{$this->phpbb_root_path}knowledgebase"),
 			)
 		);
 
@@ -547,13 +506,11 @@ class posting
 			$parents_cats[] = $row['category_id'];
 			$this->template->assign_block_vars('navlinks', array(
 				'FORUM_NAME'	=> $row['category_name'],
-				'U_VIEW_FORUM'	=> $this->helper->route('sheer_knowledgebase_category', array('id' => $row['category_id'])),
+				'U_VIEW_FORUM'	=> append_sid("{$this->phpbb_root_path}knowledgebase/category?id=$row[category_id]"),
 				)
 			);
 		}
-
-		$tille = ($mode == 'edit') ? $this->user->lang['EDIT_ARTICLE'] :  $this->user->lang['ADD_ARTICLE'];
-		page_header('' . $this->user->lang('LIBRARY') . ' &raquo; ' . $tille . '');
+		page_header('' . $this->user->lang('LIBRARY') . ' &raquo; ' . $this->user->lang('ADD_ARTICLE') . '');
 		$this->template->set_filenames(array(
 			'body' => 'kb_post_body.html'));
 
@@ -638,21 +595,20 @@ class posting
 		}
 		else if ($add_file)
 		{
-			$error = array();
-
-			if ((empty($filename) || $filename['name'] === 'none'))
-			{
-				$error[] = $this->user->lang['NO_UPLOAD_FORM_FOUND'];
-			}
-
+			$error = false;
 			$num_attachments = sizeof($attachment_data);
 
 			if ($num_attachments >= $this->kb_data['max_attachments'] && !$this->auth->acl_get('a_manage_kb'))
 			{
-				$error[] = sprintf($this->user->lang['MAX_NUM_ATTACHMENTS'], $num_attachments);
+				$error = sprintf($this->user->lang['MAX_NUM_ATTACHMENTS'], $num_attachments);
 			}
 
-			if (!sizeof($error))
+			if (!$filename['size'])
+			{
+				$error = $this->user->lang['EMPTY_FILEUPLOAD'];
+			}
+
+			if (!$error)
 			{
 				$allowed_extensions = $this->kb_data['extensions'];
 
@@ -667,23 +623,26 @@ class posting
 				$ext = $upload_file->get('extension');
 				if (!in_array($upload_file->get('extension'), $allowed_extensions))
 				{
-					$error[] = sprintf($this->user->lang['DISALLOWED_EXTENSION'], $ext);
+					$error = sprintf($this->user->lang['DISALLOWED_EXTENSION'], $ext);
 				}
 				else
 				{
 					$is_image = $this->kb->check_is_img($upload_file->get('extension'));
 					$upload_file->clean_filename('unique', $this->user->data['user_id'] . '_');
 					$result = $upload_file->move_file($upload_dir, false, !$is_image);
-
-					if (sizeof($upload_file->error))
-					{
-						$upload_file->remove();
-						$error = array_merge($error, $upload_file->error);
-						$result = false;
-					}
-
 					if ($result)
 					{
+						if ($is_image)
+						{
+							$size =  getimagesize($upload_dir . $upload_file->get('realname'));
+							if (!$size)
+							{
+								$error = $this->user->lang['UNABLE_GET_IMAGE_SIZE'];
+								@unlink($upload_dir . $upload_file->get('realname'));
+							}
+						}
+						if (!$error)
+						{
 						if ($this->kb_data['thumbnail'] && $is_image)
 						{
 							include($this->phpbb_root_path . 'includes/functions_posting.' . $this->php_ext);
@@ -720,17 +679,21 @@ class posting
 						$download_url = 'kb_file?id=' . $new . '';
 						$json_response->send(array('data' => $attachment_data, 'download_url' => $download_url));
 					}
+					}
+					else
+					{
+						$error = $this->user->lang['NOT_UPLOADED'];
+					}
 				}
 			}
-
-			if (sizeof($error))
+			if ($error)
 			{
 				$json_response->send(array(
 					'jsonrpc' => '2.0',
 					'id' => 'id',
 					'error' => array(
 						'code' => 105,
-						'message' => current($error),
+						'message' => current(array($error)),
 					),
 				));
 			}

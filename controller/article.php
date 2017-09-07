@@ -32,6 +32,9 @@ class article
 	/** @var \phpbb\user $user User object */
 	protected $user;
 
+	/** @var helper */
+	protected $helper;
+
 	//** @var string phpbb_root_path */
 	protected $phpbb_root_path;
 
@@ -54,6 +57,7 @@ class article
 		\phpbb\auth\auth $auth,
 		\phpbb\template\template $template,
 		\phpbb\user $user,
+		\phpbb\controller\helper $helper,
 		$phpbb_root_path,
 		$php_ext,
 		\sheer\knowledgebase\inc\functions_kb $kb,
@@ -67,6 +71,7 @@ class article
 		$this->auth				= $auth;
 		$this->template			= $template;
 		$this->user				= $user;
+		$this->helper			= $helper;
 		$this->phpbb_root_path	= $phpbb_root_path;
 		$this->php_ext			= $php_ext;
 		$this->kb				= $kb;
@@ -97,10 +102,17 @@ class article
 		{
 			trigger_error('ARTICLE_NO_EXISTS');
 		}
+
 		$kb_data = $this->kb->obtain_kb_config();
 		$fid = $kb_data['forum_id'];
 
 		$cat_id = $row['article_category_id'];
+
+		if (!$row['approved'] && (!$this->auth->acl_get('a_manage_kb') || !$this->kb->acl_kb_get($cat_id, 'kb_m_approve')))
+		{
+			redirect($this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id)));
+		}
+
 		$catrow = $this->kb->get_cat_info($row['article_category_id']);
 		if (empty($catrow))
 		{
@@ -109,9 +121,10 @@ class article
 		$path = $catrow['category_name'];
 
 		$this->template->assign_vars(array(
-			'ARTICLE_CATEGORY'	=>  '<a href="' . append_sid("{$this->phpbb_root_path}knowledgebase/category", 'id=' . $catrow['category_id'] . '') . '">' . $catrow['category_name'] . '</a>',
+			'ARTICLE_CATEGORY'	=>  '<a href="' . $this->helper->route('sheer_knowledgebase_category', array('id' => $catrow['category_id'])) . '">' . $catrow['category_name'] . '</a>',
+
 			'CATS_BOX'			=> '<option value="0">' . $this->user->lang['CATEGORIES_LIST'] . '</option>' . $this->kb->make_category_select($cat_id, false, true, false, false) . '',
-			'S_ACTION'			=> append_sid("{$this->phpbb_root_path}knowledgebase/category", 'id=' . $cat_id . ''),
+			'S_ACTION'			=> $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id)),
 			)
 		);
 
@@ -177,11 +190,11 @@ class article
 			'ARTICLE_TITLE'			=> $row['article_title'],
 			'ARTICLE_TEXT'			=> $text,
 			'VIEWS'					=> $views,
-			'U_EDIT_ART'			=> append_sid("{$this->phpbb_root_path}knowledgebase/posting", "mode=edit&amp;id=$cat_id&amp;k=$art_id"),
-			'U_DELETE_ART'			=> append_sid("{$this->phpbb_root_path}knowledgebase/posting", "id=$cat_id&amp;k=$art_id&amp;mode=delete"),
-			'U_APPROVE_ART'			=> append_sid("{$this->phpbb_root_path}knowledgebase/approve", "id=$art_id"),
-			'U_PRINT'				=> append_sid("{$this->phpbb_root_path}knowledgebase/article", 'k=' . $row['article_id'] . '&amp;mode=print'),
-			'U_ARTICLE'				=> '[url=' . generate_board_url() . '/knowledgebase/article?k=' . $row['article_id'] . ']' . $row['article_title'] . '[/url]',
+			'U_EDIT_ART'			=> $this->helper->route('sheer_knowledgebase_posting', array('mode' => 'edit', 'id' => $cat_id, 'k' => $art_id)),
+			'U_DELETE_ART'			=> $this->helper->route('sheer_knowledgebase_posting', array('mode' => 'delete', 'id' => $cat_id, 'k' => $art_id)),
+			'U_APPROVE_ART'			=> $this->helper->route('sheer_knowledgebase_approve', array('id' => $art_id)),
+			'U_PRINT'				=> $this->helper->route('sheer_knowledgebase_article', array('mode' => 'print', 'k' => $art_id)),
+			'U_ARTICLE'				=> '[url=' . generate_board_url() . $this->helper->route('sheer_knowledgebase_article', array('k' => $art_id)) . ']' . $row['article_title'] . '[/url]',
 			'COMMENTS'				=> ($comment_topic_id) ? '' . $this->user->lang['COMMENTS'] . ': ' . $count . '' : '',
 			'U_COMMENTS'			=> $temp_url,
 			'S_CAN_EDIT'			=> ($this->kb->acl_kb_get($cat_id, 'kb_m_edit')   || ($this->user->data['user_id'] == $row['author_id'] && $this->kb->acl_kb_get($cat_id, 'kb_u_edit')   || $this->auth->acl_get('a_manage_kb'))) ? true : false,
@@ -206,7 +219,7 @@ class article
 
 		$this->template->assign_block_vars('navlinks', array(
 			'FORUM_NAME'	=> $this->user->lang['LIBRARY'],
-			'U_VIEW_FORUM'	=> append_sid("{$this->phpbb_root_path}knowledgebase"),
+			'U_VIEW_FORUM'	=> $this->helper->route('sheer_knowledgebase_index'),
 			)
 		);
 
@@ -216,7 +229,7 @@ class article
 			$parents_cats[] = $row['category_id'];
 			$this->template->assign_block_vars('navlinks', array(
 				'FORUM_NAME'	=> $row['category_name'],
-				'U_VIEW_FORUM'	=> append_sid("{$this->phpbb_root_path}knowledgebase/category?id=$row[category_id]"),
+				'U_VIEW_FORUM'	=> $this->helper->route('sheer_knowledgebase_category', array('id' => $row['category_id'])),
 				)
 			);
 		}

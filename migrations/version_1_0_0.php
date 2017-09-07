@@ -306,11 +306,6 @@ class version_1_0_0 extends \phpbb\db\migration\migration
 
 	public function set_default_config()
 	{
-		if (!defined('KB_CONFIG_TABLE'))
-		{
-			define('KB_CONFIG_TABLE', $this->table_prefix . 'kb_config');
-		}
-
 		$sql = 'SELECT e.extension, g.group_name
 			FROM ' . $this->table_prefix . 'extensions e, ' . $this->table_prefix . 'extension_groups g
 			WHERE e.group_id = g.group_id

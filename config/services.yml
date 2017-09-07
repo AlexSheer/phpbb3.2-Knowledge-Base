@@ -4,90 +4,93 @@ services:
     sheer.knowledgebase.controller.index:
         class: sheer\knowledgebase\controller\index
         arguments:
-            - @config
-            - @request
-            - @pagination
-            - @dbal.conn
-            - @auth
-            - @template
-            - @user
-            - @controller.helper
-            - %core.root_path%
-            - %core.php_ext%
-            - @sheer.knowledgebase.inc
-            - %tables.articles_table%
-            - %tables.categories_table%
+            - '@config'
+            - '@request'
+            - '@pagination'
+            - '@dbal.conn'
+            - '@auth'
+            - '@template'
+            - '@user'
+            - '@controller.helper'
+            - '%core.root_path%'
+            - '%core.php_ext%'
+            - '@sheer.knowledgebase.inc'
+            - '%tables.articles_table%'
+            - '%tables.categories_table%'
 
     sheer.knowledgebase.controller.category:
         class: sheer\knowledgebase\controller\category
         arguments:
-            - @config
-            - @request
-            - @pagination
-            - @dbal.conn
-            - @auth
-            - @template
-            - @user
-            - @controller.helper
-            - %core.root_path%
-            - %core.php_ext%
-            - @sheer.knowledgebase.inc
-            - %tables.articles_table%
-            - %tables.categories_table%
+            - '@config'
+            - '@request'
+            - '@pagination'
+            - '@dbal.conn'
+            - '@auth'
+            - '@template'
+            - '@user'
+            - '@controller.helper'
+            - '%core.root_path%'
+            - '%core.php_ext%'
+            - '@sheer.knowledgebase.inc'
+            - '%tables.articles_table%'
+            - '%tables.categories_table%'
 
     sheer.knowledgebase.controller.article:
         class: sheer\knowledgebase\controller\article
         arguments:
-            - @config
-            - @request
-            - @dbal.conn
-            - @auth
-            - @template
-            - @user
-            - %core.root_path%
-            - %core.php_ext%
-            - @sheer.knowledgebase.inc
-            - %tables.articles_table%
-            - %tables.kb_attachments_table%
+            - '@config'
+            - '@request'
+            - '@dbal.conn'
+            - '@auth'
+            - '@template'
+            - '@user'
+            - '@controller.helper'
+            - '%core.root_path%'
+            - '%core.php_ext%'
+            - '@sheer.knowledgebase.inc'
+            - '%tables.articles_table%'
+            - '%tables.kb_attachments_table%'
 
     sheer.knowledgebase.controller.posting:
         class: sheer\knowledgebase\controller\posting
         arguments:
-            - @config
-            - @request
-            - @dbal.conn
-            - @auth
-            - @template
-            - @user
-            - @cache
-            - @log
-            - @?files.factory
-            - @notification_manager
-            - @plupload
-            - %core.root_path%
-            - %core.php_ext%
-            - @sheer.knowledgebase.inc
-            - @sheer.knowledgebase.helper
-            - %tables.logs_table%
-            - %tables.categories_table%
-            - %tables.articles_table%
-            - %tables.kb_attachments_table%
+            - '@config'
+            - '@request'
+            - '@dbal.conn'
+            - '@auth'
+            - '@template'
+            - '@user'
+            - '@cache'
+            - '@log'
+            - '@?files.factory'
+            - '@notification_manager'
+            - '@plupload'
+            - '%core.root_path%'
+            - '%core.php_ext%'
+            - '@controller.helper'
+            - '@sheer.knowledgebase.inc'
+            - '@sheer.knowledgebase.helper'
+            - '%tables.logs_table%'
+            - '%tables.categories_table%'
+            - '%tables.articles_table%'
+            - '%tables.kb_attachments_table%'
 
     sheer.knowledgebase.controller.library_search:
         class: sheer\knowledgebase\controller\library_search
         arguments:
-            - @config
-            - @request
-            - @dbal.conn
-            - @auth
-            - @template
-            - @user
-            - @cache
-            - @pagination
-            - %core.root_path%
-            - %core.php_ext%
-            - @sheer.knowledgebase.inc
-            - %tables.articles_table%
+            - '@config'
+            - '@request'
+            - '@dbal.conn'
+            - '@auth'
+            - '@template'
+            - '@user'
+            - '@controller.helper'
+            - '@cache'
+            - '@pagination'
+            - '%core.root_path%'
+            - '%core.php_ext% '
+            - '@sheer.knowledgebase.inc'
+            - '%tables.articles_table%'
 
     sheer.knowledgebase.controller.approve:
         class: sheer\knowledgebase\controller\approve
@@ -188,14 +191,23 @@ services:
     sheer.knowledgebase.admin.controller:
         class: sheer\knowledgebase\controller\admin_controller
         arguments:
-            - @user
-            - @cache
-            - @config
-            - @dbal.conn
-            - @template
-            - @request
-            - @pagination
-            - %core.root_path%
-            - @sheer.knowledgebase.inc
-            - %tables.kb_attachments_table%
-            - %tables.articles_table%
+            - '@user'
+            - '@cache'
+            - '@config'
+            - '@dbal.conn'
+            - '@template'
+            - '@request'
+            - '@pagination'
+            - '@controller.helper'
+            - '%core.root_path%'
+            - '@sheer.knowledgebase.inc'
+            - '%tables.kb_attachments_table%'
+            - '%tables.articles_table%'
+
+    sheer.knowledgebase.controller.set_order:
+        class: sheer\knowledgebase\controller\set_order
+        arguments:
+            - '@dbal.conn'
+            - '@request'
+            - '@sheer.knowledgebase.inc'
+            - '%tables.articles_table%'

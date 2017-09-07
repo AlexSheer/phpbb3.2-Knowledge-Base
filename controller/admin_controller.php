@@ -35,6 +35,9 @@ class admin_controller
 	/** @var \phpbb\pagination\pagination */
 	protected $pagination;
 
+	/** @var helper */
+	protected $helper;
+
 	//** @var string phpbb_root_path */
 	protected $phpbb_root_path;
 
@@ -62,6 +65,7 @@ class admin_controller
 		\phpbb\template\template $template,
 		\phpbb\request\request_interface $request,
 		\phpbb\pagination $pagination,
+		\phpbb\controller\helper $helper,
 		$phpbb_root_path,
 		\sheer\knowledgebase\inc\functions_kb $kb,
 		$attachments_table,
@@ -75,6 +79,7 @@ class admin_controller
 		$this->template				= $template;
 		$this->request				= $request;
 		$this->pagination			= $pagination;
+		$this->helper				= $helper;
 		$this->phpbb_root_path		= $phpbb_root_path;
 		$this->kb					= $kb;
 		$this->attachments_table	= $attachments_table;
@@ -213,11 +218,11 @@ class admin_controller
 				'REAL_FILENAME'		=> utf8_basename($row['real_filename']),
 				'FILETIME'			=> $this->user->format_date($row['filetime']),
 				'ATTACHMENT_POSTER'	=> get_username_string('full', $row['poster_id'], $row['username'], $row['user_colour']),
-				'U_FILE'			=> append_sid("{$this->phpbb_root_path}knowledgebase/kb_file?id=" . $row['attach_id'] . ""),
+				'U_FILE'			=> $this->helper->route('sheer_knowledgebase_kb_file', array('id' => $row['attach_id'])),
 				'ATTACH_ID'			=> $row['attach_id'],
 				'S_IS_ORPHAN'		=> $row['is_orphan'],
 				'IMG_SRC'			=> $img_src,
-				'U_ARTICLE'			=> append_sid("{$this->phpbb_root_path}knowledgebase/article?k=" . $row['article_id'] . ""),
+				'U_ARTICLE'			=> $this->helper->route('sheer_knowledgebase_article', array('k' => $row['article_id'])),
 				'ARTICLE_TITLE'		=> $row['article_title'],
 				'FILESIZE'			=> get_formatted_filesize($row['filesize']),
 				)
@@ -365,7 +370,7 @@ class admin_controller
 				'ATTACH_ID'			=> $row['attach_id'],
 				'IMG_SRC'			=> $img_src,
 				'POST_IDS'			=> (!empty($post_ids[$row['attach_id']])) ? $post_ids[$row['attach_id']] : '',
-				'U_FILE'			=> append_sid("{$this->phpbb_root_path}knowledgebase/kb_file?id=$row[attach_id]"),
+				'U_FILE'			=> $this->helper->route('sheer_knowledgebase_kb_file', array('id' => $row['attach_id'])),
 				)
 			);
 		}
