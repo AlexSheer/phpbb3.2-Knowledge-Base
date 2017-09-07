@@ -101,14 +101,14 @@
 	</div>
 </div>
 	<div class="pagination">
-		{PAGE_NUMBER}&nbsp;&bull;&nbsp;{TOTAL_ITEMS}
+		{TOTAL_ITEMS}
 		<!-- IF .pagination -->
 			<!-- INCLUDE pagination.html -->
 		<!-- ELSE -->
 			&bull; {PAGE_NUMBER}
 		<!-- ENDIF -->
 	</div>
-	<div id="page">{CURRENT_PAGE_NUMBER}</div>
+	<div id="page" style="display:none">{CURRENT_PAGE_NUMBER}</div>
 	<br clear="all" />
 	<form method="post" name="jumpbox" action="{S_ACTION}" onsubmit="if(document.jumpbox.id.value == -1){return false;}">
 		<fieldset style="float:right; margin: 5px 0px" class="jumpbox">
