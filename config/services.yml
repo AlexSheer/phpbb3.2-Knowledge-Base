@@ -95,59 +95,59 @@ services:
     sheer.knowledgebase.controller.approve:
         class: sheer\knowledgebase\controller\approve
         arguments:
-            - @config
-            - @request
-            - @dbal.conn
-            - @auth
-            - @template
-            - @user
-            - @cache
-            - @log
-            - %core.root_path%
-            - %core.php_ext%
-            - @sheer.knowledgebase.inc
-            - @sheer.knowledgebase.helper
-            - %tables.articles_table%
+            - '@config'
+            - '@request'
+            - '@dbal.conn'
+            - '@auth'
+            - '@template'
+            - '@user'
+            - '@cache'
+            - '@log'
+            - '%core.root_path%'
+            - '%core.php_ext%'
+            - '@sheer.knowledgebase.inc'
+            - '@sheer.knowledgebase.helper'
+            - '%tables.articles_table%'
 
     sheer.knowledgebase.listener:
         class: sheer\knowledgebase\event\listener
         arguments:
-            - @template
-            - @controller.helper
-            - @config
-            - @dbal.conn
-            - @user
-            - %core.root_path%
-            - %tables.kb_attachments_table%
+            - '@template'
+            - '@controller.helper'
+            - '@config'
+            - '@dbal.conn'
+            - '@user'
+            - '%core.root_path%'
+            - '%tables.kb_attachments_table%'
         tags:
             - { name: event.listener }
 
     sheer.knowledgebase.inc:
         class: sheer\knowledgebase\inc\functions_kb
         arguments:
-            - @config
-            - @dbal.conn
-            - @cache
-            - @user
-            - @template
-            - @auth
-            - @log
-            - %core.root_path%
-            - %core.php_ext%
-            - %tables.kb_config_table%
-            - %tables.articles_table%
-            - %tables.categories_table%
-            - %tables.kb_options_table%
-            - %tables.kb_groups_table%
-            - %tables.kb_users_table%
-            - %tables.logs_table%
-            - %tables.kb_attachments_table%
+            - '@config'
+            - '@dbal.conn'
+            - '@cache'
+            - '@user'
+            - '@template'
+            - '@auth'
+            - '@log'
+            - '%core.root_path%'
+            - '%core.php_ext%'
+            - '%tables.kb_config_table%'
+            - '%tables.articles_table%'
+            - '%tables.categories_table%'
+            - '%tables.kb_options_table%'
+            - '%tables.kb_groups_table%'
+            - '%tables.kb_users_table%'
+            - '%tables.logs_table%'
+            - '%tables.kb_attachments_table%'
 
     sheer.knowledgebase.helper:
         class: sheer\knowledgebase\core\helper
         arguments:
-            - @dbal.conn
-            - @notification_manager
+            - '@dbal.conn'
+            - '@notification_manager'
 
     sheer.knowledgebase.notification.type.need_approval:
         class: sheer\knowledgebase\notification\need_approval
@@ -179,14 +179,14 @@ services:
     sheer.knowledgebase.controller.kb_file:
         class: sheer\knowledgebase\controller\kb_file
         arguments:
-            - @user
-            - @config
-            - @dbal.conn
-            - @request
-            - @sheer.knowledgebase.inc
-            - %core.root_path%
-            - %core.php_ext%
-            - %tables.kb_attachments_table%
+            - '@user'
+            - '@config'
+            - '@dbal.conn'
+            - '@request'
+            - '@sheer.knowledgebase.inc'
+            - '%core.root_path%'
+            - '%core.php_ext%'
+            - '%tables.kb_attachments_table%'
 
     sheer.knowledgebase.admin.controller:
         class: sheer\knowledgebase\controller\admin_controller
