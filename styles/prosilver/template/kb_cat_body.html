@@ -84,7 +84,6 @@
 			<li class="row bg1" id="{art_row.ID}">
 				<dl class="row-item">
 					<dt>
-						<!--//<span>Move{art_row.ID}-{art_row.ORDER_ID}</span>//-->
 						<!-- IF S_CAN_MOVE--><span>{L_MOVE}</span><!-- ENDIF -->
 						<div<!-- IF S_CAN_MOVE--> class="list-inner"<!-- ENDIF -->>&nbsp;
 							<a class="topictitle" href="{art_row.U_ARTICLE}">{art_row.ARTICLE_TITLE}</a><!-- IF not art_row.S_APPROVED --><ul class="post-buttons" style="float: left;"><li><a href="{art_row.U_ARTICLE}" title="{L_NEED_APPROOVE}" class="button button-icon-only"><i class="icon fa-info fa-fw" aria-hidden="true"></i><span class="sr-only">{L_NEED_APPROOVE}</span></a></li></ul><!-- ENDIF -->
@@ -97,6 +96,17 @@
 				</dl>
 			</li>
 		<!-- END art_row -->
+		<!-- BEGIN no_articles -->
+		<dl class="row-item">
+			<li class="row bg2">
+				<dl class="row-item">
+					<dt style="min-height: 18px;">
+						{no_articles.COMMENT}
+					</dt>
+				</dl>
+			</li>
+		</dl>
+		<!-- END no_articles -->
 		</ul>
 	</div>
 </div>
