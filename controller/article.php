@@ -108,7 +108,7 @@ class article
 
 		$cat_id = $row['article_category_id'];
 
-		if (!$row['approved'] && (!$this->auth->acl_get('a_manage_kb') || !$this->kb->acl_kb_get($cat_id, 'kb_m_approve')))
+		if (!$row['approved'] && !($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve')))
 		{
 			redirect($this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id)));
 		}
