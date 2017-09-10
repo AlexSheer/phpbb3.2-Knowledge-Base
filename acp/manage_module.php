@@ -26,6 +26,7 @@ class manage_module
 		$this->kb_users_table		= $phpbb_container->getParameter('tables.kb_users_table');
 		$kb_logs_table				= $phpbb_container->getParameter('tables.logs_table');
 		$attachments_table			= $phpbb_container->getParameter('tables.kb_attachments_table');
+		$controller_helper			= $phpbb_container->get('controller.helper');
 
 		define ('ARTICLES_TABLE', $articles_table);
 		define ('KB_CAT_TABLE', $categories_table);
@@ -40,6 +41,7 @@ class manage_module
 			$db,
 			$cache,
 			$user,
+			$controller_helper,
 			$template,
 			$auth,
 			$phpbb_log,
