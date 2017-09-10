@@ -129,6 +129,7 @@ services:
             - '@dbal.conn'
             - '@cache'
             - '@user'
+            - '@controller.helper'
             - '@template'
             - '@auth'
             - '@log'
