@@ -16,7 +16,7 @@ class articles_module
 
 	function main($id, $mode)
 	{
-		global $config, $db, $template, $request, $cache, $phpbb_root_path, $table_prefix, $phpEx, $auth, $user, $phpbb_container, $phpbb_ext_kb, $phpbb_log, $phpbb_container;
+		global $config, $db, $template, $request, $cache, $phpbb_root_path, $table_prefix, $phpEx, $auth, $user, $phpbb_ext_kb, $phpbb_log, $phpbb_container;
 		$phpbb_admin_path = (defined('PHPBB_ADMIN_PATH')) ? PHPBB_ADMIN_PATH : './';
 
 		$config_table		= $phpbb_container->getParameter('tables.kb_config_table');
@@ -28,11 +28,14 @@ class articles_module
 		$kb_logs_table		= $phpbb_container->getParameter('tables.logs_table');
 		$attachments_table	= $phpbb_container->getParameter('tables.kb_attachments_table');
 
+		$controller_helper = $phpbb_container->get('controller.helper');
+
 		$phpbb_ext_kb = new \sheer\knowledgebase\inc\functions_kb(
 			$config,
 			$db,
 			$cache,
 			$user,
+			$controller_helper,
 			$template,
 			$auth,
 			$phpbb_log,
