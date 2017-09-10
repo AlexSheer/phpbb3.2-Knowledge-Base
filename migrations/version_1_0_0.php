@@ -180,8 +180,8 @@ class version_1_0_0 extends \phpbb\db\migration\migration
 				$this->table_prefix . 'kb_attachments'	=> array(
 					'COLUMNS'		=> array(
 						'attach_id'			=> array('UINT', null, 'auto_increment'),
-						'article_id'		=> array('UINT'),
-						'poster_id'			=> array('UINT'),
+						'article_id'		=> array('UINT', 0),
+						'poster_id'			=> array('UINT', 0),
 						'is_orphan'			=> array('BOOL', 1),
 						'physical_filename'	=> array('VCHAR:255', ''),
 						'real_filename'		=> array('VCHAR:255', ''),
@@ -244,6 +244,8 @@ class version_1_0_0 extends \phpbb\db\migration\migration
 			array('custom', array(array($this, 'update_kb_options_table'))),
 			// Set default config
 			array('custom', array(array($this, 'set_default_config'))),
+			// Remove old modules, etc...
+			array('custom', array(array($this, 'remove_knowlege_base_ext'))),
 
 			// ACP
 			array('module.add', array('acp', 'ACP_CAT_DOT_MODS', 'KNOWLEDGE_BASE')),
@@ -304,6 +306,22 @@ class version_1_0_0 extends \phpbb\db\migration\migration
 		);
 	}
 
+	public function remove_knowlege_base_ext()
+	{
+		$sql = 'DELETE FROM ' . $this->table_prefix . 'ext WHERE ext_name LIKE \'Sheer/knowlegebase\'';
+		$this->db->sql_query($sql);
+
+		$sql = 'DELETE FROM ' . $this->table_prefix . 'config WHERE config_name LIKE \'knowlege_base_version\'';
+		$this->db->sql_query($sql);
+
+		$sql = 'DELETE FROM ' . $this->table_prefix . 'modules
+			WHERE module_langname IN (
+				"KNOWLEGE_BASE", "ACP_KNOWLEGE_BASE_CONFIGURE", "ACP_LIBRARY_MANAGE", "ACP_LIBRARY_ARTICLES",
+				"ACP_LIBRARY_PERMISSIONS", "ACP_LIBRARY_SEARCH", "ACP_LIBRARY_LOGS"
+			)';
+		$this->db->sql_query($sql);
+	}
+
 	public function set_default_config()
 	{
 		$sql = 'SELECT e.extension, g.group_name
@@ -347,40 +365,70 @@ class version_1_0_0 extends \phpbb\db\migration\migration
 		$max_filesize = $this->db->sql_fetchfield('config_value');
 		$this->db->sql_freeresult($result);
 
-		$sql = 'INSERT INTO ' . $this->table_prefix . 'kb_config' . ' (config_name, config_value) VALUES
-			(\'allow_attachments\', 0),
-			(\'anounce\', 0),
-			(\'articles_per_page\', 10),
-			(\'forum_id\', 0),
-			(\'max_filesize\', ' . $max_filesize . '),
-			(\'extensions\', \'' . $extensions . '\'),
-			(\'thumbnail\', 0),
-			(\'max_attachments\', 1)
-			';
+		$sql ='SELECT * FROM ' . $this->table_prefix . 'kb_config
+			WHERE config_name IN(\'anounce\', \'articles_per_page\', \'forum_id\')';
+		$result = $this->db->sql_query($sql);
+		$row = $this->db->sql_fetchrow($result);
+		$this->db->sql_freeresult($result);
+		if (empty($row))
+		{
+			$sql = 'INSERT INTO ' . $this->table_prefix . 'kb_config' . ' (config_name, config_value) VALUES
+				(\'allow_attachments\', 0),
+				(\'anounce\', 0),
+				(\'articles_per_page\', 10),
+				(\'forum_id\', 0),
+				(\'max_filesize\', ' . $max_filesize . '),
+				(\'extensions\', \'' . $extensions . '\'),
+				(\'thumbnail\', 0),
+				(\'max_attachments\', 1)
+				';
+		}
+		else
+		{
+			$sql = 'ALTER TABLE ' . $this->table_prefix . 'kb_config DROP is_dynamic';
+			$this->db->sql_query($sql);
+			$sql = 'ALTER TABLE ' . $this->table_prefix . 'kb_config CHANGE config_value config_value TEXT CHARACTER SET utf8 COLLATE utf8_bin';
+			$this->db->sql_query($sql);
+			$sql = 'INSERT INTO ' . $this->table_prefix . 'kb_config' . ' (config_name, config_value) VALUES
+				(\'allow_attachments\', 0),
+				(\'max_filesize\', ' . $max_filesize . '),
+				(\'extensions\', \'' . $extensions . '\'),
+				(\'thumbnail\', 0),
+				(\'max_attachments\', 1)
+				';
+		}
 		$this->db->sql_query($sql);
 	}
 
 	public function update_kb_options_table()
 	{
-		$options = array(
-			1 => 'kb_u_add',
-			2 => 'kb_u_edit',
-			3 => 'kb_u_delete',
-			4 => 'kb_u_add_noapprove',
-			5 => 'kb_m_edit',
-			6 => 'kb_m_delete',
-			7 => 'kb_m_approve'
-		);
-
-		foreach ($options as $key => $value)
+		$sql = 'SELECT * FROM ' . $this->table_prefix . 'kb_options';
+		$result = $this->db->sql_query($sql);
+		$row = $this->db->sql_fetchrow($result);
+		$this->db->sql_freeresult($result);
+		if (empty($row))
 		{
-			$sql_ary[] = array(
-				'auth_option_id'	=> $key,
-				'auth_option'		=> $value,
-				'is_global'			=> 0,
-				'is_local'			=> 1,
+			$options = array(
+				1 => 'kb_u_add',
+				2 => 'kb_u_edit',
+				3 => 'kb_u_delete',
+				4 => 'kb_u_add_noapprove',
+				5 => 'kb_m_edit',
+				6 => 'kb_m_delete',
+				7 => 'kb_m_approve'
 			);
+
+			foreach ($options as $key => $value)
+			{
+				$sql_ary[] = array(
+					'auth_option_id'	=> $key,
+					'auth_option'		=> $value,
+					'is_global'			=> 0,
+					'is_local'			=> 1,
+				);
+			}
+			$this->db->sql_multi_insert($this->table_prefix . 'kb_options', $sql_ary);
 		}
-		$this->db->sql_multi_insert($this->table_prefix . 'kb_options', $sql_ary);
 	}
+
 }
