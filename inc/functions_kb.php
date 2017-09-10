@@ -29,6 +29,9 @@ class functions_kb
 	/** @var \phpbb\user $user User object */
 	protected $user;
 
+	/** @var helper */
+	protected $helper;
+
 	/** @var \phpbb\template\template */
 	protected $template;
 
@@ -52,6 +55,7 @@ class functions_kb
 		\phpbb\db\driver\driver_interface $db,
 		\phpbb\cache\service $cache,
 		\phpbb\user $user,
+		\phpbb\controller\helper $helper,
 		\phpbb\template\template $template,
 		\phpbb\auth\auth $auth,
 		\phpbb\log\log_interface $log,
@@ -71,6 +75,7 @@ class functions_kb
 		$this->db				= $db;
 		$this->phpbb_cache		= $cache;
 		$this->user				= $user;
+		$this->helper			= $helper;
 		$this->template			= $template;
 		$this->auth				= $auth;
 		$this->phpbb_log		= $log;
@@ -161,7 +166,7 @@ class functions_kb
 				$res = $this->db->sql_query($sql);
 				$art_row = $this->db->sql_fetchrow($res);
 				$this->db->sql_freeresult($res);
-				$cat_list .= ''. $padding .'<a href="' . append_sid("{$this->phpbb_root_path}knowledgebase/category?id=$row[category_id]") . '"/>' . $row['category_name'] . '</a> (' . $this->user->lang['ARTICLES'] . ': ' . $art_row['articles'] . ')<br />';
+				$cat_list .= '' . $padding . '<a href="' . $this->helper->route('sheer_knowledgebase_category', array('id' => $row['category_id'])) . '"/>' . $row['category_name'] . '</a> (' . $this->user->lang['ARTICLES'] . ': ' . $art_row['articles'] . ')<br />';
 			}
 		}
 		$this->db->sql_freeresult($result);
@@ -197,10 +202,10 @@ class functions_kb
 			$open = $close = '';
 			if($row['category_id'] == $select_id)
 			{
-				$open = '<b>';
-				$close = '</b>';
+				$open = '<strong>';
+				$close = '</strong>';
 			}
-			$cats_list .= '<li>' . $padding . '<a href="'. append_sid("{$this->phpbb_root_path}knowledgebase/category", 'id=' . $row['category_id'] .' ') .'">' . $open . ''. $row['category_name'] . '' . $close . '</a></li>';
+			$cats_list .= '<li>' . $padding . '<a href="' . '<a href="' . $this->helper->route('sheer_knowledgebase_category', array('id' => $row['category_id'])) . '">' . $open . '' . $row['category_name'] . '' . $close . '</a></li>';
 		}
 		$this->db->sql_freeresult($result);
 		unset($padding_store);
@@ -596,7 +601,7 @@ class functions_kb
 		$topic_text .= "\n";
 		$topic_text .= '[b]' . $this->user->lang['CATEGORY'] . ':[/b] ' . $category_name . ' ';
 		$topic_text .= "\n\n";
-		$topic_text .= '[b][url=' . generate_board_url() . '/' . append_sid("knowledgebase/article",'k=' . $new . ' ').']&raquo;' . $this->user->lang['READ_FULL'] . '[/url][/b]';
+		$topic_text .= '[b][url=' . generate_board_url() . '/' . $this->helper->route('sheer_knowledgebase_article', array('k' => $new)) . ']&raquo;' . $this->user->lang['READ_FULL'] . '[/url][/b]';
 
 		generate_text_for_storage($topic_text, $uid, $bitfield, $options, true, true, true);
 
@@ -649,18 +654,19 @@ class functions_kb
 			$comment = ($attachments[$index]['attach_comment']) ?  '<dd>' . $attachments[$index]['attach_comment'] . '</dd>' : '';
 			if ($attachments[$index]['thumbnail'] == 1)
 			{
-				$replacement = '<dl class="thumbnail"><dt><a href="kb_file?id=' . $attachments[$index]['attach_id'] . '"><img src="kb_file?id=' . $attachments[$index]['attach_id'] . '&amp;t=1" class="postimage" alt="' . $attachments[$index]['real_filename'] . '" title="' . $attachments[$index]['real_filename'] . '"></a></dt>' . $comment . '</dl>';
+				//$replacement = '<dl class="thumbnail"><dt><a href="kb_file?id=' . $attachments[$index]['attach_id'] . '"><img src="kb_file?id=' . $attachments[$index]['attach_id'] . '&amp;t=1" class="postimage" alt="' . $attachments[$index]['real_filename'] . '" title="' . $attachments[$index]['real_filename'] . '"></a></dt>' . $comment . '</dl>';
+				$replacement = '<dl class="thumbnail"><dt><a href="' . $this->helper->route('sheer_knowledgebase_kb_file', array('id' => $attachments[$index]['attach_id'])) . '"><img src="' . $this->helper->route('sheer_knowledgebase_kb_file', array('id' => $attachments[$index]['attach_id'])) . '&amp;t=1" class="postimage" alt="' . $attachments[$index]['real_filename'] . '" title="' . $attachments[$index]['real_filename'] . '"></a></dt>' . $comment . '</dl>';
 			}
 			else
 			{
 				if ($this->check_is_img($attachments[$index]['extension'], $extensions))
 				{
-					$replacement = '<dl class="file"><dt class="attach-image"><img src="kb_file?id=' . $attachments[$index]['attach_id'] . '" class="postimage" alt="' . $attachments[$index]['real_filename'] . '" onclick="viewableArea(this);"></dt><dd>' . $comment . '</dd></dl>';
+					$replacement = '<dl class="file"><dt class="attach-image"><img src="' . $this->helper->route('sheer_knowledgebase_kb_file', array('id' => $attachments[$index]['attach_id'])) . '" class="postimage" alt="' . $attachments[$index]['real_filename'] . '" onclick="viewableArea(this);"></dt><dd>' . $comment . '</dd></dl>';
 				}
 				else
 				{
 					$icon = ($extensions[$attachments[$index]['extension']]['upload_icon']) ? '<img src="./../images/upload_icons/' . $extensions[$attachments[$index]['extension']]['upload_icon'] . '" alt="">' : '';
-					$replacement = '<dl class="file"><dt>' . $icon . ' <a class="postlink" href="kb_file?id=' . $attachments[$index]['attach_id'] . '">' . $attachments[$index]['real_filename'] . '</a></dt></dl>';
+					$replacement = '<dl class="file"><dt>' . $icon . ' <a class="postlink" href="' . $this->helper->route('sheer_knowledgebase_kb_file', array('id' => $attachments[$index]['attach_id'])) . '">' . $attachments[$index]['real_filename'] . '</a></dt></dl>';
 				}
 			}
 			$replace['from'][] = $matches[0][$num];
@@ -685,7 +691,7 @@ class functions_kb
 				$comment = ($value['attach_comment']) ?  '<dd>' . $value['attach_comment'] . '</dd>' : '';
 				if ($value['thumbnail'])
 				{
-					$text .= '<dd><dl class="thumbnail"><dt><a href="kb_file?id=' . $value['attach_id'] . '"><img src="kb_file?id=' . $value['attach_id'] . '&amp;t=1"></a></dt>' . $comment . '</dl></dd>';
+					$text .= '<dd><dl class="thumbnail"><dt><a href="' . $this->helper->route('sheer_knowledgebase_kb_file', array('id' => $value['attach_id'])) . '"><img src="' . $this->helper->route('sheer_knowledgebase_kb_file', array('id' => $value['attach_id'])) . '&amp;t=1"></a></dt>' . $comment . '</dl></dd>';
 				}
 				else
 				{
@@ -693,12 +699,12 @@ class functions_kb
 					if ($this->check_is_img($value['extension'], $extensions))
 					{
 						$text .= '<dd><dl class="file">';
-						$text .= '<dt class="attach-image"><img src="kb_file?id=' . $value['attach_id'] . '" class="postimage" alt="' . $value['real_filename'] . '" onclick="viewableArea(this);"></dt>' . $comment . '';
+						$text .= '<dt class="attach-image"><img src="' . $this->helper->route('sheer_knowledgebase_kb_file', array('id' => $value['attach_id'])) . '" class="postimage" alt="' . $value['real_filename'] . '" onclick="viewableArea(this);"></dt>' . $comment . '';
 					}
 					else
 					{
 						$icon = ($extensions[$value['extension']]['upload_icon']) ? '<img src="./../images/upload_icons/' . $extensions[$value['extension']]['upload_icon'] . '" alt="">' : '';
-						$text .= '<dd><dl class="file"><dt>' . $icon . ' <a class="postlink" href="kb_file?id=' . $value['attach_id'] . '">' . $value['real_filename'] . '</a></dt>' . $comment . '';
+						$text .= '<dd><dl class="file"><dt>' . $icon . ' <a class="postlink" href="' . $this->helper->route('sheer_knowledgebase_kb_file', array('id' => $value['attach_id'])) . '">' . $value['real_filename'] . '</a></dt>' . $comment . '';
 					}
 					$text .= '</dl></dd>';
 				}
