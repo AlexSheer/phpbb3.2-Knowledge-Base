@@ -27,6 +27,8 @@ class permissions_module
 		$kb_users_table		= $phpbb_container->getParameter('tables.kb_users_table');
 		$kb_logs_table		= $phpbb_container->getParameter('tables.logs_table');
 		$attachments_table	= $phpbb_container->getParameter('tables.kb_attachments_table');
+		$controller_helper	= $phpbb_container->get('controller.helper');
+
 
 		define ('KB_CAT_TABLE', $categories_table);
 		define ('KB_OPTIONS_TABLE', $options_table);
@@ -38,13 +40,13 @@ class permissions_module
 		}
 
 		include_once($phpbb_root_path . 'includes/functions_user.' . $phpEx);
-		include_once($phpbb_root_path . 'includes/functions_user.' . $phpEx);
 
 		$phpbb_ext_kb = new \sheer\knowledgebase\inc\functions_kb(
 			$config,
 			$db,
 			$cache,
 			$user,
+			$controller_helper,
 			$template,
 			$auth,
 			$phpbb_log,
