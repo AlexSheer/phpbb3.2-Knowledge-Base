@@ -665,7 +665,7 @@ class functions_kb
 				}
 				else
 				{
-					$icon = ($extensions[$attachments[$index]['extension']]['upload_icon']) ? '<img src="./../images/upload_icons/' . $extensions[$attachments[$index]['extension']]['upload_icon'] . '" alt="">' : '';
+					$icon = ($extensions[$attachments[$index]['extension']]['upload_icon']) ? '<img src="' . generate_board_url() . '/images/upload_icons/' . $extensions[$attachments[$index]['extension']]['upload_icon'] . '" alt="">' : '';
 					$replacement = '<dl class="file"><dt>' . $icon . ' <a class="postlink" href="' . $this->helper->route('sheer_knowledgebase_kb_file', array('id' => $attachments[$index]['attach_id'])) . '">' . $attachments[$index]['real_filename'] . '</a></dt></dl>';
 				}
 			}
@@ -703,7 +703,7 @@ class functions_kb
 					}
 					else
 					{
-						$icon = ($extensions[$value['extension']]['upload_icon']) ? '<img src="./../images/upload_icons/' . $extensions[$value['extension']]['upload_icon'] . '" alt="">' : '';
+						$icon = ($extensions[$value['extension']]['upload_icon']) ? '<img src="' . generate_board_url() . '/images/upload_icons/' . $extensions[$value['extension']]['upload_icon'] . '" alt="">' : '';
 						$text .= '<dd><dl class="file"><dt>' . $icon . ' <a class="postlink" href="' . $this->helper->route('sheer_knowledgebase_kb_file', array('id' => $value['attach_id'])) . '">' . $value['real_filename'] . '</a></dt>' . $comment . '';
 					}
 					$text .= '</dl></dd>';
