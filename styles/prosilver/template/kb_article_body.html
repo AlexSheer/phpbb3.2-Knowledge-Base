@@ -25,11 +25,17 @@
 					<!-- ENDIF -->
 				</ul>
 				<h3 class="first">{ARTICLE_TITLE}</h3>
-				<p class="author" style="line-height: 1.5em"><strong>{L_ARTICLE_AUTHOR}:</strong> {ARTICLE_AUTHOR}&nbsp;<strong>{L_ARTICLE_DATE}:</strong> {ARTICLE_DATE}&nbsp;<strong>{L_VIEWS}{L_COLON}</strong> {VIEWS}<br />
+				<p class="author" style="line-height: 1.5em; float:right"><strong>{L_ARTICLE_AUTHOR}:</strong> {ARTICLE_AUTHOR}&nbsp;<strong>{L_ARTICLE_DATE}:</strong> {ARTICLE_DATE}&nbsp;<strong>{L_VIEWS}{L_COLON}</strong> {VIEWS}<br />
 				<strong>{L_ARTICLE_DESCRIPTION}{L_COLON}</strong> {ARTICLE_DESCRIPTION}<br /><strong>{L_CATEGORY}{L_COLON}</strong> {ARTICLE_CATEGORY}<br />
-				<span style="border: 1px solid #cccccc;padding: 5px;position: absolute;">{U_ARTICLE}</span><br />
-				<!-- IF .postrow --><strong>{COMMENTS}</strong><!-- ENDIF --></p><hr />
-				<div class="content">{ARTICLE_TEXT}</div>
+					<div class="codebox" style="float:left; font-size: 1.1em;">
+						<p>{L_LINK_TO_ARTICLE}{L_COLON} <a href="#" onclick="selectCode(this); return false;">{L_SELECT_ALL_CODE}</a></p>
+						<code style="font-size: 1.1em;">{U_ARTICLE}</code>
+					</div>
+				<div class="content">
+					<!-- IF .postrow --><p><strong>{COMMENTS}</strong></p><!-- ENDIF -->
+					<hr />
+					{ARTICLE_TEXT}
+				</div>
 			</div>
 		</div>
 	</div>
