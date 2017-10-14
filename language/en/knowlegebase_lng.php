@@ -59,6 +59,7 @@ $lang = array_merge($lang, array(
 	'CONFIRM_DELETE_ARTICLE'		=> 'Are you sure delete this article?',
 	'EDIT'							=> 'Edit',
 	'PRINT'							=> 'Print',
+	'LINK_TO_ARTICLE'				=> 'Link to article',
 
 	'NEED_APPROOVE'							=> 'The article requires approval.',
 	'NO_NEED_APPROVE'						=> 'This article does not require approval.',
