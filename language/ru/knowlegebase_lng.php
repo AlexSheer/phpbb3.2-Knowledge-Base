@@ -64,6 +64,7 @@ $lang = array_merge($lang, array(
 
 	'LEAVE_COMMENTS'				=> 'Оставить комментарий',
 	'LIBRARY'						=> 'Библиотека',
+	'LINK_TO_ARTICLE'				=> 'Ссылка на статью',
 	'LOGIN_EXPLAIN_APPROVE'			=> 'Для проведения этого действия вы должны войти на конференцию.',
 
 	'MAX_NUM_ATTACHMENTS'			=> 'Достигнуто максимально допустимое количество вложений: %d ',
