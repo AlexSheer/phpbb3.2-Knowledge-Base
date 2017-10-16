@@ -106,14 +106,14 @@ $lang = array_merge($lang, array(
 	'PRUNE_ATTACHMENTS_FINISHED'					=> 'Aucun fichier supplémentaire n’a été trouvé.',
 	'PRUNE_ATTACHMENTS_PROGRESS'					=> 'Les fichiers inutiles sont vérifiés. Merci de ne pas interrompre ce processus !<br />Les fichiers suivants ont été supprimés :',
 	'PRUNE_ATTACHMENTS_FAIL'						=> '<br />La suppression des fichiers suivants a rencontré un problème, il n’a pas été possible de les supprimer :',
-	'POST_ROW_ARTICLE_INFO'							=> ' ayant le numéro/ID %1$d…',
+	'POST_ROW_ARTICLE_INFO'							=> ' ayant l’ID %1$d…',
 	'RESYNC_ATTACHMENTS_FINISHED'					=> 'Les fichiers joints ont été synchronisés avec succès (les entrées correspondantes dans la base de données ont été vérifiées)',
 	'RESYNC_ATTACHMENTS_PROGRESS'					=> 'La vérification des entrées dans la base de données est en cours ! Merci de ne pas interrompre le processus !',
 	'SELECT_CAT'									=> 'Sélectionner une catégorie',
 	'SELECT_CATEGORY'								=> 'Sélectionner une catégorie',
 	'SYNC_OK'										=> 'Catégorie synchronisée avec succès !',
 	'THUMBNAIL_EXPLAIN'								=> 'Les dimensions des miniatures sont définies dans la page par défaut de phpBB dans le PCA (&laquo;Paramètres des fichiers joints&raquo;).',
-	'UPLOAD_DENIED_ARTICLE'							=> 'Les articles ayant le numéro/ID n’existent pas.',
+	'UPLOAD_DENIED_ARTICLE'							=> 'L’article ayant l’ID n’existe pas.',
 	'UPLOADING_FILE_TO_ARTICLE'						=> 'Envoi du fichier « %1$s » pour l’article',
 
 // User Permissions

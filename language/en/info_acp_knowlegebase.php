@@ -1,7 +1,7 @@
 <?php
 /**
 *
-* knowledgebase [Russian]
+* knowledgebase [English]
 *
 * @copyright (c) 2013 phpBB Group
 * @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
@@ -108,7 +108,7 @@ $lang = array_merge($lang, array(
 	'SELECT_CATEGORY'								=> 'Select a category',
 	'SYNC_OK'										=> 'Category successfully synchronized.',
 	'THUMBNAIL_EXPLAIN'								=> 'The thumbnails sizes are defined in default phpBB page in ACP (&laquo;Attachment files settings&raquo;).',
-	'UPLOAD_DENIED_ARTICLE'							=> 'Articles with thess number/ID don’t exist.',
+	'UPLOAD_DENIED_ARTICLE'							=> 'Article with this ID doesn’t exist.',
 	'UPLOADING_FILE_TO_ARTICLE'						=> 'Upload file “%1$s” to article',
 
 // User Permissions
