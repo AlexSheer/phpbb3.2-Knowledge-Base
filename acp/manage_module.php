@@ -560,7 +560,7 @@ class manage_module
 
 		$sql = 'SELECT MAX(display_order) AS ord FROM ' . ARTICLES_TABLE . ' WHERE article_category_id = ' . $to_id;
 		$result = $db->sql_query($sql);
-		$order = $db->sql_fetchfield('ord');
+		$order = (int) $db->sql_fetchfield('ord');
 		$db->sql_freeresult($result);
 
 		$sql = 'UPDATE ' . ARTICLES_TABLE . ' SET display_order = display_order + ' . $order . '
