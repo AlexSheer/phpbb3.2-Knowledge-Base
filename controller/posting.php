@@ -137,7 +137,7 @@ class posting
 		$this->kb_data = $this->kb->obtain_kb_config();
 		$fid = $this->kb_data['forum_id'];
 
-		if (empty($kb_data['forum_id']) && $kb_data['anounce'])
+		if (empty($this->kb_data['forum_id']) && $this->kb_data['anounce'])
 		{
 			trigger_error('WARNING_DEFAULT_CONFIG');
 		}
@@ -404,7 +404,7 @@ class posting
 							$kb_search->index('add', $new, $article_text, $article_title, $this->user->data['user_id']);
 						}
 
-						if (!empty($kb_data['forum_id']) && $kb_data['anounce'])
+						if (!empty($this->kb_data['forum_id']) && $this->kb_data['anounce'])
 						{
 							$this->kb->submit_article($cat_id, $fid, $article_title, $article_description, $this->user->data['username'], $category_name, $new);
 						}
