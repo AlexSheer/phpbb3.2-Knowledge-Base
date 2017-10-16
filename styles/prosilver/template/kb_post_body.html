@@ -13,21 +13,21 @@
 				<!-- IF S_EDIT_POST -->
 				<!-- IF S_CAN_DELETE -->
 				<dl>
-					<dt><label for="delete">{L_DELETE_ARTICLE}:</label></dt>
+					<dt><label for="delete">{L_DELETE_ARTICLE}{L_COLON}</label></dt>
 					<dd><label for="delete"><input type="checkbox" name="delete" id="delete" /> {L_DELETE_ARTICLE_WARN}</label></dd>
 				</dl>
 				<!-- ENDIF -->
 				<dl>
-					<dt><label for="cat">{L_CATEGORY}:</label></dt>
+					<dt><label for="cat">{L_CATEGORY}{L_COLON}</label></dt>
 					<dd><label for="cat"><select name="to_id">{CATS_BOX}</select></label></dd>
 				</dl>
 				<!-- ENDIF -->
 				<dl style="clear: left;">
-					<dt><label for="subject">{L_SUBJECT}</label></dt>
+					<dt><label for="subject">{L_SUBJECT}{L_COLON}</label></dt>
 					<dd><input type="text" name="subject" id="subject" size="60" maxlength="60" tabindex="2" value="{SUBJECT}" class="inputbox autowidth" /></dd>
 				</dl>
 				<dl style="clear: left;">
-					<dt><label for="subject">{L_DESCR}:</label></dt>
+					<dt><label for="subject">{L_DESCR}{L_COLON}</label></dt>
 					<dd><input type="text" name="descr" id="subject" size="60" maxlength="60" tabindex="2" value="{DESCR}" class="inputbox autowidth" />
 				</dl>
 			<!-- INCLUDE posting_buttons.html -->

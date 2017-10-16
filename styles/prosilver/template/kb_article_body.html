@@ -24,13 +24,18 @@
 					</li>
 					<!-- ENDIF -->
 				</ul>
-				<h3 class="first">{ARTICLE_TITLE}</h3>
-				<p class="author" style="line-height: 1.5em; float:right"><strong>{L_ARTICLE_AUTHOR}:</strong> {ARTICLE_AUTHOR}&nbsp;<strong>{L_ARTICLE_DATE}:</strong> {ARTICLE_DATE}&nbsp;<strong>{L_VIEWS}{L_COLON}</strong> {VIEWS}<br />
-				<strong>{L_ARTICLE_DESCRIPTION}{L_COLON}</strong> {ARTICLE_DESCRIPTION}<br /><strong>{L_CATEGORY}{L_COLON}</strong> {ARTICLE_CATEGORY}<br />
-					<div class="codebox" style="float:left; font-size: 1.1em;">
-						<p>{L_LINK_TO_ARTICLE}{L_COLON} <a href="#" onclick="selectCode(this); return false;">{L_SELECT_ALL_CODE}</a></p>
-						<code style="font-size: 1.1em;">{U_ARTICLE}</code>
-					</div>
+				<h3 class="first">{ARTICLE_TITLE}</h3><br /><br />
+				<p><strong>{L_ARTICLE_DESCRIPTION}{L_COLON}</strong> {ARTICLE_DESCRIPTION}</p>			
+				<p class="author" style="line-height: 1.5em; float:right">
+					<strong>{L_ARTICLE_AUTHOR}{L_COLON}</strong> {ARTICLE_AUTHOR}<br />
+					<strong>{L_ARTICLE_DATE}{L_COLON}</strong> {ARTICLE_DATE}<br />
+					<strong>{L_VIEWS}{L_COLON}</strong> {VIEWS}<br />
+					<strong>{L_CATEGORY}{L_COLON}</strong> {ARTICLE_CATEGORY}
+				</p>
+				<div class="codebox" style="float:left; font-size: 1.1em;">
+					<p>{L_LINK_TO_ARTICLE}{L_COLON} <a href="#" onclick="selectCode(this); return false;">{L_SELECT_ALL_CODE}</a></p>
+					<code style="font-size: 1.1em;">{U_ARTICLE}</code>
+				</div>
 				<div class="content">
 					<!-- IF .postrow --><p><strong>{COMMENTS}</strong></p><!-- ENDIF -->
 					<hr />

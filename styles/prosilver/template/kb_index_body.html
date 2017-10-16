@@ -56,7 +56,7 @@
 	<!-- IF CATS_BOX -->
 	<form method="post" name="jumpbox" action="{S_ACTION}" onsubmit="if(document.jumpbox.id.value == -1){return false;}">
 		<fieldset style="float:right; margin: 5px 0px" class="jumpbox">
-			<label for="id" accesskey="j">{L_GO}:</label>
+			<label for="id" accesskey="j">{L_GO}{L_COLON}</label>
 			<select name="id" onchange="if(this.options[this.selectedIndex].value != -1){ document.forms['jumpbox'].submit() }">
 			{CATS_BOX}</select>
 			<input type="submit" value="{L_GO}" class="button2">

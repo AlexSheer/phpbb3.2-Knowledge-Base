@@ -1,11 +1,11 @@
 <!-- INCLUDE overall_header.html -->
 <form method="post" action="{S_SEARCH_ACTION}">
-	<h2><!-- IF SEARCH_TITLE -->{SEARCH_TITLE}<!-- ELSE -->{SEARCH_MATCHES}<!-- ENDIF --><!-- IF SEARCH_WORDS -->: <a href="{U_SEARCH_WORDS}">{SEARCH_WORDS_AND_AUTHOR}</a><!-- ENDIF --></h2>
+	<h2><!-- IF SEARCH_TITLE -->{SEARCH_TITLE}<!-- ELSE -->{SEARCH_MATCHES}<!-- ENDIF --><!-- IF SEARCH_WORDS -->{L_COLON} <a href="{U_SEARCH_WORDS}">{SEARCH_WORDS_AND_AUTHOR}</a><!-- ENDIF --></h2>
 	<p><a class="{S_CONTENT_FLOW_BEGIN}" href="{U_KB_SEARCH}" title="{L_SEARCH_ADV}">{L_RETURN_TO_KB_SEARCH_ADV}</a></p>
 <!-- IF PAGINATION or .searchrow or TOTAL_MATCHES -->
 	<div class="topic-actions">
 		<div class="rightside pagination">
-			{L_ARTICLES}: {TOTAL_MATCHES}<!-- IF PAGINATION --> &bull; <a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{S_ON_PAGE}</a> &bull; <span>{PAGINATION}</span><!-- ELSE --> &bull; {S_ON_PAGE}<!-- ENDIF -->
+			{L_ARTICLES}{L_COLON} {TOTAL_MATCHES}<!-- IF PAGINATION --> &bull; <a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{S_ON_PAGE}</a> &bull; <span>{PAGINATION}</span><!-- ELSE --> &bull; {S_ON_PAGE}<!-- ENDIF -->
 		</div>
 	</div>
 <!-- ENDIF -->
@@ -18,9 +18,9 @@
 				<div class="content">{searchrow.MESSAGE}</div>
 			</div>
 			<dl class="postprofile">
-				<dt class="author">{L_AUTHOR}: {searchrow.USER_FULL}</dt>
-				<dd>{L_POSTED}: {searchrow.DATE}</dd>
-				<dd>{L_CATEGORY}: <a href="{searchrow.U_CAT}"><b>{searchrow.CATEGORY}</b></a></dd>
+				<dt class="author">{L_AUTHOR}{L_COLON} {searchrow.USER_FULL}</dt>
+				<dd>{L_POSTED}{L_COLON} {searchrow.DATE}</dd>
+				<dd>{L_CATEGORY}{L_COLON} <a href="{searchrow.U_CAT}"><b>{searchrow.CATEGORY}</b></a></dd>
 			</dl>
 		</div>
 	</div>
