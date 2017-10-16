@@ -84,7 +84,7 @@
 			<li class="row bg1" id="{art_row.ID}">
 				<dl class="row-item">
 					<dt>
-						<!-- IF S_CAN_MOVE--><span>{L_MOVE}</span><!-- ENDIF -->
+						<!-- IF S_CAN_MOVE--><span title="{L_MOVE_DRAGNDROP}">{L_MOVE}</span><!-- ENDIF -->
 						<div<!-- IF S_CAN_MOVE--> class="list-inner"<!-- ENDIF -->>&nbsp;
 							<a class="topictitle" href="{art_row.U_ARTICLE}">{art_row.ARTICLE_TITLE}</a><!-- IF not art_row.S_APPROVED --><ul class="post-buttons" style="float: left;"><li><a href="{art_row.U_ARTICLE}" title="{L_NEED_APPROOVE}" class="button button-icon-only"><i class="icon fa-info fa-fw" aria-hidden="true"></i><span class="sr-only">{L_NEED_APPROOVE}</span></a></li></ul><!-- ENDIF -->
 						</div>

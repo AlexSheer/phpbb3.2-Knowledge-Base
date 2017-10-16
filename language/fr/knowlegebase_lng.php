@@ -82,6 +82,7 @@ $lang = array_merge($lang, array(
 	'LOGIN_EXPLAIN_APPROVE'					=> 'Pour effectuer cette action il est nécessaire d’avoir enregistré un compte sur le forum et d’être connecté à celui-ci.',
 	'MAX_NUM_ATTACHMENTS'					=> 'La limite du nombre de fichiers joints autorisés a été atteinte : %d .',
 	'MISSING_INLINE_ATTACHMENT'				=> 'Le fichier joint : « <strong>%s</strong> » n’existe pas.',
+	'MOVE_DRAGNDROP'						=> 'Click here left mouse button and move article to desired place, up or down',
 	'NEED_APPROOVE'							=> 'L’article requiert l’approbation d’un modérateur.',
 	'NOTIFICATION_ARTICLE_APPROVE'			=> 'Le <b>modérateur</b> %1$s a approuvé votre article :',
 	'NOTIFICATION_ARTICLE_DISAPPROVE'		=> 'Le <b>modérateur</b> %1$s a refusé votre article :',
