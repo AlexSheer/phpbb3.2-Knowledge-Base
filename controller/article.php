@@ -194,7 +194,7 @@ class article
 			'U_DELETE_ART'			=> $this->helper->route('sheer_knowledgebase_posting', array('mode' => 'delete', 'id' => $cat_id, 'k' => $art_id)),
 			'U_APPROVE_ART'			=> $this->helper->route('sheer_knowledgebase_approve', array('id' => $art_id)),
 			'U_PRINT'				=> $this->helper->route('sheer_knowledgebase_article', array('mode' => 'print', 'k' => $art_id)),
-			'U_ARTICLE'				=> '[url=' . generate_board_url() . $this->helper->route('sheer_knowledgebase_article', array('k' => $art_id)) . ']' . $row['article_title'] . '[/url]',
+			'U_ARTICLE'				=> '[url=' . generate_board_url() . '/knowledgebase/article?k=' . $art_id . ']' . $row['article_title'] . '[/url]',
 			'COMMENTS'				=> ($comment_topic_id) ? '' . $this->user->lang['COMMENTS'] . ': ' . $count . '' : '',
 			'U_COMMENTS'			=> $temp_url,
 			'S_CAN_EDIT'			=> ($this->kb->acl_kb_get($cat_id, 'kb_m_edit')   || ($this->user->data['user_id'] == $row['author_id'] && $this->kb->acl_kb_get($cat_id, 'kb_u_edit')   || $this->auth->acl_get('a_manage_kb'))) ? true : false,
