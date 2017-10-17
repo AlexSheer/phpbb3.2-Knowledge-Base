@@ -584,7 +584,7 @@ class functions_kb
 		$result = $this->db->sql_query($sql);
 		if ($row = $this->db->sql_fetchrow($result))
 		{
-			$topic_title = '[ ' . $this->user->lang['LIBRARY'] . ' ]';
+			$topic_title = '[ ' . $this->user->lang['LIBRARY'] . ' ] ';
 			$topic_title .= $article_title;
 		}
 		else
@@ -601,7 +601,7 @@ class functions_kb
 		$topic_text .= "\n";
 		$topic_text .= '[b]' . $this->user->lang['CATEGORY'] . ':[/b] ' . $category_name . ' ';
 		$topic_text .= "\n\n";
-		$topic_text .= '[b][url=' . generate_board_url() . '/knowledgebase/article?k=' . $new . ']&raquo; ' . $this->user->lang['READ_FULL'] . '[/url][/b]';
+		$topic_text .= '[b][url=' . generate_board_url() . '/knowledgebase/article?k=' . $new . ']&raquo;' . $this->user->lang['READ_FULL'] . '[/url][/b]';
 
 		generate_text_for_storage($topic_text, $uid, $bitfield, $options, true, true, true);
 
