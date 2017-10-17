@@ -601,7 +601,7 @@ class functions_kb
 		$topic_text .= "\n";
 		$topic_text .= '[b]' . $this->user->lang['CATEGORY'] . ':[/b] ' . $category_name . ' ';
 		$topic_text .= "\n\n";
-		$topic_text .= '[b][url=' . generate_board_url() . '/knowledgebase/article?k=' . $new . ']&raquo;' . $this->user->lang['READ_FULL'] . '[/url][/b]';
+		$topic_text .= '[b][url=' . generate_board_url() . '/knowledgebase/article?k=' . $new . ']&raquo;&nbsp;' . $this->user->lang['READ_FULL'] . '[/url][/b]';
 
 		generate_text_for_storage($topic_text, $uid, $bitfield, $options, true, true, true);
 
