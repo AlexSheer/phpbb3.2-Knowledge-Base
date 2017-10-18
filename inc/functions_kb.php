@@ -593,13 +593,13 @@ class functions_kb
 		}
 		$this->db->sql_freeresult($result);
 
-		$topic_text = '[b]' . $this->user->lang['ARTICLE_TITLE'] . ':[/b] ' . $article_title . '';
+		$topic_text = '[b]' . $this->user->lang['ARTICLE_TITLE'] . '' . $this->user->lang['COLON'] . '[/b] ' . $article_title . '';
 		$topic_text .= "\n";
-		$topic_text .= '[b]' . $this->user->lang['ARTICLE_AUTHOR'] . ':[/b] ' . $article_author . ' ';
+		$topic_text .= '[b]' . $this->user->lang['ARTICLE_AUTHOR'] . '' . $this->user->lang['COLON'] . '[/b] ' . $article_author . ' ';
 		$topic_text .= "\n";
-		$topic_text .= '[b]' . $this->user->lang['ARTICLE_DESCRIPTION'] . ':[/b] ' . $article_description . ' ';
+		$topic_text .= '[b]' . $this->user->lang['ARTICLE_DESCRIPTION'] . '' . $this->user->lang['COLON'] . '[/b] ' . $article_description . ' ';
 		$topic_text .= "\n";
-		$topic_text .= '[b]' . $this->user->lang['CATEGORY'] . ':[/b] ' . $category_name . ' ';
+		$topic_text .= '[b]' . $this->user->lang['CATEGORY'] . '' . $this->user->lang['COLON'] . '[/b] ' . $category_name . ' ';
 		$topic_text .= "\n\n";
 		$topic_text .= '[b][url=' . generate_board_url() . '/knowledgebase/article?k=' . $new . ']&raquo;&nbsp;' . $this->user->lang['READ_FULL'] . '[/url][/b]';
 
