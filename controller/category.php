@@ -163,7 +163,7 @@ class category
 			$per_page = 10;
 		}
 
-		$sql = 'SELECT a.*, u.user_colour
+		$sql = 'SELECT a.*, u.user_colour, username
 			FROM ' . $this->articles_table . ' a, ' . USERS_TABLE . ' u
 			WHERE a.article_category_id = ' . (int) $cat_id . '
 			' . $sql_where . '
@@ -179,7 +179,7 @@ class category
 				'ORDER_ID'				=> $art_row['display_order'],
 				'U_ARTICLE'				=> $this->helper->route('sheer_knowledgebase_article', array('k' => $art_row['article_id'])),
 				'ARTICLE_TITLE'			=> $art_row['article_title'],
-				'ARTICLE_AUTHOR'		=> get_username_string('full', $art_row['author_id'], $art_row['author'], $art_row['user_colour']),//$author_kb_art,
+				'ARTICLE_AUTHOR'		=> get_username_string('full', $art_row['author_id'], $art_row['username'], $art_row['user_colour']),//$author_kb_art,
 				'ARTICLE_DESCRIPTION'	=> $art_row['article_description'],
 				'ARTICLE_DATE'			=> $this->user->format_date($art_row['article_date']),
 				'ART_VIEWS'				=> $art_row['views'],
