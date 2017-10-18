@@ -1,18 +1,43 @@
-li.header dl.row-item dt .list-inner {
-	padding-left: 9%;
-}
 .joined
 {
-	width:15%;
+	width:130px;
 	text-align:center;
 	font-size: 1.1em;
 }
-/* Sortable ******************/
+
 #sortable li {
 	padding-left: 5px;
 }
-#sortable li span {
-	cursor: move;
-	width: 8%;
-	float: left;
+
+dl.row-item dt {
+	max-width: 96%;
+}
+
+dd.posts {
+	width: 120px;
+}
+
+dd.views {
+	width: 85px;
+}
+
+@media (max-width: 995px) and (min-width: 961px) {
+	.row-item div {
+		margin-right: 440px;
+	}
+}
+
+@media (max-width: 960px) and (min-width: 701px) {
+	.row-item div {
+		margin-right: 410px;
+	}
+	dd.views {
+		width: 60px !important;;
+	}
+}
+
+@media (max-width: 700px) {
+	dl.row-item dt {
+		max-width: 100%;
+	}
 }
