@@ -86,7 +86,6 @@ class library_search
 
 	public function main()
 	{
-		include($this->phpbb_root_path . 'includes/bbcode.' . $this->php_ext);
 		$this->user->add_lang(array('search'));
 
 		if (!$this->config['kb_search'])
