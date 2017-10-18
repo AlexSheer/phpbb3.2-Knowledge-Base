@@ -112,7 +112,7 @@ $lang = array_merge($lang, array(
 	'SELECT_CAT'									=> 'Sélectionner une catégorie',
 	'SELECT_CATEGORY'								=> 'Sélectionner une catégorie',
 	'SYNC_OK'										=> 'Catégorie synchronisée avec succès !',
-	'THUMBNAIL_EXPLAIN'								=> 'Les dimensions des miniatures sont définies dans la page par défaut de phpBB dans le PCA (&laquo;Paramètres des fichiers joints&raquo;).',
+	'THUMBNAIL_EXPLAIN'								=> 'Les dimensions des miniatures sont définies dans la page par défaut de phpBB dans le PCA (&laquo; Paramètres des fichiers joints &raquo;).',
 	'UPLOAD_DENIED_ARTICLE'							=> 'L’article ayant l’ID n’existe pas.',
 	'UPLOADING_FILE_TO_ARTICLE'						=> 'Envoi du fichier « %1$s » pour l’article',
 
