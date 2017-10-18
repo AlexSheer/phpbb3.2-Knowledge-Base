@@ -163,7 +163,7 @@ class category
 			$per_page = 10;
 		}
 
-		$sql = 'SELECT a.*, u.user_colour, username
+		$sql = 'SELECT a.*, u.user_colour, u.username
 			FROM ' . $this->articles_table . ' a, ' . USERS_TABLE . ' u
 			WHERE a.article_category_id = ' . (int) $cat_id . '
 			' . $sql_where . '
