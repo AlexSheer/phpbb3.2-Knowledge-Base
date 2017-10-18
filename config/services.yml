@@ -88,7 +88,7 @@ services:
             - '@cache'
             - '@pagination'
             - '%core.root_path%'
-            - '%core.php_ext% '
+            - '%core.php_ext%'
             - '@sheer.knowledgebase.inc'
             - '%tables.articles_table%'
 
