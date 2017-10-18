@@ -12,7 +12,7 @@ namespace sheer\knowledgebase\controller;
 
 use Symfony\Component\HttpFoundation\Response;
 
-class library_search
+class article
 {
 	/** @var \phpbb\config\config $config Config object */
 	protected $config;
@@ -20,8 +20,8 @@ class library_search
 	/** @var \phpbb\request\request */
 	protected $request;
 
-	/** @var \phpbb\db\driver\driver_interface */
 	protected $db;
+	/** @var \phpbb\db\driver\driver_interface */
 
 	/** @var \phpbb\auth\auth */
 	protected $auth;
@@ -47,11 +47,8 @@ class library_search
 	/** @var string ARTICLES_TABLE */
 	protected $articles_table;
 
-	/**
-	* Constructor
-	*
-	* @access public
-	*/
+	/** @var string KB_ATTACHMENTS_TABLE */
+	protected $attachments_table;
 
 	public function __construct(
 		\phpbb\config\config $config,
@@ -61,12 +58,11 @@ class library_search
 		\phpbb\template\template $template,
 		\phpbb\user $user,
 		\phpbb\controller\helper $helper,
-		\phpbb\cache\service $cache,
-		\phpbb\pagination $pagination,
 		$phpbb_root_path,
 		$php_ext,
 		\sheer\knowledgebase\inc\functions_kb $kb,
-		$articles_table
+		$articles_table,
+		$attachments_table
 	)
 	{
 		$this->config			= $config;
@@ -76,255 +72,150 @@ class library_search
 		$this->template			= $template;
 		$this->user				= $user;
 		$this->helper			= $helper;
-		$this->phpbb_cache		= $cache;
-		$this->pagination		= $pagination;
 		$this->phpbb_root_path	= $phpbb_root_path;
 		$this->php_ext			= $php_ext;
 		$this->kb				= $kb;
 		$this->articles_table	= $articles_table;
+		$this->attachments_table= $attachments_table;
 	}
 
-	public function main()
+	public function show()
 	{
-		$this->user->add_lang(array('search'));
+		$art_id = $this->request->variable('k', 0);
+		$mode = $this->request->variable('mode', '');
+		$download_path = $this->config['upload_path'];
 
-		if (!$this->config['kb_search'])
+		if (empty($art_id))
 		{
-			trigger_error('SEARCH_DISABLED');
+			trigger_error ($this->user->lang['NO_ID_SPECIFIED']);
 		}
 
-		// Is user able to search? Has search been disabled?
-		if (!$this->auth->acl_get('u_search') || !$this->config['load_search'])
+		$sql = 'SELECT a.*, u.user_colour
+			FROM '. $this->articles_table . ' a, ' . USERS_TABLE . ' u
+			WHERE a.article_id = ' . (int) $art_id . '
+			AND u.user_id = a.author_id ';
+		$result = $this->db->sql_query($sql);
+		$row = $this->db->sql_fetchrow($result);
+		$this->db->sql_freeresult($result);
+
+		if (empty($row))
 		{
-			$this->template->assign_var('S_NO_SEARCH', true);
-			trigger_error('NO_SEARCH');
+			trigger_error('ARTICLE_NO_EXISTS');
 		}
 
-		// Check search load limit
-		if ($this->user->load && $this->config['limit_search_load'] && ($this->user->load > doubleval($this->config['limit_search_load'])))
+		$kb_data = $this->kb->obtain_kb_config();
+		$fid = $kb_data['forum_id'];
+
+		$cat_id = $row['article_category_id'];
+
+		if (!$row['approved'] && !($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve')))
 		{
-			$this->template->assign_var('S_NO_SEARCH', true);
-			trigger_error('NO_SEARCH_TIME');
+			redirect($this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id)));
 		}
 
-		$keywords 		= $this->request->variable('keywords', '', true);
-		$author 		= $this->request->variable('author', '', true);
-		$terms 			= $this->request->variable('terms', 'all');
-		$sf 			= $this->request->variable('sf', '');
-		$return_chars	= $this->request->variable('ch', 300);
-		$start 			= $this->request->variable('start', 0);
-		$submit 		= $this->request->variable('submit', false);
-		$sort_days		= $this->request->variable('st', 0);
-		$sort_key		= $this->request->variable('sk', 't');
-		$sort_dir		= $this->request->variable('sd', 'd');
-		$show_results	= $this->request->variable('show', 'posts');
-		$category_id	= $this->request->variable('cid', 0);
-		$categories		= $this->request->variable('cat_ids', array(0));
-
-		$cat = '';
-		$search_terms = 'all';
-		$cat_ary = $ex_fid_ary = array();
-
-		if (!empty($categories))
+		$catrow = $this->kb->get_cat_info($row['article_category_id']);
+		if (empty($catrow))
 		{
-			$sql = 'SELECT category_id
-				FROM '. KB_CAT_TABLE;
-			$result = $this->db->sql_query($sql);
-			while ($row = $this->db->sql_fetchrow($result))
+			trigger_error($this->user->lang['CAT_NO_EXISTS']);
+		}
+		$path = $catrow['category_name'];
+
+		$this->template->assign_vars(array(
+			'ARTICLE_CATEGORY'	=>  '<a href="' . $this->helper->route('sheer_knowledgebase_category', array('id' => $catrow['category_id'])) . '">' . $catrow['category_name'] . '</a>',
+
+			'CATS_BOX'			=> '<option value="0">' . $this->user->lang['CATEGORIES_LIST'] . '</option>' . $this->kb->make_category_select($cat_id, false, true, false, false) . '',
+			'S_ACTION'			=> $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id)),
+			)
+		);
+
+		$comment_topic_id = $row['topic_id'];
+
+		// Get comments
+		if ($comment_topic_id)
+		{
+			$count = -1;
+			$sql = 'SELECT DISTINCT p.poster_id, p.post_time, p.post_subject, p.post_text, p.bbcode_uid, p.bbcode_bitfield, u.user_id, u.username
+				FROM ' . POSTS_TABLE . ' p, ' . USERS_TABLE . ' u
+				WHERE p.topic_id = ' . $comment_topic_id . '
+				AND (p.poster_id = u.user_id)
+				ORDER BY p.post_time ASC';
+			$res = $this->db->sql_query($sql);
+			while ($postrow = $this->db->sql_fetchrow($res))
 			{
-				$cat_ary[] = $row['category_id'];
-			}
-			$this->db->sql_freeresult($result);
-
-			foreach ($cat_ary as $key => $value)
-			{
-				if (!in_array($value, $categories))
+				$count++;
+				if ($count > 0)
 				{
-					$ex_fid_ary[] = $value;
-				}
-			}
-		}
-
-		$per_page = ($this->config['kb_per_page_search']) ? $this->config['kb_per_page_search'] : 5;
-
-		$sort_by_sql = $id_ary = $author_ary = array();
-		// Define some vars
-		$limit_days		= array(0 => $this->user->lang['ALL_RESULTS'], 1 => $this->user->lang['1_DAY'], 7 => $this->user->lang['7_DAYS'], 14 => $this->user->lang['2_WEEKS'], 30 => $this->user->lang['1_MONTH'], 90 => $this->user->lang['3_MONTHS'], 180 => $this->user->lang['6_MONTHS'], 365 => $this->user->lang['1_YEAR']);
-		$sort_by_text	= array('t' => $this->user->lang['SORT_TIME'], 'a' => $this->user->lang['SORT_AUTHOR'], 'c' => $this->user->lang['CATEGORY'], 's' => $this->user->lang['SORT_ARTICLE_TITLE']);
-
-		$s_limit_days = $s_sort_key = $s_sort_dir = $u_sort_param = '';
-		gen_sort_selects($limit_days, $sort_by_text, $sort_days, $sort_key, $sort_dir, $s_limit_days, $s_sort_key, $s_sort_dir, $u_sort_param);
-		// define some variables needed for retrieving post_id/topic_id information
-		$sort_by_sql = array('a' => 'author', 't' => (($show_results == 'posts') ? 'article_date' : 'topic_last_post_time'), 'c' => 'article_category_id', 's' => (($show_results == 'posts') ? 'article_title' : 'category_name'));
-
-		$sql_sort = $sort_by_sql[$sort_key] . (($sort_dir == 'a') ? ' ASC' : ' DESC');
-		$author_id_ary=array();
-		$total_matches = 0;
-		$type = 'posts';
-
-		$error = array();
-
-		if (empty($keywords) && empty($author) && $submit)
-		{
-			$error[] = $this->user->lang['EMPTY_QUERY'];
-		}
-
-		$u_show_results = '&amp;sr=' . $show_results;
-		$search_url = append_sid("{$this->phpbb_root_path}knowledgebase/library_search", $u_sort_param . $u_show_results);
-		$search_url .= ($search_terms != 'all') ? '&amp;terms=' . $search_terms : '';
-		$search_url .= ($category_id) ? '&amp;cid=' . $category_id : '';
-		$search_url .= ($author) ? '&amp;author=' . urlencode(htmlspecialchars_decode($author)) : '';
-		$search_url .= ($return_chars != 300) ? '&amp;ch=' . $return_chars : '';
-		$search_url .= ($keywords) ? '&amp;keywords=' . $keywords : '';
-		if (sizeof($categories))
-		{
-			foreach ($categories as $key => $value)
-			{
-				$cat .= '&amp;cat_ids[]='.$value.'';
-			}
-		}
-		$search_url .= ($cat) ? $cat : '';
-		$hilit = implode('|', explode(' ', preg_replace('#\s+#u', ' ', str_replace(array('+', '-', '|', '(', ')', '&quot;'), ' ', $keywords))));
-		// Do not allow *only* wildcard being used for hilight
-		$hilit = (strspn($hilit, '*') === strlen($hilit)) ? '' : $hilit;
-		if ($hilit)
-		{
-			// Remove bad highlights
-			$hilit_array = array_filter(explode('|', $hilit), 'strlen');
-			foreach ($hilit_array as $key => $value)
-			{
-				$hilit_array[$key] = str_replace('\*', '\w*?', preg_quote($value, '#'));
-				$hilit_array[$key] = preg_replace('#(^|\s)\\\\w\*\?(\s|$)#', '$1\w+?$2', $hilit_array[$key]);
-			}
-			$hilit = implode('|', $hilit_array);
-		}
-
-		if (($keywords && $keywords != $this->user->lang['SEARCH_MINI']) || $author)
-		{
-			$kb_search = $this->kb->setup_kb_search();
-			$highlight_match = $highlight = '';
-			$matches = array('(', ')', '|', '+', '-');
-			$highlight_words = str_replace($matches, ' ', $keywords);
-			foreach (explode(' ', trim($highlight_words)) as $word)
-			{
-				if (trim($word))
-				{
-					$highlight_match .= (($highlight_match != '') ? '|' : '') . str_replace('*', '\w*?', preg_quote($word, '#'));
-				}
-			}
-			$highlight = urlencode($highlight_words);
-
-			if ($author)
-			{
-				$author_id = $this->kb->get_id_by_username($author);
-				if ($author_id)
-				{
-					$author_id_ary[] = $author_id;
-				}
-			}
-
-			if ($author && $keywords)
-			{
-				$kb_search->split_keywords($keywords, $terms);
-				$search_result = $kb_search->keyword_search($type, $sf, 'all', $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $category_id, $author_id_ary, $author, $id_ary, $start, $per_page);
-			}
-			else if ($author)
-			{
-				$search_result = $kb_search->author_search($type, $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $category_id, $author_id_ary, $author, $id_ary, $start, $per_page);
-			}
-			else
-			{
-				$kb_search->split_keywords($keywords, $terms);
-				$search_result = $kb_search->keyword_search($type, $sf, 'all', $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $category_id, $author_id_ary, $author, $id_ary, $start, $per_page);
-			}
-
-			$total_matches = $search_result['total_matches'];
-			$start = $search_result['start'];
-			$id_ary = $search_result['id_ary'];
-
-			if ($total_matches)
-			{
-				$sql = 'SELECT DISTINCT a.*, u.user_id, u.username, u.user_colour
-					FROM ' . $this->articles_table . ' a, ' . USERS_TABLE . ' u
-					WHERE ' . $this->db->sql_in_set('article_id', $id_ary).'
-						AND (a.author_id = u.user_id)
-						AND a.approved = 1';
-				if ($author && $keywords)
-				{
-					$sql .= ' AND author_id = ' . $author_id . '';
-				}
-				$sql .= ' ORDER BY ' . $sql_sort . '';
-				$result = $this->db->sql_query($sql);
-				while ($row = $this->db->sql_fetchrow($result))
-				{
-					$article_id = $row['article_id'];
-					$article_info = $this->kb->get_kb_article_info ($article_id);
-					$category_id = $article_info['article_category_id'];
-					$message = $row['article_body'];
-					$message = generate_text_for_display($message, $row['bbcode_uid'], $row['bbcode_bitfield'], 3, true);
-					$message = get_context($message, array_filter(explode('|', $hilit), 'strlen'), $return_chars);
-					$message =  strtr($message, array('&lt;' => '<', '&gt;' => '>'));
-
-					if ($hilit)
-					{
-						$message = preg_replace('#(?!<.*)(?<!\w)(' . $hilit . ')(?!\w|[^<>]*(?:</s(?:cript|tyle))?>)#is', '<span class="posthilit">\1</span>', $message);
-					}
-
-					$category = $this->kb->get_cat_info($row['article_category_id']);
-
-					$this->template->assign_block_vars('searchrow', array(
-						'MESSAGE'	=> $message,
-						'DATE'		=> $this->user->format_date($row['article_date']),
-						'TITLE'		=> $row['article_title'],
-						'U_VIEW'	=> $this->helper->route('sheer_knowledgebase_article', array('k' => $article_id)),
-						'CATEGORY'	=> $category['category_name'],
-						'U_CAT'		=> $this->helper->route('sheer_knowledgebase_category', array('id' => $category_id)),
-						'USER_FULL'	=> get_username_string('full', $row['user_id'], $row['username'], $row['user_colour']),
-						'ID'		=> $article_id,
+					$this->template->assign_block_vars('postrow', array(
+						'POSTER_NAME'	=> $postrow['username'],
+						'POST_DATE'		=> $this->user->format_date ($postrow['post_time']),
+						'POST_SUBJECT'	=> $postrow['post_subject'],
+						'MESSAGE'		=> generate_text_for_display($postrow['post_text'], $postrow['bbcode_uid'], $postrow['bbcode_bitfield'], 3, true),
 						)
 					);
 				}
-				$this->db->sql_freeresult($result);
-				if ($total_matches)
-				{
-					$this->pagination->generate_template_pagination($search_url, 'pagination', 'start', $total_matches, $per_page, $start);
-				}
-
-				$this->template->assign_vars(array(
-					'TOTAL_ITEMS'				=> $this->user->lang('TOTAL_ITEMS', (int) $total_matches),
-					'PAGE_NUMBER'				=> $this->pagination->on_page($total_matches, $per_page, $start),
-					'TOTAL_MATCHES'				=> $total_matches,
-					'SEARCH_MATCHES'			=> ($total_matches == 1) ? sprintf($this->user->lang['FOUND_KB_SEARCH_MATCH'], $total_matches) : sprintf($this->user->lang['FOUND_KB_SEARCH_MATCHES'], $total_matches),
-					'U_SEARCH_WORDS'			=> $search_url,
-					'SEARCH_WORDS_AND_AUTHOR'	=> $author . ' &bull; ' . $keywords,
-					'SEARCH_WORDS'				=> $keywords,
-				));
 			}
-		}
+			$this->db->sql_freeresult($res);
 
-		page_header($this->user->lang('LIBRARY'));
-
-		if (($keywords && $keywords != $this->user->lang['SEARCH_MINI']) || $author)
-		{
-			$this->template->set_filenames(array(
-				'body' => 'kb_search_results.html'));
+			$temp_url = append_sid("{$this->phpbb_root_path}viewtopic." . $this->php_ext . "", 'f=' . $fid . '&amp;t=' . $row['topic_id']);
 		}
-		else
+		$views = $row['views'];
+		$article = $row['article_id'];
+		$text = generate_text_for_display($row['article_body'], $row['bbcode_uid'], $row['bbcode_bitfield'], 3, true);
+
+		$sql = 'SELECT *
+			FROM ' . $this->attachments_table . '
+			WHERE article_id = ' .  (int) $art_id . '
+			ORDER BY attach_id DESC';
+		$result = $this->db->sql_query($sql);
+
+		while ($attach_row = $this->db->sql_fetchrow($result))
 		{
-			$this->template->set_filenames(array(
-				'body' => 'kb_search_body.html'));
+			$attachments[] = $attach_row;
+		}
+		$this->db->sql_freeresult($result);
+
+		$update_count = array();
+
+		// Parse attacments
+		if (sizeof($attachments))
+		{
+			$this->kb->parse_att($text, $attachments);
 		}
 
 		$this->template->assign_vars(array(
-			'S_SELECT_SORT_DAYS'	=> $s_limit_days,
-			'S_SELECT_SORT_KEY'		=> $s_sort_key,
-			'S_SELECT_SORT_DIR'		=> $s_sort_dir,
-			'S_SEARCH_ACTION'		=> $search_url,
-			'U_KB_SEARCH'			=> $this->helper->route('sheer_knowledgebase_library_search'),
-			'ERROR'					=> (sizeof($error)) ? implode('<br />', $error) : '',
-			'CATS_BOX'				=> $this->kb->make_category_select(0, false, false, false, false),
+			'ARTICLE_AUTHOR'		=> get_username_string('full', $row['author_id'], $row['author'], $row['user_colour']),
+			'ARTICLE_DESCRIPTION' 	=> $row['article_description'],
+			'ARTICLE_DATE'			=> $this->user->format_date($row['article_date']),
+			'ART_VIEWS'				=> $row['views'],
+			'ARTICLE_TITLE'			=> $row['article_title'],
+			'ARTICLE_TEXT'			=> $text,
+			'VIEWS'					=> $views,
+			'U_EDIT_ART'			=> $this->helper->route('sheer_knowledgebase_posting', array('mode' => 'edit', 'id' => $cat_id, 'k' => $art_id)),
+			'U_DELETE_ART'			=> $this->helper->route('sheer_knowledgebase_posting', array('mode' => 'delete', 'id' => $cat_id, 'k' => $art_id)),
+			'U_APPROVE_ART'			=> $this->helper->route('sheer_knowledgebase_approve', array('id' => $art_id)),
+			'U_PRINT'				=> $this->helper->route('sheer_knowledgebase_article', array('mode' => 'print', 'k' => $art_id)),
+			'U_ARTICLE'				=> '[url=' . generate_board_url() . '/knowledgebase/article?k=' . $art_id . ']' . $row['article_title'] . '[/url]',
+			'COMMENTS'				=> ($comment_topic_id) ? '' . $this->user->lang['COMMENTS'] . '' . $this->user->lang['COLON'] . ' ' . $count . '' : '',
+			'U_COMMENTS'			=> $temp_url,
+			'S_CAN_EDIT'			=> ($this->kb->acl_kb_get($cat_id, 'kb_m_edit')   || ($this->user->data['user_id'] == $row['author_id'] && $this->kb->acl_kb_get($cat_id, 'kb_u_edit')   || $this->auth->acl_get('a_manage_kb'))) ? true : false,
+			'S_CAN_DELETE'			=> ($this->kb->acl_kb_get($cat_id, 'kb_m_delete') || ($this->user->data['user_id'] == $row['author_id'] && $this->kb->acl_kb_get($cat_id, 'kb_u_delete') || $this->auth->acl_get('a_manage_kb'))) ? true : false,
+			'S_CAN_APPROOVE'		=> ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve')) ? true : false,
+			'COUNT_COMMENTS'		=> ($comment_topic_id) ? '[' . $this->user->lang['LEAVE_COMMENTS'] . ']' : '',
+			'U_FORUM'				=> generate_board_url() . '/',
+			'S_APPROVED'			=> $row['approved'],
+			'S_VIEWTOPIC'			=> true, // Need for Extension Highslide (bb3mobi/highslide)
 			)
 		);
+
+		if ($mode != 'print' && $row['approved'])
+		{
+		// Increase the number of views
+			++$views;
+			$sql = 'UPDATE ' . $this->articles_table . '
+				SET views = ' . $views . '
+				WHERE article_id = ' . (int) $article;
+			$this->db->sql_query($sql);
+		}
 
 		$this->template->assign_block_vars('navlinks', array(
 			'FORUM_NAME'	=> $this->user->lang['LIBRARY'],
@@ -332,11 +223,22 @@ class library_search
 			)
 		);
 
-		$this->template->assign_block_vars('navlinks', array(
-			'FORUM_NAME'	=> $this->user->lang['SEARCH'],
-			'U_VIEW_FORUM'	=> $this->helper->route('sheer_knowledgebase_library_search'),
-			)
-		);
+		$parents_cats = array();
+		foreach ($this->kb->get_category_branch($cat_id, 'parents') as $row)
+		{
+			$parents_cats[] = $row['category_id'];
+			$this->template->assign_block_vars('navlinks', array(
+				'FORUM_NAME'	=> $row['category_name'],
+				'U_VIEW_FORUM'	=> $this->helper->route('sheer_knowledgebase_category', array('id' => $row['category_id'])),
+				)
+			);
+		}
+
+		$html_template = (($mode != 'print')) ? 'kb_article_body.html' : 'kb_article_body_print.html';
+
+		page_header($this->user->lang('LIBRARY'));
+		$this->template->set_filenames(array(
+			'body' => $html_template));
 
 		page_footer();
 		return new Response($this->template->return_display('body'), 200);
