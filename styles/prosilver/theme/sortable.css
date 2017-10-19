@@ -41,3 +41,61 @@ dd.views {
 		max-width: 100%;
 	}
 }
+.kb_print
+{
+	float:right;
+	padding:5px;
+	margin-bottom:5px;
+}
+
+.codebox input
+{
+	width: 0px;
+	height: 0;
+	border: none;
+	margin: 10px;
+}
+
+.buttoncopy {
+	padding-top: 2px;
+	padding-bottom: 4px;
+	font-size: 1em;
+	padding: 1.5px 6px;
+	margin: 0;
+	outline: 0;
+	box-shadow: none;
+	padding-bottom: 4.5px;
+	position: relative;
+	background-color: #e1ebf2;
+	border-radius: 0 3px 3px 0;
+	cursor: pointer;
+}
+
+.copied::after {
+	position: absolute;
+	top: 12%;
+	left: 110%;
+	display: block;
+	font-size: 0.9em;
+	padding: 2px 4px 2px 4px;
+	color: #fff;
+	background-color: #115098;
+	border-radius: 3px;
+	opacity: 0;
+	will-change: opacity, transform;
+	animation: showcopied 1.5s ease;
+}
+
+@keyframes showcopied {
+	0% {
+		opacity: 0;
+	transform: translateX(100%);
+	}
+	70% {
+		opacity: 1;
+		transform: translateX(0);
+	}
+	100% {
+		opacity: 0;
+	}
+}
