@@ -1,6 +1,10 @@
 <!-- INCLUDE overall_header.html -->
-
-<div style="float:right; padding:5px; margin-bottom:5px"><a href="{U_PRINT}"><strong>{L_PRINT}</strong></a></div>
+<style>
+.copied::after {
+	content: "{L_COPYED}";
+}
+</style>
+<div class="kb_print"><a href="{U_PRINT}"><strong>{L_PRINT}</strong></a></div>
 
 <div id="page-body">
 	<div class="clear"></div>
@@ -34,9 +38,17 @@
 					<strong>{L_CATEGORY}{L_COLON}</strong> {ARTICLE_CATEGORY}
 				</p>
 				<div class="codebox" style="float:left; font-size: 1.1em;">
-					<p>{L_LINK_TO_ARTICLE}{L_COLON} <a href="#" onclick="selectCode(this); return false;">{L_SELECT_ALL_CODE}</a></p>
-					<code style="font-size: 1.1em;">{U_ARTICLE}</code>
+					<p>{L_LINK_TO_ARTICLE}{L_COLON} <a class="buttoncopy" data-copytarget="#bbcode">{L_COPY_TO_BUFFER}</a></p>
+					<code style="font-size: 1.1em; display:contents">{U_ARTICLE}</code>
+					<input value="{U_ARTICLE}" id="bbcode" type="text">
 				</div>
+				<br clear="all">
+				<div class="codebox" style="float:left; font-size: 1.1em;margin-top: -12px;margin-bottom: -6px;">
+					<p>{L_DIRECT_LINK}{L_COLON} <a class="buttoncopy" data-copytarget="#link">{L_COPY_TO_BUFFER}</a></p>
+					<code style="font-size: 1.1em; display:contents">{U_DIRECT_LINK}</code>
+					<input value="{U_DIRECT_LINK}" id="link" type="text">
+				</div>
+
 				<div class="content">
 					<!-- IF .postrow --><p><strong>{COMMENTS}</strong></p><!-- ENDIF -->
 					<hr />
