@@ -90,7 +90,7 @@ class article
 			trigger_error ($this->user->lang['NO_ID_SPECIFIED']);
 		}
 
-		$sql = 'SELECT a.*, u.user_colour
+		$sql = 'SELECT a.*, u.user_colour, u.username
 			FROM '. $this->articles_table . ' a, ' . USERS_TABLE . ' u
 			WHERE a.article_id = ' . (int) $art_id . '
 			AND u.user_id = a.author_id ';
@@ -183,7 +183,7 @@ class article
 		}
 
 		$this->template->assign_vars(array(
-			'ARTICLE_AUTHOR'		=> get_username_string('full', $row['author_id'], $row['author'], $row['user_colour']),
+			'ARTICLE_AUTHOR'		=> get_username_string('full', $row['author_id'], $row['username'], $row['user_colour']),
 			'ARTICLE_DESCRIPTION' 	=> $row['article_description'],
 			'ARTICLE_DATE'			=> $this->user->format_date($row['article_date']),
 			'ART_VIEWS'				=> $row['views'],
@@ -195,6 +195,7 @@ class article
 			'U_APPROVE_ART'			=> $this->helper->route('sheer_knowledgebase_approve', array('id' => $art_id)),
 			'U_PRINT'				=> $this->helper->route('sheer_knowledgebase_article', array('mode' => 'print', 'k' => $art_id)),
 			'U_ARTICLE'				=> '[url=' . generate_board_url() . '/knowledgebase/article?k=' . $art_id . ']' . $row['article_title'] . '[/url]',
+			'U_DIRECT_LINK'			=> generate_board_url() . '/knowledgebase/article?k=' . $art_id,
 			'COMMENTS'				=> ($comment_topic_id) ? '' . $this->user->lang['COMMENTS'] . '' . $this->user->lang['COLON'] . ' ' . $count . '' : '',
 			'U_COMMENTS'			=> $temp_url,
 			'S_CAN_EDIT'			=> ($this->kb->acl_kb_get($cat_id, 'kb_m_edit')   || ($this->user->data['user_id'] == $row['author_id'] && $this->kb->acl_kb_get($cat_id, 'kb_u_edit')   || $this->auth->acl_get('a_manage_kb'))) ? true : false,
@@ -204,6 +205,7 @@ class article
 			'U_FORUM'				=> generate_board_url() . '/',
 			'S_APPROVED'			=> $row['approved'],
 			'S_VIEWTOPIC'			=> true, // Need for Extension Highslide (bb3mobi/highslide)
+			'S_KNOWLEDGEBASE'		=> true,
 			)
 		);
 
