@@ -60,6 +60,7 @@ class approve
 	*/
 
 	public function __construct(
+			\phpbb\controller\helper $helper,
 			\phpbb\config\config $config,
 			\phpbb\request\request_interface $request,
 			\phpbb\db\driver\driver_interface $db,
@@ -71,10 +72,11 @@ class approve
 			$phpbb_root_path,
 			$php_ext,
 			\sheer\knowledgebase\inc\functions_kb $kb,
-			$helper,
+			$kb_helper,
 			$articles_table
 		)
 	{
+		$this->routing = $helper;
 		$this->config = $config;
 		$this->request = $request;
 		$this->db = $db;
@@ -86,7 +88,7 @@ class approve
 		$this->phpbb_root_path = $phpbb_root_path;
 		$this->php_ext = $php_ext;
 		$this->kb = $kb;
-		$this->helper = $helper;
+		$this->helper = $kb_helper;
 		$this->articles_table	= $articles_table;
 	}
 
@@ -108,7 +110,7 @@ class approve
 		$kb_category_info = $this->kb->get_cat_info($kb_article_info['article_category_id']);
 		$category_name = $kb_category_info['category_name'];
 
-		$redirect = append_sid("{$this->phpbb_root_path}knowledgebase/category",'id='. $kb_article_info['article_category_id'] .'');
+		$redirect = $this->routing->route('sheer_knowledgebase_category', array('id' => $kb_article_info['article_category_id']));
 
 		if (!$this->kb->acl_kb_get($kb_article_info['article_category_id'], 'kb_m_approve') && !$this->auth->acl_get('a_manage_kb'))
 		{
@@ -194,11 +196,7 @@ class approve
 		}
 
 		$this->template->assign_vars(array(
-			'ARTICLE_AUTHOR'		=> $kb_article_info['author'],
-			'ARTICLE_DESCRIPTION' 	=> $kb_article_info['article_description'],
-			'ARTICLE_DATE'			=> $this->user->format_date($kb_article_info['article_date']),
-			'ARTICLE_TITLE'			=> $kb_article_info['article_title'],
-			'S_ACTION'				=> append_sid("{$this->phpbb_root_path}knowledgebase/approve",'id=' . $art_id),
+			'S_ACTION'		=> $this->routing->route('sheer_knowledgebase_approve', array('id' => $art_id)),
 			)
 		);
 
