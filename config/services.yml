@@ -95,6 +95,7 @@ services:
     sheer.knowledgebase.controller.approve:
         class: sheer\knowledgebase\controller\approve
         arguments:
+            - '@controller.helper'
             - '@config'
             - '@request'
             - '@dbal.conn'
