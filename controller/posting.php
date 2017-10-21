@@ -493,7 +493,7 @@ class posting
 		}
 
 		$this->template->assign_vars(array(
-			'L_POST_A'				=> $this->user->lang['ADD_ARTICLE'],
+			'L_POST_A'				=> ($mode == 'edit') ? $this->user->lang['EDIT_ARTICLE'] : $this->user->lang['ADD_ARTICLE'],
 			'CATEGORY_NAME'			=> $category_name,
 			'DESCR'					=> $article_description,
 			'TOPIC_TITLE'			=> $article_title,
