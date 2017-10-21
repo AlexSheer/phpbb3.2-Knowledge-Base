@@ -14,6 +14,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 class approve
 {
+	/** @var helper */
+	protected $helper;
+
 	/** @var \phpbb\config\config $config Config object */
 	protected $config;
 
