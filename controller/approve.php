@@ -50,8 +50,8 @@ class approve
 	//** @var string \sheer\knowledgebase\inc\functions_kb */
 	protected $kb;
 
-	/** @var helper */
-	protected $helper;
+	/** @var kb_helper */
+	protected $kb_helper;
 
 	/** @var string ARTICLES_TABLE */
 	protected $articles_table;
