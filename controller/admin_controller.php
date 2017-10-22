@@ -85,7 +85,7 @@ class admin_controller
 		$this->attachments_table	= $attachments_table;
 		$this->articles_table		= $articles_table;
 
-		$this->user->add_lang_ext('sheer/knowledgebase', 'info_acp_knowlegebase');
+		$this->user->add_lang_ext('sheer/knowledgebase', 'info_acp_knowledgebase');
 		$this->user->add_lang(array('acp/attachments'));
 	}
 
