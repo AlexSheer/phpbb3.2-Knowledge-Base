@@ -56,7 +56,7 @@ class manage_module
 			$kb_logs_table,
 			$attachments_table
 		);
-		$this->tpl_name = 'acp_knowlegebase_body';
+		$this->tpl_name = 'acp_knowledgebase_body';
 		$this->page_title = $user->lang('ACP_LIBRARY_MANAGE');
 		$category_data = $errors = array();
 
