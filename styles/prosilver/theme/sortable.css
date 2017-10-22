@@ -9,6 +9,10 @@
 	padding-left: 5px;
 }
 
+li.bg1 {
+	padding-left: 5px;
+}
+
 dl.row-item dt {
 	max-width: 96%;
 }
