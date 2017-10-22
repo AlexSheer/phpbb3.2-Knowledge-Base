@@ -151,7 +151,7 @@ class category
 			$this->template->assign_block_vars('cat_row', array(
 				'CAT_ID'	=> $cat_row['category_id'],
 				'CAT_NAME'	=> $cat_row['category_name'],
-				'U_CAT'		=> $this->helper->route('sheer_knowledgebase_category', array('id' => $row['category_id'])),
+				'U_CAT'		=> $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_row['category_id'])),
 				'ARTICLES'	=> $cat_row['number_articles'],
 				'SUBCATS'	=> $this->kb->get_cat_list ($cat_row['parent_id'], $exclude_cats),
 				)
