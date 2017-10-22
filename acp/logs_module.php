@@ -84,7 +84,7 @@ class logs_module
 		$sql_where = ($sort_days) ? (time() - ($sort_days * 86400)) : 0;
 		$sql_sort = $sort_by_sql[$sort_key] . ' ' . (($sort_dir == 'd') ? 'DESC' : 'ASC');
 
-		$this->tpl_name = 'acp_knowlegebase_logs';
+		$this->tpl_name = 'acp_knowledgebase_logs';
 		$this->page_title = $user->lang('ACP_LIBRARY_LOGS');
 
 		$log_data = array();
