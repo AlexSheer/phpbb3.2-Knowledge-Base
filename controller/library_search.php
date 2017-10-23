@@ -66,7 +66,8 @@ class library_search
 		$phpbb_root_path,
 		$php_ext,
 		\sheer\knowledgebase\inc\functions_kb $kb,
-		$articles_table
+		$articles_table,
+		$categories_table
 	)
 	{
 		$this->config			= $config;
@@ -82,6 +83,7 @@ class library_search
 		$this->php_ext			= $php_ext;
 		$this->kb				= $kb;
 		$this->articles_table	= $articles_table;
+		$this->categories_table	= $categories_table;
 	}
 
 	public function main()
@@ -128,7 +130,7 @@ class library_search
 		if (!empty($categories))
 		{
 			$sql = 'SELECT category_id
-				FROM '. KB_CAT_TABLE;
+				FROM ' . $this->categories_table;
 			$result = $this->db->sql_query($sql);
 			while ($row = $this->db->sql_fetchrow($result))
 			{
