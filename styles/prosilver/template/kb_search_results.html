@@ -1,7 +1,8 @@
 <!-- INCLUDE overall_header.html -->
-<form method="post" action="{S_SEARCH_ACTION}">
+
 	<h2><!-- IF SEARCH_TITLE -->{SEARCH_TITLE}<!-- ELSE -->{SEARCH_MATCHES}<!-- ENDIF --><!-- IF SEARCH_WORDS -->{L_COLON} <a href="{U_SEARCH_WORDS}">{SEARCH_WORDS_AND_AUTHOR}</a><!-- ENDIF --></h2>
 	<p><a class="{S_CONTENT_FLOW_BEGIN}" href="{U_KB_SEARCH}" title="{L_SEARCH_ADV}">{L_RETURN_TO_KB_SEARCH_ADV}</a></p>
+
 <!-- IF PAGINATION or .searchrow or TOTAL_MATCHES -->
 	<div class="topic-actions">
 		<div class="rightside pagination">
@@ -33,12 +34,15 @@
 <!-- END searchrow -->
 
 <!-- IF S_SELECT_SORT_KEY or S_SELECT_SORT_DAYS -->
+<form method="post" action="{S_SEARCH_ACTION}">
 	<fieldset class="display-options">
 			<label><!-- IF S_SHOW_TOPICS -->{L_DISPLAY_POSTS}<!-- ELSE -->{L_SORT_BY}</label><label><!-- ENDIF --> {S_SELECT_SORT_DAYS}<!-- IF S_SELECT_SORT_KEY --></label> <label>{S_SELECT_SORT_KEY}</label>
 			<label>{S_SELECT_SORT_DIR}<!-- ENDIF --> <input type="submit" name="sort" value="{L_GO}" class="button2" /></label>
 	</fieldset>
 	<hr />
+</form>
 <!-- ENDIF -->
+
 <!-- IF PAGE_NUMBER -->
 	<div class="pagination">
 		{TOTAL_ITEMS}
@@ -50,5 +54,5 @@
 	</div>
 <!-- ENDIF -->
 	<br clear="all" />
-</form>
+
 <!-- INCLUDE overall_footer.html -->
