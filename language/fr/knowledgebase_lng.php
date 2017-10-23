@@ -40,7 +40,7 @@ if (empty($lang) || !is_array($lang))
 
 $lang = array_merge($lang, array(
 	'ADD_ARTICLE'							=> 'Nouvel article',
-	'APPROVE'								=> 'Approuver',
+	'APPROVE'								=> 'Confirmer l’approbation de l’article ',
 	'ARTICLE'								=> 'Article',
 	'ARTICLES'								=> 'Articles',
 	'ARTICLE_APPROVED_SUCESS'				=> 'L’article a été approuvé.',
