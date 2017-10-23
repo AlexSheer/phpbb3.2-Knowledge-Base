@@ -91,6 +91,7 @@ services:
             - '%core.php_ext%'
             - '@sheer.knowledgebase.inc'
             - '%tables.articles_table%'
+            - '%tables.categories_table%'
 
     sheer.knowledgebase.controller.approve:
         class: sheer\knowledgebase\controller\approve
