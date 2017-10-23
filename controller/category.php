@@ -89,9 +89,9 @@ class category
 		$kb_config = $this->kb->obtain_kb_config();
 		$per_page = $kb_config['articles_per_page'];
 
-		$sql = 'SELECT category_id
-			FROM '. $this->categories_table .'
-			WHERE category_id = '.$cat_id.'';
+		$sql = 'SELECT category_id, category_name
+			FROM ' . $this->categories_table . '
+			WHERE category_id = ' . $cat_id;
 		$result = $this->db->sql_query($sql);
 		$row = $this->db->sql_fetchrow($result);
 		$this->db->sql_freeresult($result);
@@ -100,6 +100,8 @@ class category
 		{
 			trigger_error ('CAT_NO_EXISTS');
 		}
+
+		$category_name = $row['category_name'];
 
 		$sql = 'SELECT COUNT(a.article_id) as article_count
 			FROM ' . $this->articles_table . ' a
@@ -203,8 +205,8 @@ class category
 		$this->template->assign_vars(array(
 			'CATS_DROPBOX'			=> $this->kb->make_category_dropbox($cat_id, false, true, false, false),
 			'CATS_BOX'				=> $this->kb->make_category_select($cat_id, false, true, false, false),
-			'CATEGORY'				=> $row['category_name'],
-			'CATEGORY_ID'			=> $row['category_id'],
+			'CATEGORY'				=> $category_name,
+			'CATEGORY_ID'			=> $cat_id,
 			'TOTAL_ITEMS'			=> $this->user->lang('TOTAL_ITEMS', (int) $article_count),
 			'PAGE_NUMBER'			=> $this->pagination->on_page($article_count, $per_page, $start),
 			'U_ADD_ARTICLE'			=> $this->helper->route('sheer_knowledgebase_posting', array('id' => $cat_id)),
