@@ -85,7 +85,7 @@
 			</ul>
 		<ul class="topiclist topics"<!-- IF S_CAN_MOVE--> id="sortable"<!-- ENDIF -->>
 		<!-- BEGIN art_row -->
-			<li class="row bg1" id="{art_row.ID}">
+			<li class="row<!-- IF art_row.S_ROW_COUNT is even --> bg1<!-- ELSE --> bg2<!-- ENDIF -->" id="{art_row.ID}">
 				<dl class="row-item">
 					<dt>
 						<div>
