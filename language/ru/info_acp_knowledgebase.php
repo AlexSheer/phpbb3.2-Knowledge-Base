@@ -134,7 +134,7 @@ $lang = array_merge($lang, array(
 	'DELETING_INDEX_IN_PROGRESS_EXPLAIN'	=> 'Идёт удаление поисковых индексов. Этот процесс может занять несколько минут.',
 
 	'FULLTEXT_MYSQL_INCOMPATIBLE_DATABASE'	=> 'Механизм полнотекстового поиска MySQL может использоваться только на MySQL4 и выше.',
-	'FULLTEXT_MYSQL_NOT_SUPPORTED'			=> 'Полнотекстовые индексы MySQL могут использоваться только с таблицами MyISAM или InnoDB. Для использования полнотекстовых индексов с таблицами InnoDB требуется MySQL 5.6.4 или более поздней версии.',
+	'FULLTEXT_MYSQL_NOT_SUPPORTED'			=> 'Полнотекстовые индексы MySQL могут использоваться только с таблицами MyISAM или InnoDB. Для использования полнотекстовых индексов с таблицами InnoDB требуется MySQL 5.6.8 или более поздней версии.',
 	'FULLTEXT_MYSQL_TOTAL_POSTS'			=> 'Общее количество индексированных статей',
 
 	'FULLTEXT_POSTGRES_INCOMPATIBLE_DATABASE'	=> 'Механизм полнотекстового поиска PostgreSQL может быть использован только на СУБД PostgreSQL.',
