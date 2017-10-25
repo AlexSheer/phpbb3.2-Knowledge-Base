@@ -109,22 +109,22 @@ class library_search
 			trigger_error('NO_SEARCH_TIME');
 		}
 
-		$keywords 		= $this->request->variable('keywords', '', true);
-		$author 		= $this->request->variable('author', '', true);
-		$terms 			= $this->request->variable('terms', 'all');
-		$sf 			= $this->request->variable('sf', '');
+		$category_id	= $this->request->variable('cid', 0);
+		$keywords		= $this->request->variable('keywords', '', true);
+		$author			= $this->request->variable('author', '', true);
+		$search_terms	= $this->request->variable('terms', 'all');
+		$search_fields	= $this->request->variable('sf', 'all');
+		$show_results	= ($category_id) ? 'posts' : $this->request->variable('sr', 'posts');
+		$show_results	= ($show_results == 'posts') ? 'posts' : 'topics';
 		$return_chars	= $this->request->variable('ch', 300);
-		$start 			= $this->request->variable('start', 0);
+		$start			= $this->request->variable('start', 0);
 		$submit 		= $this->request->variable('submit', false);
 		$sort_days		= $this->request->variable('st', 0);
 		$sort_key		= $this->request->variable('sk', 't');
 		$sort_dir		= $this->request->variable('sd', 'd');
-		$show_results	= $this->request->variable('show', 'posts');
-		$category_id	= $this->request->variable('cid', 0);
 		$categories		= $this->request->variable('cat_ids', array(0));
 
 		$cat = '';
-		$search_terms = 'all';
 		$cat_ary = $ex_fid_ary = array();
 
 		if (!empty($categories))
@@ -157,7 +157,7 @@ class library_search
 		$s_limit_days = $s_sort_key = $s_sort_dir = $u_sort_param = '';
 		gen_sort_selects($limit_days, $sort_by_text, $sort_days, $sort_key, $sort_dir, $s_limit_days, $s_sort_key, $s_sort_dir, $u_sort_param);
 		// define some variables needed for retrieving post_id/topic_id information
-		$sort_by_sql = array('a' => 'author', 't' => (($show_results == 'posts') ? 'article_date' : 'topic_last_post_time'), 'c' => 'article_category_id', 's' => (($show_results == 'posts') ? 'article_title' : 'category_name'));
+		$sort_by_sql = array('a' => 'author', 't' => 'article_date', 'c' => 'article_category_id', 's' => (($show_results == 'posts') ? 'article_title' : 'category_name'));
 
 		$sql_sort = $sort_by_sql[$sort_key] . (($sort_dir == 'a') ? ' ASC' : ' DESC');
 		$author_id_ary=array();
@@ -176,13 +176,15 @@ class library_search
 		$search_url .= ($search_terms != 'all') ? '&amp;terms=' . $search_terms : '';
 		$search_url .= ($category_id) ? '&amp;cid=' . $category_id : '';
 		$search_url .= ($author) ? '&amp;author=' . urlencode(htmlspecialchars_decode($author)) : '';
+		$search_url .= ($search_fields != 'all') ? '&amp;sf=' . $search_fields : '';
 		$search_url .= ($return_chars != 300) ? '&amp;ch=' . $return_chars : '';
+		$search_url .= ($search_fields != 'all') ? '&amp;sf=' . $search_fields : '';
 		$search_url .= ($keywords) ? '&amp;keywords=' . $keywords : '';
 		if (sizeof($categories))
 		{
 			foreach ($categories as $key => $value)
 			{
-				$cat .= '&amp;cat_ids[]='.$value.'';
+				$cat .= '&amp;cat_ids[]=' . $value . '';
 			}
 		}
 		$search_url .= ($cat) ? $cat : '';
@@ -228,16 +230,16 @@ class library_search
 			if ($author && $keywords)
 			{
 				$kb_search->split_keywords($keywords, $terms);
-				$search_result = $kb_search->keyword_search($type, $sf, 'all', $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $category_id, $author_id_ary, $author, $id_ary, $start, $per_page);
+				$search_result = $kb_search->keyword_search($show_results, $search_fields, $search_terms, $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $category_id, $author_id_ary, $author, $id_ary, $start, $per_page);
 			}
 			else if ($author)
 			{
-				$search_result = $kb_search->author_search($type, $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $category_id, $author_id_ary, $author, $id_ary, $start, $per_page);
+				$search_result = $kb_search->author_search($show_results, $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $category_id, $author_id_ary, $author, $id_ary, $start, $per_page);
 			}
 			else
 			{
 				$kb_search->split_keywords($keywords, $terms);
-				$search_result = $kb_search->keyword_search($type, $sf, 'all', $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $category_id, $author_id_ary, $author, $id_ary, $start, $per_page);
+				$search_result = $kb_search->keyword_search($show_results, $search_fields, $search_terms, $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $category_id, $author_id_ary, $author, $id_ary, $start, $per_page);
 			}
 
 			$total_matches = $search_result['total_matches'];
@@ -318,6 +320,7 @@ class library_search
 		}
 
 		$this->template->assign_vars(array(
+			'S_SHOW_TITLES'			=> ($show_results == 'posts') ? false : true,
 			'S_SELECT_SORT_DAYS'	=> $s_limit_days,
 			'S_SELECT_SORT_KEY'		=> $s_sort_key,
 			'S_SELECT_SORT_DIR'		=> $s_sort_dir,
