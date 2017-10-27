@@ -112,12 +112,12 @@ $lang = array_merge($lang, array(
 	'UPLOADING_FILE_TO_ARTICLE'						=> 'Upload file “%1$s” to article',
 
 // User Permissions
-	'kb_u_add'				=> 'Can add article',
+	'kb_u_add'				=> 'Can add articles',
 	'kb_u_edit'				=> 'Can edit own articles',
 	'kb_u_delete'			=> 'Can delete own articles',
 	'kb_u_add_noapprove'	=> 'Can add articles without prior approval',
 // Moderator Permissions
-	'kb_m_edit'				=> 'Can edit article',
+	'kb_m_edit'				=> 'Can edit articles',
 	'kb_m_delete'			=> 'Can delete articles',
 	'kb_m_approve'			=> 'Can approve articles',
 
