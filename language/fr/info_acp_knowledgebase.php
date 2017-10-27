@@ -142,7 +142,7 @@ $lang = array_merge($lang, array(
 	'DELETING_INDEX_IN_PROGRESS_EXPLAIN'	=> 'La méthode d’indexation de la recherche est actuellement en cours de nettyage de l’index. Cela peut durer plusieurs minutes.',
 
 	'FULLTEXT_MYSQL_INCOMPATIBLE_DATABASE'	=> 'La méthode d’indexation « MySQL Fulltext » peut être utilisée avec les versions de MySQL 4 et supérieures.',
-	'FULLTEXT_MYSQL_NOT_SUPPORTED'			=> 'La méthode d’indexation « MySQL Fulltext » peut être utilisée avec les tables MyISAM ou InnoDB. MySQL 5.6.4 ou plus récent est nécessaire pour indexer en mode « fulltext » avec les tables InnoDB.',
+	'FULLTEXT_MYSQL_NOT_SUPPORTED'			=> 'La méthode d’indexation « MySQL Fulltext » peut être utilisée avec les tables MyISAM ou InnoDB. MySQL 5.6.8 ou plus récent est nécessaire pour indexer en mode « fulltext » avec les tables InnoDB.',
 	'FULLTEXT_MYSQL_TOTAL_POSTS'			=> 'Nombre total de messages indexés',
 
 	'FULLTEXT_POSTGRES_INCOMPATIBLE_DATABASE'	=> 'La méthode d’indexation « PostgreSQL Fulltext » peut être utilisée avec PostgreSQL.',

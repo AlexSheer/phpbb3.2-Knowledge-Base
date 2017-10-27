@@ -20,8 +20,6 @@ class search_module
 
 	function main($id, $mode)
 	{
-		global $user, $phpbb_root_path, $phpEx;
-
 		// For some this may be of help...
 		@ini_set('memory_limit', '128M');
 		$this->settings($id, $mode);
@@ -33,8 +31,9 @@ class search_module
 		global $db, $user, $auth, $template, $cache, $phpbb_log, $request;
 		global $config, $phpbb_root_path, $phpbb_admin_path, $phpEx, $table_prefix;
 
-		define ('KB_LOG_TABLE', $table_prefix.'kb_log');
-		$phpbb_log->set_log_table(KB_LOG_TABLE);
+		$this->kb_log_table = $table_prefix . 'kb_log';
+
+		$phpbb_log->set_log_table($this->kb_log_table);
 
 		$submit = (isset($_POST['submit'])) ? true : false;
 
@@ -42,18 +41,19 @@ class search_module
 
 		$settings = array(
 			'kb_search'				=> 'bool',
-			'kb_search_type'		=> 'string',
 			'kb_per_page_search'	=> 'int',
 		);
 
 		$search = null;
 		$error = false;
 		$search_options = '';
-		if (!$config['kb_search_type'])
+
+		if (!isset($config['kb_search_type']))
 		{
 			// Search type by default
 			$type = 'kb_fulltext_native';
 		}
+
 		foreach ($search_types as $type)
 		{
 			if ($this->init_search($type, $search, $error))
@@ -66,27 +66,7 @@ class search_module
 			$selected = ($config['kb_search_type'] === $type) ? ' selected="selected"' : '';
 			$identifier = substr($type, strrpos($type, '\\') + 1);
 			$search_options .= "<option value=\"$type\"$selected data-toggle-setting=\"#search_{$identifier}_settings\">$name</option>";
-
-			if (method_exists($search, 'acp'))
-			{
-				$vars = $search->acp();
-
-				if (!$submit)
-				{
-					$template->assign_block_vars('backend', array(
-						'NAME'			=> $name,
-						'SETTINGS'		=> $vars['tpl'],
-						'IDENTIFIER'	=> $identifier,
-					));
-				}
-				else if (is_array($vars['config']))
-				{
-					$settings = array_merge($settings, $vars['config']);
-				}
-			}
 		}
-		unset($search);
-		unset($error);
 
 		$cfg_array = (isset($_REQUEST['config'])) ? $request->variable('config', array('' => ''), true) : array();
 		$updated = $request->variable('updated', false);
@@ -118,7 +98,6 @@ class search_module
 			if ($submit && ($config[$config_name] != $config_value))
 			{
 				$config->set($config_name, $config_value);
-				$cache->destroy('sql', CONFIG_TABLE);
 				$updated = true;
 			}
 		}
@@ -131,24 +110,24 @@ class search_module
 				$phpbb_log->add('admin', $user->data['user_id'], $user->data['user_ip'], 'LOG_KB_CONFIG_SEARCH', time());
 			}
 
-			if (isset($cfg_array['search_type']) && in_array($cfg_array['search_type'], $search_types, true) && ($cfg_array['search_type'] != $config['search_type']))
+			if (isset($cfg_array['kb_search_type']) && in_array($cfg_array['kb_search_type'], $search_types, true) && ($cfg_array['kb_search_type'] != $config['kb_search_type']))
 			{
 				$search = null;
 				$error = false;
 
-				if (!$this->init_search($cfg_array['search_type'], $search, $error))
+				if (!$this->init_search($cfg_array['kb_search_type'], $search, $error))
 				{
 					if (confirm_box(true))
 					{
 						if (!method_exists($search, 'init') || !($error = $search->init()))
 						{
-							$config->set('kb_search_type', $cfg_array['search_type'], $cache = true);
+							$config->set('kb_search_type', $cfg_array['kb_search_type']);
 
 							if (!$updated)
 							{
-								$phpbb_log->add('admin', $user->data['user_id'], $user->data['user_ip'], 'LOG_KB_CONFIG_SEARCH', time());
+								$phpbb_log->add('admin', $user->data['user_id'], $user->ip, 'LOG_CONFIG_SEARCH');
 							}
-							$extra_message = '<br />' . $user->lang['SWITCHED_SEARCH_BACKEND'] . '<br /><a href="' . append_sid("{$phpbb_admin_path}index.$phpEx", 'i=search&amp;mode=index') . '">&raquo; ' . $user->lang['GO_TO_SEARCH_INDEX'] . '</a>';
+							$extra_message = '<br />' . $user->lang['SWITCHED_SEARCH_BACKEND'];
 						}
 						else
 						{
@@ -162,7 +141,7 @@ class search_module
 							'mode'		=> $mode,
 							'submit'	=> true,
 							'updated'	=> $updated,
-							'config'	=> array('kb_search_type' => $cfg_array['search_type']),
+							'config'	=> array('kb_search_type' => $cfg_array['kb_search_type']),
 						)));
 					}
 				}
@@ -174,6 +153,7 @@ class search_module
 
 			$search = null;
 			$error = false;
+
 			if (!$this->init_search($config['kb_search_type'], $search, $error))
 			{
 				if ($updated)
@@ -213,7 +193,8 @@ class search_module
 		global $db, $user, $auth, $template, $cache, $phpbb_log, $request;
 		global $config, $phpbb_root_path, $phpbb_admin_path, $phpEx;
 
-		$phpbb_log->set_log_table(KB_LOG_TABLE);
+		$phpbb_log->set_log_table($this->kb_log_table);
+		$this->kb_articles_table = $table_prefix . 'kb_articles';
 
 		$action = $request->variable('action', '');
 		$this->state = explode(',', $config['search_indexing_state']);
@@ -285,7 +266,7 @@ class search_module
 						while (still_on_time() && $post_counter <= $this->max_post_id)
 						{
 							$sql = 'SELECT article_id, author_id, article_category_id
-								FROM ' . ARTICLES_TABLE . '
+								FROM ' . $this->kb_articles_table . '
 								WHERE article_id >= ' . (int) ($post_counter + 1) . '
 									AND article_id <= ' . (int) ($post_counter + $this->batch_size);
 							$result = $db->sql_query($sql);
@@ -351,7 +332,7 @@ class search_module
 						while (still_on_time() && $post_counter <= $this->max_post_id)
 						{
 							$sql = 'SELECT article_id, article_title, article_body, author_id, article_category_id
-								FROM ' . ARTICLES_TABLE . '
+								FROM ' . $this->kb_articles_table . '
 								WHERE article_id >= ' . (int) ($post_counter + 1) . '
 									AND article_id <= ' . (int) ($post_counter + $this->batch_size);
 							$result = $db->sql_query($sql);
@@ -548,13 +529,10 @@ class search_module
 	{
 		global $db, $table_prefix;
 
-		if (!defined('ARTICLES_TABLE'))
-		{
-			define('ARTICLES_TABLE', $table_prefix.'kb_articles');
-		}
+		$this->kb_articles_table = $table_prefix . 'kb_articles';
 
 		$sql = 'SELECT MAX(article_id) as max_article_id
-			FROM '. ARTICLES_TABLE;
+			FROM '. $this->kb_articles_table;
 		$result = $db->sql_query($sql);
 		$max_article_id = (int) $db->sql_fetchfield('max_article_id');
 		$db->sql_freeresult($result);
@@ -592,7 +570,7 @@ class search_module
 		}
 
 		include_once("{$phpbb_root_path}ext/sheer/knowledgebase/search/$type.$phpEx");
-		$type = '\sheer\knowledgebase\search\\'.$type.'';
+		$type = '\sheer\knowledgebase\search\\' . $type . '';
 		if (!class_exists($type))
 		{
 			$error = $user->lang['NO_SUCH_SEARCH_MODULE'];

@@ -26,13 +26,19 @@
 		<div class="inner">
 			<h3>{L_SEARCH_OPTIONS}</h3>
 			<fieldset>
-				<!--//<dl>
+				<dl>
 					<dt><label for="show_results1">{L_DISPLAY_RESULTS}{L_COLON}</label></dt>
 					<dd>
-						<label for="show_results1"><input type="radio" name="sr" id="show_results1" value="posts" checked="checked" /> {L_SEARCH_ARTICLES_ONLY}</label>
-						<label for="show_results2"><input type="radio" name="sr" id="show_results2" value="topics" /> {L_SEARCH_ARTICLES_TITLE_ONLY}</label>
+						<label for="show_results1"><input type="radio" name="sr" id="show_results1" value="posts" checked="checked" /> {L_ARTICLES}</label>
+						<label for="show_results2"><input type="radio" name="sr" id="show_results2" value="topics" /> {L_ARTICLE_TITLE}</label>
 					</dd>
-				</dl>//-->
+				</dl>
+				<dl>
+					<dt><label for="sf1">{L_SEARCH_WITHIN}{L_COLON}</label></dt>
+					<dd><label for="sf1"><input type="radio" name="sf" id="sf1" value="all" checked="checked" /> {L_SEARCH_ALL}</label></dd>
+					<dd><label for="sf2"><input type="radio" name="sf" id="sf2" value="msgonly" /> {L_SEARCH_ARTICLES_ONLY}</label></dd>
+					<dd><label for="sf3"><input type="radio" name="sf" id="sf3" value="titleonly" /> {L_SEARCH_ARTICLES_TITLE_ONLY}</label></dd>
+				</dl>
 				<dl>
 					<dt><label for="search_cat">{L_SEARCH_CAT}{L_COLON}</label><br><span>{L_SEARCH_CAT_EXPLAIN}</span></dt>
 					<dd><select name="cat_ids[]" id="search_cat" multiple="multiple" size="8" title="{L_SEARCH_CAT}">

@@ -113,21 +113,10 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 
 		global $table_prefix;
 
-		if (!defined('KB_SEARCH_WORDMATCH_TABLE'))
-		{
-			define('KB_SEARCH_WORDMATCH_TABLE', $table_prefix.'kb_src_wrdmtch');
-		}
-		if (!defined('KB_SEARCH_WORDLIST_TABLE'))
-		{
-			define('KB_SEARCH_WORDLIST_TABLE', $table_prefix.'kb_src_wrdlist');
-		}
-		if (!defined('KB_CAT_TABLE'))
-		{
-			define('KB_CAT_TABLE', $table_prefix.'kb_categories');
-		}
-
 		$error = false;
-		$this->articles_table = $table_prefix .'kb_articles';
+		$this->articles_table = $table_prefix . 'kb_articles';
+		$this->wordmatch_table = $table_prefix . 'kb_src_wrdmtch';
+		$this->wordlist_table = $table_prefix . 'kb_src_wrdlist';
 	}
 
 	/**
@@ -316,7 +305,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 		if (sizeof($exact_words))
 		{
 			$sql = 'SELECT word_id, word_text, word_common
-				FROM ' . KB_SEARCH_WORDLIST_TABLE . '
+				FROM ' . $this->wordlist_table . '
 				WHERE ' . $this->db->sql_in_set('word_text', $exact_words) . '
 				ORDER BY word_count ASC';
 			$result = $this->db->sql_query($sql);
@@ -499,7 +488,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 	* @param	string		$sort_days			specifies the maximum amount of days a post may be old
 	* @param	array		$author_ary			an array of author ids if the author should be ignored during the search the array is empty
 	* @param	string		$author_name		specifies the author match, when ANONYMOUS is also a search-match
-	* @param	array		$id_ary			to be filled with ids for the page specified by $start and $per_page, should be ordered
+	* @param	array		$id_ary				to be filled with ids for the page specified by $start and $per_page, should be ordered
 	* @param	int			$start				indicates the first index of the page
 	* @param	int			$per_page			number of ids each page is supposed to contain
 	* @return	boolean|int						total number of results
@@ -540,7 +529,6 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 			$sort_key,
 			$category_id,
 			implode(',', $ex_fid_ary),
-
 			implode(',', $author_ary),
 			$author_name,
 		)));
@@ -562,10 +550,10 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 		$w_num = 0;
 
 		$sql_array = array(
-			'SELECT'	=> ($type == 'posts') ? 'p.article_id' : 'p.article_category_id',
+			'SELECT'	=> 'p.article_id',
 			'FROM'		=> array(
-				KB_SEARCH_WORDMATCH_TABLE	=> array(),
-				KB_SEARCH_WORDLIST_TABLE	=> array(),
+				$this->wordmatch_table	=> array(),
+				$this->wordlist_table	=> array(),
 			),
 			'LEFT_JOIN' => array(array(
 				'FROM'	=> array($this->articles_table => 'p'),
@@ -574,7 +562,6 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 		);
 
 		$title_match = '';
-		$left_join_topics = false;
 		$group_by = true;
 		// Build some display specific sql strings
 		switch ($fields)
@@ -582,18 +569,12 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 			case 'titleonly':
 				$title_match = 'title_match = 1';
 				$group_by = false;
-			// no break
+			break;
 
 			case 'msgonly':
 				$title_match = 'title_match = 0';
 				$group_by = false;
 			break;
-		}
-
-		if ($type == 'topics')
-		{
-			$left_join_topics = true;
-			$group_by = true;
 		}
 
 		foreach ($this->must_contain_ids as $subquery)
@@ -609,7 +590,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 					if (is_string($id))
 					{
 						$sql_array['LEFT_JOIN'][] = array(
-							'FROM'	=> array(KB_SEARCH_WORDLIST_TABLE => 'w' . $w_num),
+							'FROM'	=> array($this->wordlist_table => 'w' . $w_num),
 							'ON'	=> "w$w_num.word_text LIKE $id"
 						);
 						$word_ids[] = "w$w_num.word_id";
@@ -629,7 +610,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 			}
 			else if (is_string($subquery))
 			{
-				$sql_array['FROM'][KB_SEARCH_WORDLIST_TABLE][] = 'w' . $w_num;
+				$sql_array['FROM'][$this->wordlist_table][] = 'w' . $w_num;
 
 				$sql_where[] = "w$w_num.word_text LIKE $subquery";
 				$sql_where[] = "m$m_num.word_id = w$w_num.word_id";
@@ -642,7 +623,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 				$sql_where[] = "m$m_num.word_id = $subquery";
 			}
 
-			$sql_array['FROM'][KB_SEARCH_WORDMATCH_TABLE][] = 'm' . $m_num;
+			$sql_array['FROM'][$this->wordmatch_table][] = 'm' . $m_num;
 
 			if ($title_match)
 			{
@@ -661,7 +642,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 			if (is_string($subquery))
 			{
 				$sql_array['LEFT_JOIN'][] = array(
-					'FROM'	=> array(KB_SEARCH_WORDLIST_TABLE => 'w' . $w_num),
+					'FROM'	=> array($this->wordlist_table => 'w' . $w_num),
 					'ON'	=> "w$w_num.word_text LIKE $subquery"
 				);
 
@@ -675,7 +656,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 		if (sizeof($this->must_not_contain_ids))
 		{
 			$sql_array['LEFT_JOIN'][] = array(
-				'FROM'	=> array(KB_SEARCH_WORDMATCH_TABLE => 'm' . $m_num),
+				'FROM'	=> array($this->wordmatch_table => 'm' . $m_num),
 				'ON'	=> $this->db->sql_in_set("m$m_num.word_id", $this->must_not_contain_ids) . (($title_match) ? " AND m$m_num.$title_match" : '') . " AND m$m_num.post_id = m0.post_id"
 			);
 
@@ -691,7 +672,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 				if (is_string($id))
 				{
 					$sql_array['LEFT_JOIN'][] = array(
-						'FROM'	=> array(KB_SEARCH_WORDLIST_TABLE => 'w' . $w_num),
+						'FROM'	=> array($this->wordlist_table => 'w' . $w_num),
 						'ON'	=> "w$w_num.word_text LIKE $id"
 					);
 					$id = "w$w_num.word_id";
@@ -701,7 +682,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 				}
 
 				$sql_array['LEFT_JOIN'][] = array(
-					'FROM'	=> array(KB_SEARCH_WORDMATCH_TABLE => 'm' . $m_num),
+					'FROM'	=> array($this->wordmatch_table => 'm' . $m_num),
 					'ON'	=> "m$m_num.word_id = $id AND m$m_num.post_id = m0.post_id" . (($title_match) ? " AND m$m_num.$title_match" : '')
 				);
 				$is_null_joins[] = "m$m_num.word_id IS NULL";
@@ -711,7 +692,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 			$sql_where[] = '(' . implode(' OR ', $is_null_joins) . ')';
 		}
 
-		$sql_where[] = 'p.approved=1';
+		$sql_where[] = 'p.approved= 1';
 
 		if ($category_id)
 		{
@@ -743,14 +724,6 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 			$sql = '';
 			$sql_array_count = $sql_array;
 
-			if ($left_join_topics)
-			{
-				$sql_array_count['LEFT_JOIN'][] = array(
-					'FROM'	=> array(TOPICS_TABLE => 't'),
-					'ON'	=> 'p.topic_id = t.topic_id'
-				);
-			}
-
 			switch ($this->db->get_sql_layer())
 			{
 				case 'mysql4':
@@ -764,14 +737,14 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 
 				case 'sqlite':
 				case 'sqlite3':
-					$sql_array_count['SELECT'] = ($type == 'posts') ? 'DISTINCT p.article_id' : 'DISTINCT p.article_category_id';
-					$sql = 'SELECT COUNT(' . (($type == 'posts') ? 'article_id' : 'category_id') . ') as total_results
+					$sql_array_count['SELECT'] = 'DISTINCT p.article_id';
+					$sql = 'SELECT COUNT(DISTINCT p.article_id) as total_results
 							FROM (' . $this->db->sql_build_query('SELECT', $sql_array_count) . ')';
 
 				// no break
 
 				default:
-					$sql_array_count['SELECT'] = ($type == 'posts') ? 'COUNT(DISTINCT p.article_id) AS total_results' : 'COUNT(DISTINCT p.topic_id) AS total_results';
+					$sql_array_count['SELECT'] = 'COUNT(DISTINCT p.article_id) AS total_results';
 					$sql = (!$sql) ? $this->db->sql_build_query('SELECT', $sql_array_count) : $sql;
 
 					$result = $this->db->sql_query($sql);
@@ -791,31 +764,18 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 		// Build sql strings for sorting
 		$sql_sort = $sort_by_sql[$sort_key] . (($sort_dir == 'a') ? ' ASC' : ' DESC');
 
-		switch ($sql_sort[0])
-		{
-			case 'u':
-				$sql_array['FROM'][USERS_TABLE] = 'u';
-				$sql_where[] = 'u.user_id = p.author_id ';
-			break;
-
-			case 't':
-				$left_join_topics = true;
-			break;
-		}
-
 		$sql_array['WHERE'] = implode(' AND ', $sql_where);
-		$sql_array['GROUP_BY'] = ($group_by) ? (($type == 'posts') ? 'p.article_id' : 'p.topic_id') . ', ' . $sort_by_sql[$sort_key] : '';
+		$sql_array['GROUP_BY'] = ($group_by) ? 'p.article_id, ' . $sort_by_sql[$sort_key] : '';
 		$sql_array['ORDER_BY'] = $sql_sort;
 
 		unset($sql_where, $sql_sort, $group_by);
 
 		$sql = $this->db->sql_build_query('SELECT', $sql_array);
-
 		$result = $this->db->sql_query_limit($sql, $this->config['search_block_size'], $start);
 
 		while ($row = $this->db->sql_fetchrow($result))
 		{
-			$id_ary[] = (int) $row[(($type == 'posts') ? 'article_id' : 'topic_id')];
+			$id_ary[] = (int) $row['article_id'];
 		}
 		$this->db->sql_freeresult($result);
 
@@ -851,10 +811,9 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 
 			while ($row = $this->db->sql_fetchrow($result))
 			{
-				$id_ary[] = (int) $row[(($type == 'posts') ? 'article_id' : 'topic_id')];
+				$id_ary[] = (int) $row['article_id'];
 			}
 			$this->db->sql_freeresult($result);
-
 		}
 
 		// store the ids, from start on then delete anything that isn't on the current page because we only need ids for one page
@@ -875,7 +834,6 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 	* @param	string		$sort_dir			is either a or d representing ASC and DESC
 	* @param	string		$sort_days			specifies the maximum amount of days a post may be old
 	* @param	array		$ex_fid_ary			specifies an array of categories ids which should not be searched
-	* @param	int			$topic_id			is set to 0 or a topic id, if it is not 0 then only posts in this topic should be searched
 	* @param	array		$author_ary			an array of author ids
 	* @param	string		$author_name		specifies the author match, when ANONYMOUS is also a search-match
 	* @param	array		&$id_ary			passed by reference, to be filled with ids for the page specified by $start and $per_page, should be ordered
@@ -885,9 +843,6 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 	*/
 	public function author_search ($type, $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $category_id, $author_ary, $author_name, $id_ary, $start, $per_page)
 	{
-		$firstpost_only = false;
-		$post_visibility = true;
-
 		// No author? No posts
 		if (!sizeof($author_ary))
 		{
@@ -900,20 +855,21 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 		$search_key = crc32(implode('#', array(
 			'',
 			$type,
-			($firstpost_only) ? 'firstpost' : '',
+			'',
 			'',
 			'',
 			$sort_days,
 			$sort_key,
 			$category_id,
 			implode(',', $ex_fid_ary),
-			$post_visibility,
+			true,
 			implode(',', $author_ary),
 			$author_name,
 		)));
 
 		// try reading the results from cache
 		$total_results = 0;
+
 		if ($this->obtain_ids($search_key, $total_results, $id_ary, $start, $per_page, $sort_dir) == 1)
 		{
 			$search_result['total_matches'] = $total_results;
@@ -927,7 +883,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 
 		// Create some display specific sql strings
 
-		$sql_author = ''.$this->db->sql_in_set('p.author_id', $author_ary).' AND p.approved=1 ';
+		$sql_author = '' . $this->db->sql_in_set('p.author_id', $author_ary). ' AND p.approved=1 ';
 		$sql_fora = (sizeof($ex_fid_ary)) ? ' AND ' . $this->db->sql_in_set('p.article_category_id', $ex_fid_ary, true) : '';
 		$sql_time = ($sort_days) ? ' AND p.article_date >= ' . (time() - ($sort_days * 86400)) : '';
 		$sql_category_id = ($category_id) ? ' AND p.article_category_id = ' . (int) $category_id : '';
@@ -935,21 +891,8 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 		// Build sql strings for sorting
 
 		$sql_sort = $sort_by_sql[$sort_key] . (($sort_dir == 'a') ? ' ASC' : ' DESC');
-		$sql_sort_table = $sql_sort_join = '';
-		switch ($sql_sort[0])
-		{
-			case 'u':
-				$sql_sort_table	= USERS_TABLE . ' u, ';
-				$sql_sort_join	= ' AND u.user_id = p.author_id ';
-			break;
 
-			case 't':
-				$sql_sort_table	= ($type == 'posts') ? KB_CAT_TABLE . ' t, ' : '';
-				$sql_sort_join	= ($type == 'posts') ? ' AND t.topic_id = p.article_category_id ' : '';
-			break;
-		}
-
-		$select = ($type == 'posts') ? 'p.article_id' : 't.category_id';
+		$select = 'p.article_id';
 		$is_mysql = false;
 
 		// If the cache was completely empty count the results
@@ -964,34 +907,13 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 				break;
 
 				default:
-					if ($type == 'posts')
-					{
-						$sql = 'SELECT COUNT(p.article_id) as total_results
-							FROM ' . POSTS_TABLE . ' p' . (($firstpost_only) ? ', ' . KB_CAT_TABLE . ' t ' : ' ') . "
-							WHERE $sql_author
-								$sql_category_id
-								$sql_fora
-								$sql_time";
-					}
-					else
-					{
-						if ($this->db->get_sql_layer() == 'sqlite' || $this->db->get_sql_layer() == 'sqlite3')
-						{
-							$sql = 'SELECT COUNT(category_id) as total_results
-								FROM (SELECT DISTINCT t.category_id';
-						}
-						else
-						{
-							$sql = 'SELECT COUNT(DISTINCT t.category_id) as total_results';
-						}
+					$sql = 'SELECT COUNT(p.article_id) as total_results
+						FROM ' . $this->articles_table . ' p
+						WHERE ' . $sql_author . '
+							' . $sql_category_id . '
+							' . $sql_fora . '
+							' . $sql_time . '';
 
-						$sql .= ' FROM ' . KB_CAT_TABLE . ' t, ' . $this->articles_table . " p
-							WHERE $sql_author
-								$sql_category_id
-								$sql_fora
-								AND t.category_id = p.article_category_id
-								$sql_time" . (($this->db->get_sql_layer() == 'sqlite' || $this->db->get_sql_layer() == 'sqlite3') ? ')' : '');
-					}
 					$result = $this->db->sql_query($sql);
 
 					$total_results = (int) $this->db->sql_fetchfield('total_results');
@@ -1006,42 +928,24 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 		}
 
 		// Build the query for really selecting the article_ids
-		if ($type == 'posts')
-		{
-			$sql = "SELECT $select
-				FROM " . $sql_sort_table . $this->articles_table . " p
-				WHERE $sql_author
-					$sql_category_id
-					$sql_fora
-					$sql_sort_join
-					$sql_time
-				ORDER BY $sql_sort";
-			$field = 'article_id';
-		}
-		else
-		{
-			$sql = "SELECT $select
-				FROM " . $sql_sort_table . KB_CAT_TABLE . ' t, ' . $this->articles_table . " p
-				WHERE $sql_author
-					$sql_category_id
-					AND t.category_id = p.article_category_id
-					$sql_fora
-					$sql_sort_join
-					$sql_time
-				GROUP BY t.category_id, " . $sort_by_sql[$sort_key] . '
-				ORDER BY ' . $sql_sort;
-			$field = 'category_id';
-		}
+
+		$sql = "SELECT $select
+			FROM " . $this->articles_table . " p
+			WHERE $sql_author
+				$sql_category_id
+				$sql_fora
+				$sql_time
+			ORDER BY $sql_sort";
+		$field = 'article_id';
 
 		// Only read one block of posts from the db and then cache it
+		$res = $this->db->sql_query_limit($sql, $this->config['search_block_size'], $start);
 
-		$result = $this->db->sql_query_limit($sql, $this->config['search_block_size'], $start);
-
-		while ($row = $this->db->sql_fetchrow($result))
+		while ($row = $this->db->sql_fetchrow($res))
 		{
 			$id_ary[] = (int) $row[$field];
 		}
-		$this->db->sql_freeresult($result);
+		$this->db->sql_freeresult($res);
 
 		if (!$total_results && $is_mysql)
 		{
@@ -1199,7 +1103,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 			$words['del']['title'] = array();
 
 			$sql = 'SELECT w.word_id, w.word_text, m.title_match
-				FROM ' . KB_SEARCH_WORDLIST_TABLE . ' w, ' . KB_SEARCH_WORDMATCH_TABLE . " m
+				FROM ' . $this->wordlist_table . ' w, ' . $this->wordmatch_table . " m
 				WHERE m.article_id = $article_id
 					AND w.word_id = m.word_id";
 			$result = $this->db->sql_query($sql);
@@ -1236,7 +1140,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 		if (sizeof($unique_add_words))
 		{
 			$sql = 'SELECT word_id, word_text
-				FROM ' . KB_SEARCH_WORDLIST_TABLE . '
+				FROM ' . $this->wordlist_table . '
 				WHERE ' . $this->db->sql_in_set('word_text', $unique_add_words);
 			$result = $this->db->sql_query($sql);
 
@@ -1258,7 +1162,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 					$sql_ary[] = array('word_text' => (string) $word, 'word_count' => 0);
 				}
 				$this->db->sql_return_on_error(true);
-				$this->db->sql_multi_insert(KB_SEARCH_WORDLIST_TABLE, $sql_ary);
+				$this->db->sql_multi_insert($this->wordlist_table, $sql_ary);
 				$this->db->sql_return_on_error(false);
 			}
 			unset($new_words, $sql_ary);
@@ -1281,13 +1185,13 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 					$sql_in[] = $cur_words[$word_in][$word];
 				}
 
-				$sql = 'DELETE FROM ' .  KB_SEARCH_WORDMATCH_TABLE . '
+				$sql = 'DELETE FROM ' .  $this->wordmatch_table . '
 					WHERE ' . $this->db->sql_in_set('word_id', $sql_in) . "
 						AND article_id = $article_id
 						AND title_match = $title_match";
 				$this->db->sql_query($sql);
 
-				$sql = 'UPDATE ' . KB_SEARCH_WORDLIST_TABLE . '
+				$sql = 'UPDATE ' . $this->wordlist_table . '
 					SET word_count = word_count - 1
 					WHERE ' . $this->db->sql_in_set('word_id', $sql_in) . '
 						AND word_count > 0';
@@ -1304,13 +1208,13 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 
 			if (sizeof($word_ary))
 			{
-				$sql = 'INSERT INTO ' . KB_SEARCH_WORDMATCH_TABLE . ' (article_id, word_id, title_match)
+				$sql = 'INSERT INTO ' . $this->wordmatch_table . ' (article_id, word_id, title_match)
 					SELECT ' . (int) $article_id . ', word_id, ' . (int) $title_match . '
-					FROM ' . KB_SEARCH_WORDLIST_TABLE . '
+					FROM ' . $this->wordlist_table . '
 					WHERE ' . $this->db->sql_in_set('word_text', $word_ary);
 				$this->db->sql_query($sql);
 
-				$sql = 'UPDATE ' . KB_SEARCH_WORDLIST_TABLE . '
+				$sql = 'UPDATE ' . $this->wordlist_table . '
 					SET word_count = word_count + 1
 					WHERE ' . $this->db->sql_in_set('word_text', $word_ary);
 				$this->db->sql_query($sql);
@@ -1336,7 +1240,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 		if (sizeof($article_ids))
 		{
 			$sql = 'SELECT w.word_id, w.word_text, m.title_match
-				FROM ' . KB_SEARCH_WORDMATCH_TABLE . ' m, ' . KB_SEARCH_WORDLIST_TABLE . ' w
+				FROM ' . $this->wordmatch_table . ' m, ' . $this->wordlist_table . ' w
 				WHERE ' . $this->db->sql_in_set('m.article_id', $article_ids) . '
 					AND w.word_id = m.word_id';
 			$result = $this->db->sql_query($sql);
@@ -1358,7 +1262,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 
 			if (sizeof($title_word_ids))
 			{
-				$sql = 'UPDATE ' . KB_SEARCH_WORDLIST_TABLE . '
+				$sql = 'UPDATE ' . $this->wordlist_table . '
 					SET word_count = word_count - 1
 					WHERE ' . $this->db->sql_in_set('word_id', $title_word_ids) . '
 						AND word_count > 0';
@@ -1367,7 +1271,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 
 			if (sizeof($message_word_ids))
 			{
-				$sql = 'UPDATE ' . KB_SEARCH_WORDLIST_TABLE . '
+				$sql = 'UPDATE ' . $this->wordlist_table . '
 					SET word_count = word_count - 1
 					WHERE ' . $this->db->sql_in_set('word_id', $message_word_ids) . '
 						AND word_count > 0';
@@ -1377,7 +1281,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 			unset($title_word_ids);
 			unset($message_word_ids);
 
-			$sql = 'DELETE FROM ' . KB_SEARCH_WORDMATCH_TABLE . '
+			$sql = 'DELETE FROM ' . $this->wordmatch_table . '
 				WHERE ' . $this->db->sql_in_set('article_id', $article_ids);
 			$this->db->sql_query($sql);
 		}
@@ -1409,7 +1313,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 			$common_threshold = ((double) $this->config['fulltext_native_common_thres']) / 100.0;
 			// First, get the IDs of common words
 			$sql = 'SELECT word_id, word_text
-				FROM ' . KB_SEARCH_WORDLIST_TABLE . '
+				FROM ' . $this->wordlist_table . '
 				WHERE word_count > ' . floor($this->config['num_posts'] * $common_threshold) . '
 					OR word_common = 1';
 			$result = $this->db->sql_query($sql);
@@ -1425,7 +1329,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 			if (sizeof($sql_in))
 			{
 				// Flag the words
-				$sql = 'UPDATE ' . KB_SEARCH_WORDLIST_TABLE . '
+				$sql = 'UPDATE ' . $this->wordlist_table . '
 					SET word_common = 1
 					WHERE ' . $this->db->sql_in_set('word_id', $sql_in);
 				$this->db->sql_query($sql);
@@ -1435,7 +1339,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 				$config->set('search_last_gc', time(), $cache = true);
 
 				// Delete the matches
-				$sql = 'DELETE FROM ' . KB_SEARCH_WORDMATCH_TABLE . '
+				$sql = 'DELETE FROM ' . $this->wordmatch_table . '
 					WHERE ' . $this->db->sql_in_set('word_id', $sql_in);
 				$this->db->sql_query($sql);
 			}
@@ -1460,13 +1364,13 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 		{
 			case 'sqlite':
 			case 'sqlite3':
-				$this->db->sql_query('DELETE FROM ' . KB_SEARCH_WORDLIST_TABLE);
-				$this->db->sql_query('DELETE FROM ' . KB_SEARCH_WORDMATCH_TABLE);
+				$this->db->sql_query('DELETE FROM ' . $this->wordlist_table);
+				$this->db->sql_query('DELETE FROM ' . $this->wordmatch_table);
 			break;
 
 			default:
-				$this->db->sql_query('TRUNCATE TABLE ' . KB_SEARCH_WORDLIST_TABLE);
-				$this->db->sql_query('TRUNCATE TABLE ' . KB_SEARCH_WORDMATCH_TABLE);
+				$this->db->sql_query('TRUNCATE TABLE ' . $this->wordlist_table);
+				$this->db->sql_query('TRUNCATE TABLE ' . $this->wordmatch_table);
 			break;
 		}
 	}
@@ -1501,8 +1405,8 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 
 	protected function get_stats()
 	{
-		$this->stats['total_words']		= $this->db->get_estimated_row_count(KB_SEARCH_WORDLIST_TABLE);
-		$this->stats['total_matches']	= $this->db->get_estimated_row_count(KB_SEARCH_WORDMATCH_TABLE);
+		$this->stats['total_words']		= $this->db->get_estimated_row_count($this->wordlist_table);
+		$this->stats['total_matches']	= $this->db->get_estimated_row_count($this->wordmatch_table);
 	}
 
 	/**
