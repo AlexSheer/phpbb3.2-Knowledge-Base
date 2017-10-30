@@ -181,34 +181,15 @@ class functions_kb
 			ORDER BY left_id ASC';
 		$result = $this->db->sql_query($sql, 600);
 
-		$right = 0;
-		$padding_store = array('0' => '');
-		$cats_list = $padding = '';
+		$cats_list = '';
 
 		while ($row = $this->db->sql_fetchrow($result))
 		{
-			if ($row['left_id'] < $right)
-			{
-				$padding .= '&nbsp; &nbsp;';
-				$padding_store[$row['parent_id']] = $padding;
-			}
-			else if ($row['left_id'] > $right + 1)
-			{
-				$padding = (isset($padding_store[$row['parent_id']])) ? $padding_store[$row['parent_id']] : '';
-			}
-
-			$right = $row['right_id'];
-			$selected = false;
-			$open = $close = '';
-			if($row['category_id'] == $select_id)
-			{
-				$open = '<strong>';
-				$close = '</strong>';
-			}
-			$cats_list .= '<li>' . $padding . '<a href="' . '<a href="' . $this->helper->route('sheer_knowledgebase_category', array('id' => $row['category_id'])) . '">' . $open . '' . $row['category_name'] . '' . $close . '</a></li>';
+			$class = (!$row['parent_id']) ? ' class="jumpbox-cat-link"' : '';
+			$cats_list .= '<li><a href="' . $this->helper->route('sheer_knowledgebase_category', array('id' => $row['category_id'])) . '" ' . $class . '>' . $row['category_name'] . '</a></li>';
 		}
 		$this->db->sql_freeresult($result);
-		unset($padding_store);
+
 		return $cats_list;
 	}
 
@@ -239,7 +220,7 @@ class functions_kb
 			$right = $row['right_id'];
 			$disabled = false;
 
-			if ((is_array($ignore_id) && in_array($row['category_id'], $ignore_id)) || $row['category_id'] == $ignore_id)
+			if (!$ignore_acl && ((is_array($ignore_id) && in_array($row['category_id'], $ignore_id)) || !$this->acl_kb_get($row['category_id'], 'kb_u_add')))
 			{
 				$disabled = true;
 			}
@@ -542,7 +523,9 @@ class functions_kb
 		{
 			$this->config['kb_search_type'] = 'kb_fulltext_native';
 		}
+
 		$kb_search = false;
+
 		if ($this->config['kb_search_type'])
 		{
 			if (preg_match('#^\w+$#', $this->config['kb_search_type']) || file_exists($this->phpbb_root_path . 'ext/sheer/knowledgebase/search/' . $this->config['kb_search_type'] . '.' . $this->php_ext))
@@ -595,15 +578,15 @@ class functions_kb
 
 		$topic_text = '[b]' . $this->user->lang['ARTICLE_TITLE'] . '' . $this->user->lang['COLON'] . '[/b] ' . $article_title . '';
 		$topic_text .= "\n";
-		$topic_text .= '[b]' . $this->user->lang['ARTICLE_AUTHOR'] . '' . $this->user->lang['COLON'] . '[/b] ' . $article_author . ' ';
+		$topic_text .= '[b]' . $this->user->lang['ARTICLE_AUTHOR'] . '' . $this->user->lang['COLON'] . '[/b] ' . $article_author . '';
 		$topic_text .= "\n";
-		$topic_text .= '[b]' . $this->user->lang['ARTICLE_DESCRIPTION'] . '' . $this->user->lang['COLON'] . '[/b] ' . $article_description . ' ';
+		$topic_text .= '[b]' . $this->user->lang['ARTICLE_DESCRIPTION'] . '' . $this->user->lang['COLON'] . '[/b] ' . $article_description . '';
 		$topic_text .= "\n";
-		$topic_text .= '[b]' . $this->user->lang['CATEGORY'] . '' . $this->user->lang['COLON'] . '[/b] ' . $category_name . ' ';
+		$topic_text .= '[b]' . $this->user->lang['CATEGORY'] . '' . $this->user->lang['COLON'] . '[/b] ' . $category_name . '';
 		$topic_text .= "\n\n";
-		$topic_text .= '[b][url=' . generate_board_url() . '/knowledgebase/article?k=' . $new . ']&raquo;&nbsp;' . $this->user->lang['READ_FULL'] . '[/url][/b]';
+		$topic_text .= '[b][url=' . generate_board_url() . '/knowledgebase/article?k=' . $new . ']' . $this->user->lang['READ_FULL'] . '[/url][/b]';
 
-		generate_text_for_storage($topic_text, $uid, $bitfield, $options, true, true, true);
+		generate_text_for_storage($topic_text, $bbcode_uid, $bitfield, $options, true, true, true);
 
 		$data = array(
 			'topic_title'			=> $topic_title,
@@ -617,11 +600,11 @@ class functions_kb
 			'enable_sig' 			=> (bool) true,
 			'notify'				=> 0,
 			'notify_set'			=> '',
-			'enable_indexing'		=> (bool) false,
+			'enable_indexing'		=> (bool) true,
 			'message'				=> htmlspecialchars_decode($topic_text),
-			'message_md5'			=> (string) '',
+			'message_md5'			=> md5($message_parser->message),
 			'bbcode_bitfield'		=> $bitfield,
-			'bbcode_uid'			=> $uid,
+			'bbcode_uid'			=> substr(md5(rand()), 0, 8),
 			'post_edit_locked'		=> 0,
 		);
 
@@ -663,6 +646,15 @@ class functions_kb
 				{
 					$replacement = '<dl class="file"><dt class="attach-image"><img src="' . $this->helper->route('sheer_knowledgebase_kb_file', array('id' => $attachments[$index]['attach_id'])) . '" class="postimage" alt="' . $attachments[$index]['real_filename'] . '" onclick="viewableArea(this);"></dt><dd>' . $comment . '</dd></dl>';
 				}
+				else if ($attachments[$index]['extension'] == 'mp3' || $attachments[$index]['extension'] == 'mp4')
+				{
+					$replacement = '<p><audio src="' . $this->helper->route('sheer_knowledgebase_kb_file', array('id' => $attachments[$index]['attach_id'])) .'" style="width:80%" controls preload="none"></audio>';
+					if ($attachments[$index]['attach_comment'])
+					{
+						$replacement .= '<br />' . $attachments[$index]['attach_comment'] . '';
+					}
+					$replacement .= '</p>';
+				}
 				else
 				{
 					$icon = ($extensions[$attachments[$index]['extension']]['upload_icon']) ? '<img src="' . generate_board_url() . '/images/upload_icons/' . $extensions[$attachments[$index]['extension']]['upload_icon'] . '" alt="">' : '';
@@ -700,6 +692,15 @@ class functions_kb
 					{
 						$text .= '<dd><dl class="file">';
 						$text .= '<dt class="attach-image"><img src="' . $this->helper->route('sheer_knowledgebase_kb_file', array('id' => $value['attach_id'])) . '" class="postimage" alt="' . $value['real_filename'] . '" onclick="viewableArea(this);"></dt>' . $comment . '';
+					}
+					else if ($value['extension'] == 'mp3')
+					{
+                   		$text .= '<p><audio src="' . $this->helper->route('sheer_knowledgebase_kb_file', array('id' => $value['attach_id'])) .'" style="width:100%" controls preload="none"></audio>';
+                   		if ($value['attach_comment'])
+                   		{
+                   			$text .= '<br />' . $value['attach_comment'] . '';
+                   		}
+                   		$text .= '</p>';
 					}
 					else
 					{
