@@ -151,6 +151,36 @@ class posting
 			trigger_error('RULES_KB_ADD_CANNOT');
 		}
 
+		if ($mode)
+		{
+			$sql = 'SELECT DISTINCT a.*, c.category_name, c.category_id
+				FROM ' . $this->articles_table . ' a, ' . $this->categories_table . ' c
+				WHERE article_id = ' . (int) $art_id . '
+					AND (c.category_id = a.article_category_id)';
+			$result = $this->db->sql_query($sql);
+			$row = $this->db->sql_fetchrow($result);
+			$this->db->sql_freeresult($result);
+
+			if (empty($row))
+			{
+				trigger_error('ARTICLE_NO_EXISTS');
+			}
+
+			$article_author_id = $row['author_id'];
+
+			$edit_allowed = ($this->kb->acl_kb_get($cat_id, 'kb_m_edit') || (
+				$this->user->data['user_id'] == $article_author_id &&
+				$this->kb->acl_kb_get($cat_id, 'kb_u_edit') ||
+				$this->auth->acl_get('a_manage_kb')
+			));
+
+			$delete_allowed = ($this->kb->acl_kb_get($cat_id, 'kb_m_delete') || (
+				$this->user->data['user_id'] == $article_author_id &&
+				$this->kb->acl_kb_get($cat_id, 'kb_u_delete') ||
+				$this->auth->acl_get('a_manage_kb')
+			));
+		}
+
 		if ($this->config['kb_search_type'])
 		{
 			if (preg_match('#^\w+$#', $this->config['kb_search_type']) || file_exists($this->phpbb_root_path . 'ext/sheer/knowledgebase/search/' . $this->config['kb_search_type'] . '.' . $this->php_ext))
@@ -172,15 +202,7 @@ class posting
 		$delete		= (isset($_POST['delete'])) ? true : false;
 		$edit		= ($mode == 'edit') ?true : false;
 
-		$delete_allowed = ($this->kb->acl_kb_get($cat_id, 'kb_m_delete') || (
-			$this->user->data['user_id'] == $author_id &&
-			$this->kb->acl_kb_get($cat_id, 'kb_u_delete') ||
-			$this->auth->acl_get('a_manage_kb')
-		));
-
 		$action = $this->helper->route('sheer_knowledgebase_posting', array('id' => $cat_id));
-
-		$this->kb_parse_attachments($art_id, $attachment_data, $preview, $edit, $submit);
 
  		if ($mode == 'delete' || $delete)
 		{
@@ -225,43 +247,25 @@ class posting
 			}
 			$action = $this->helper->route('sheer_knowledgebase_posting', array('mode' => 'edit', 'k' => $art_id, 'id' => $cat_id));
 
-			$sql = 'SELECT DISTINCT a.*, c.category_name, c.category_id
-				FROM ' . $this->articles_table . ' a, ' . $this->categories_table . ' c
-				WHERE article_id = ' . (int) $art_id . '
-					AND (c.category_id = a.article_category_id)';
-			$result = $this->db->sql_query($sql);
-			$row = $this->db->sql_fetchrow($result);
-			$this->db->sql_freeresult($result);
-
-			if (empty($row))
-			{
-				trigger_error('ARTICLE_NO_EXISTS');
-			}
-
-			$edit_allowed = ($this->kb->acl_kb_get($cat_id, 'kb_m_edit') || (
-				$this->user->data['user_id'] == $author_id &&
-				$this->kb->acl_kb_get($cat_id, 'kb_u_edit') ||
-				$this->auth->acl_get('a_manage_kb')
-			));
-
-			if (!$edit_allowed)
-			{
-				trigger_error('RULES_KB_MOD_EDIT_CANNOT');
-			}
-
 			$uid = $bitfield = $options = '';
 
 			$article_title 			= $row['article_title'];
 			$article_text 			= $row['article_body'];
 			$article_description 	= $row['article_description'];
 			$article_author			= $row['author'];
-			$article_author_id		= $row['author_id'];
 			$views					= $row['views'];
 			$article_date			= $row['article_date'];
 			$order					= $row['display_order'];
 
 			$article_text = $this->decode_message($article_text, $row['bbcode_uid']);
+
+			if (!$edit_allowed)
+			{
+				trigger_error('RULES_KB_MOD_EDIT_CANNOT');
+			}
 		}
+
+		$this->kb_parse_attachments($art_id, $attachment_data, $preview, $edit, $submit);
 
 		$bbcode_status	= true;
 		$smilies_status	= true;
@@ -297,10 +301,6 @@ class posting
 				/* to enable bbcode, urls and smilies parsing, be enable it when using
 				generate_text_for_stoarge function */
 				generate_text_for_storage($article_text, $bbcode_uid, $bbcode_bitfield, $options, true, true, true);
-				if (!$bbcode_bitfield)
-				{
-					$bbcode_bitfield = 'QA==';
-				}
 
 				$sql_data = array(
 					'article_category_id'	=> $cat_id,
@@ -308,8 +308,7 @@ class posting
 					'article_description'	=> $article_description,
 					'article_date'			=> time(),
 					'author_id'				=> $this->user->data['user_id'],
-					'bbcode_uid'			=> $bbcode_uid,
-					'bbcode_bitfield'		=> $bbcode_bitfield,
+					'bbcode_uid'			=> substr(md5(rand()), 0, 8),
 					'article_body'			=> $article_text,
 					'views'					=> 0,
 					'author'				=> $this->user->data['username'],
@@ -363,7 +362,7 @@ class posting
 					// Upd search index
 					if ($kb_search)
 					{
-						$kb_search->index('edit', $art_id, $article_text, $article_title, $author_id);
+						$kb_search->index('edit', $art_id, $article_text, $article_title, $article_description, $author_id);
 					}
 
 					$this->insert_attachments($attachment_data, $art_id);
@@ -401,7 +400,7 @@ class posting
 						if (isset($kb_search))
 						{
 							// Add search index
-							$kb_search->index('add', $new, $article_text, $article_title, $this->user->data['user_id']);
+							$kb_search->index('add', $new, $article_text, $article_title, $article_description, $this->user->data['user_id']);
 						}
 
 						if (!empty($this->kb_data['forum_id']) && $this->kb_data['anounce'])
@@ -527,7 +526,7 @@ class posting
 			'S_ATTACH_DATA'			=> (sizeof($attachment_data)) ? json_encode($attachment_data) : '[]',
 			'S_PLUPLOAD_URL'		=> generate_board_url() . '/knowledgebase/posting?id=' . $cat_id . '',
 
-			'CATS_BOX'				=> '<option value="0" disabled="disabled">' . $this->user->lang['CATEGORIES_LIST'] . '</option>' . $this->kb->make_category_select($cat_id, false, true, false, false) . '',
+			'CATS_BOX'				=> '<option value="0" disabled="disabled">' . $this->user->lang['CATEGORIES_LIST'] . '</option>' . $this->kb->make_category_select($cat_id, array($cat_id), false, false, false) . '',
 
 			'U_KB'					=> $this->helper->route('sheer_knowledgebase_index'),
 			'S_POST_ACTION'			=> $action,
