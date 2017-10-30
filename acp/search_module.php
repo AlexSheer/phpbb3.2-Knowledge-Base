@@ -331,7 +331,7 @@ class search_module
 						$max = $this->max_post_id;
 						while (still_on_time() && $post_counter <= $this->max_post_id)
 						{
-							$sql = 'SELECT article_id, article_title, article_body, author_id, article_category_id
+							$sql = 'SELECT article_id, article_title, article_body, author_id, article_description
 								FROM ' . $this->kb_articles_table . '
 								WHERE article_id >= ' . (int) ($post_counter + 1) . '
 									AND article_id <= ' . (int) ($post_counter + $this->batch_size);
@@ -350,7 +350,7 @@ class search_module
 							$i = 0;
 							while ($row = ($buffer ? $rows[$i++] : $db->sql_fetchrow($result)))
 							{
-								$this->search->index('add', $row['article_id'], $row['article_body'], $row['article_title'], $row['author_id'], $row['article_category_id']);
+								$this->search->index('add', $row['article_id'], $row['article_body'], $row['article_title'], $row['article_description'], $row['author_id']);
 								$row_count++;
 							}
 							if (!$buffer)
