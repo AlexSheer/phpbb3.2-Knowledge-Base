@@ -12,6 +12,7 @@
 					<dl class="posts">
 						<dt>{L_CATEGORY}</dt>
 						<dd class="posts">{L_ARTICLES}</dd>
+						<dd class="lastpost">{L_LAST_ARTICLE}</dd>
 					</dl>
 				</li>
 			</ul>
@@ -24,7 +25,15 @@
 							<!-- IF cat_row.CAT_DESCRIPTION --><br />{cat_row.CAT_DESCRIPTION}<!-- ENDIF -->
 							<!-- IF cat_row.SUBCATS --><br /><span>{cat_row.SUBCATS}</span><!-- ENDIF -->
 						</dt>
-							<dd class="topics">{cat_row.ARTICLES}</dd>
+							<dd class="posts">{cat_row.ARTICLES}</dd>
+							<dd class="lastpost">
+							<!-- IF cat_row.U_ARTICLE -->
+								<span>
+									<a href="{cat_row.U_ARTICLE}" class="lastsubject"><!-- IF cat_row.NEED_APPROVE --><i class="icon fa fa-exclamation-triangle fa-fw" aria-hidden="true" style="color: #a00;"></i>&nbsp;<!-- ENDIF -->{cat_row.ARTICLE_TITLE}</a><br />
+									{cat_row.ARTICLE_AUTHOR},&nbsp;{cat_row.ARTICLE_TTIME}
+								</span>
+								<!-- ENDIF -->
+							</dd>
 					</dl>
 				</li>
 				<!-- END cat_row -->
@@ -130,25 +139,21 @@
 	</div>
 	<div id="page" style="display:none">{CURRENT_PAGE_NUMBER}</div>
 	<br clear="all" />
-	<form method="post" name="jumpbox" action="{S_ACTION}" onsubmit="if(document.jumpbox.id.value == -1){return false;}">
-		<fieldset style="float:right; margin: 5px 0px" class="jumpbox">
-			<label for="id" accesskey="j">{L_GO}{L_COLON}</label>
-			<select name="id" onchange="if(this.options[this.selectedIndex].value != -1){ document.forms['jumpbox'].submit() }">
-			{CATS_BOX}</select>
-			<input type="submit" value="{L_GO}" class="button2">
-		</fieldset>
 
+	<!-- IF CATS_DROPBOX -->
+	<div class="jumpbox dropdown-container dropdown-container-right dropdown-up dropdown-left dropdown-button-control" id="jumpbox">
+			<span title="{L_GO}" class="button button-secondary dropdown-trigger dropdown-select dropdown-toggle">
+				<span>{L_GO}</span>
+				<span class="caret"><i class="icon fa-sort-down fa-fw" aria-hidden="true"></i></span>
+			</span>
 		<div class="dropdown">
 			<div class="pointer"><div class="pointer-inner"></div></div>
 			<ul class="dropdown-contents">
-				<!-- BEGIN jumpbox_forums -->
-				<!-- IF jumpbox_forums.FORUM_ID neq -1 -->
-				<li><a href="{jumpbox_forums.LINK}" class="<!-- IF jumpbox_forums.level -->jumpbox-sub-link<!-- ELSEIF jumpbox_forums.S_IS_CAT -->jumpbox-cat-link<!-- ELSE -->jumpbox-forum-link<!-- ENDIF -->"><!-- BEGIN level --><span class="spacer"></span><!-- END level --> <span><!-- IF jumpbox_forums.level --><!-- IF S_CONTENT_DIRECTION eq 'rtl' -->&#8626;<!-- ELSE -->&#8627;<!-- ENDIF --> &nbsp;<!-- ENDIF --> {jumpbox_forums.FORUM_NAME}</span></a></li>
-				<!-- ENDIF -->
-				<!-- END jumpbox_forums -->
+				{CATS_DROPBOX}
 			</ul>
 		</div>
-	</form>
+	</div>
+	<!-- ENDIF -->
 	<div class="stat-block permissions">
 		<h3>{L_KB_PERMISSIONS}</h3>
 		<p><!-- BEGIN rules -->{rules.RULE}<br /><!-- END rules --></p>
