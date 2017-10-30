@@ -92,7 +92,7 @@ class kb_base
 	{
 		global $cache;
 
-		if (!($stored_ids = $cache->get('_search_results_' . $search_key)))
+		if (!($stored_ids = $cache->get('_kb_search_results_' . $search_key)))
 		{
 			// no search results cached for this search_key
 			return 0;
@@ -173,10 +173,7 @@ class kb_base
 	{
 		global $cache, $config, $db, $user, $table_prefix;
 
-		if (!defined('KB_SEARCH_RESULTS_TABLE'))
-		{
-			define('KB_SEARCH_RESULTS_TABLE', $table_prefix.'kb_search_results');
-		}
+		$search_results_table = $table_prefix . 'kb_search_results';
 
 		$length = min(sizeof($id_ary), $config['search_block_size']);
 
@@ -190,13 +187,13 @@ class kb_base
 
 		// create a new resultset if there is none for this search_key yet
 		// or add the ids to the existing resultset
-		if (!($store = $cache->get('_search_results_' . $search_key)))
+		if (!($store = $cache->get('_kb_search_results_' . $search_key)))
 		{
 			// add the current keywords to the recent searches in the cache which are listed on the search page
 			if (!empty($keywords) || sizeof($author_ary))
 			{
 				$sql = 'SELECT search_time
-					FROM ' . KB_SEARCH_RESULTS_TABLE . '
+					FROM ' . $search_results_table . '
 					WHERE search_key = \'' . $db->sql_escape($search_key) . '\'';
 				$result = $db->sql_query($sql);
 
@@ -209,7 +206,7 @@ class kb_base
 						'search_authors'	=> ' ' . implode(' ', $author_ary) . ' '
 					);
 
-					$sql = 'INSERT INTO ' . KB_SEARCH_RESULTS_TABLE . ' ' . $db->sql_build_array('INSERT', $sql_ary);
+					$sql = 'INSERT INTO ' . $search_results_table . ' ' . $db->sql_build_array('INSERT', $sql_ary);
 					$db->sql_query($sql);
 				}
 				$db->sql_freeresult($result);
@@ -267,9 +264,9 @@ class kb_base
 					}
 				}
 			}
-			$cache->put('_search_results_' . $search_key, $store, $config['search_store_results']);
+			$cache->put('_kb_search_results_' . $search_key, $store, $config['search_store_results']);
 
-			$sql = 'UPDATE ' . KB_SEARCH_RESULTS_TABLE . '
+			$sql = 'UPDATE ' . $search_results_table . '
 				SET search_time = ' . time() . '
 				WHERE search_key = \'' . $db->sql_escape($search_key) . '\'';
 			$db->sql_query($sql);
@@ -287,10 +284,7 @@ class kb_base
 	{
 		global $db, $cache, $config, $table_prefix;
 
-		if (!defined('KB_SEARCH_RESULTS_TABLE'))
-		{
-			define('KB_SEARCH_RESULTS_TABLE', $table_prefix.'kb_search_results');
-		}
+		$search_results_table = $table_prefix . 'kb_search_results';
 
 		// clear all searches that searched for the specified words
 		if (sizeof($words))
@@ -302,13 +296,12 @@ class kb_base
 			}
 
 			$sql = 'SELECT search_key
-				FROM ' . KB_SEARCH_RESULTS_TABLE . "
+				FROM ' . $search_results_table . "
 				WHERE search_keywords LIKE '%*%' $sql_where";
 			$result = $db->sql_query($sql);
-
 			while ($row = $db->sql_fetchrow($result))
 			{
-				$cache->destroy('_search_results_' . $row['search_key']);
+				$cache->destroy('_kb_search_results_' . $row['search_key']);
 			}
 			$db->sql_freeresult($result);
 		}
@@ -323,20 +316,28 @@ class kb_base
 			}
 
 			$sql = 'SELECT search_key
-				FROM ' . KB_SEARCH_RESULTS_TABLE . "
+				FROM ' . $search_results_table . "
 				WHERE $sql_where";
 			$result = $db->sql_query($sql);
 
 			while ($row = $db->sql_fetchrow($result))
 			{
-				$cache->destroy('_search_results_' . $row['search_key']);
+				$cache->destroy('_kb_search_results_' . $row['search_key']);
 			}
 			$db->sql_freeresult($result);
 		}
 
 		$sql = 'DELETE
-			FROM ' . KB_SEARCH_RESULTS_TABLE . '
+			FROM ' . $search_results_table . '
 			WHERE search_time < ' . (time() - $config['search_store_results']);
 		$db->sql_query($sql);
+	}
+
+	public function destroy_src_cache()
+	{
+		global $phpbb_root_path;
+
+		$path = '' . $phpbb_root_path . 'cache/production/data_kb_search_results_*.*';
+		array_map('unlink', glob($path));
 	}
 }
