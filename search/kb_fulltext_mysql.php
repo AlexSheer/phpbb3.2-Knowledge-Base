@@ -375,18 +375,20 @@ class kb_fulltext_mysql extends \sheer\knowledgebase\search\kb_base
 		$search_result = array();
 
 		// generate a search_key from all the options to identify the results
-		$search_key = crc32(implode('#', array(
+		$search_key_array = array(
 			implode(', ', $this->split_words),
 			$type,
 			$fields,
 			$terms,
 			$sort_days,
 			$sort_key,
-			$category_id,
+			$topic_id,
 			implode(',', $ex_fid_ary),
 			true,
 			implode(',', $author_ary)
-		)));
+		);
+
+		$search_key = md5(implode('#', $search_key_array));
 
 		if ($start < 0)
 		{
@@ -411,13 +413,31 @@ class kb_fulltext_mysql extends \sheer\knowledgebase\search\kb_base
 		$sql_sort = $sort_by_sql[$sort_key] . (($sort_dir == 'a') ? ' ASC' : ' DESC');
 
 		// Build some display specific sql strings
+		switch ($fields)
+		{
+			case 'titleonly':
+				$sql_match = 'p.article_title';
+			break;
 
-		$sql_match = 'p.article_title, p.article_body';
-		$sql_match_where = '';
+			case 'descronly':
+				$sql_match = 'p.article_description';
+			break;
+
+			case 'msgonly':
+				$sql_match = 'p.article_body';
+			break;
+
+			default:
+				$sql_match = 'p.article_title, p.article_body, p.article_description';
+			break;
+		}
+
+		$search_query = $this->search_query;
 
 		$sql_select			= (!$result_count) ? 'SQL_CALC_FOUND_ROWS ' : '';
 		$sql_select			= $sql_select . 'p.article_id';
 		$field				= 'article_id';
+
 		if (sizeof($author_ary) && $author_name)
 		{
 			// first one matches post of registered users, second one guests and deleted users
@@ -437,7 +457,6 @@ class kb_fulltext_mysql extends \sheer\knowledgebase\search\kb_base
 		$sql_where_options .= $sql_author;
 		$sql_where_options .= ($sort_days) ? ' AND p.article_date >= ' . (time() - ($sort_days * 86400)) : '';
 		$sql_where_options .= $sql_author;
-		$sql_where_options .= $sql_match_where;
 		$sql_where_options .= ' AND p.approved = 1 ';
 
 		$sql = "SELECT $sql_select
@@ -445,6 +464,7 @@ class kb_fulltext_mysql extends \sheer\knowledgebase\search\kb_base
 			WHERE MATCH ($sql_match) AGAINST ('" . $this->db->sql_escape(htmlspecialchars_decode($this->search_query)) . "' IN BOOLEAN MODE)
 				$sql_where_options
 			ORDER BY $sql_sort";
+		$this->db->sql_return_on_error(true); // Fix bug with SQL error if empty index
 		$result = $this->db->sql_query_limit($sql, $this->config['search_block_size'], $start);
 
 		while ($row = $this->db->sql_fetchrow($result))
@@ -455,8 +475,9 @@ class kb_fulltext_mysql extends \sheer\knowledgebase\search\kb_base
 		$this->db->sql_freeresult($result);
 
 		$id_ary = array_unique($id_ary);
+
 		// if the total result count is not cached yet, retrieve it from the db
-		if (!$result_count)
+		if (!$result_count && sizeof($id_ary))
 		{
 			$sql_found_rows = 'SELECT FOUND_ROWS() as result_count';
 			$result = $this->db->sql_query($sql_found_rows);
@@ -627,29 +648,35 @@ class kb_fulltext_mysql extends \sheer\knowledgebase\search\kb_base
 	* @param	string		$subject	contains the subject of the post to index
 	* @param	int			$poster_id	contains the user id of the poster
 	*/
-	public function index($mode, $post_id, &$message, &$subject, $poster_id)
+	public function index($mode, $article_id, &$message, &$subject, &$description, $poster_id)
 	{
 		// Split old and new post/subject to obtain array of words
 		$split_text = $this->split_message($message);
 		$split_title = ($subject) ? $this->split_message($subject) : array();
+		// Add in vers 1.0.3 -->
+		$split_descr = $this->split_message($description);
+		//<--
 
-		$words = array_unique(array_merge($split_text, $split_title));
+		$kb_words = array_unique(array_merge($split_text, $split_title, $split_descr));
 
 		unset($split_text);
 		unset($split_title);
+// Add in vers 1.0.3 -->
+		unset($split_descr);
+//<--
 
-		// destroy cached search results containing any of the words removed or added
-		$this->destroy_cache($words, array($poster_id));
+		// destroy cached search results
+		$this->destroy_src_cache();
 
-		unset($words);
+		unset($kb_words);
 	}
 
 	/**
 	* Destroy cached results, that might be outdated after deleting a post
 	*/
-	public function index_remove($post_ids, $author_ids, $forum_ids)
+	public function index_remove($post_ids, $author_ids)
 	{
-		$this->destroy_cache(array(), array_unique($author_ids));
+		$this->destroy_src_cache();
 	}
 
 	/**
@@ -658,7 +685,7 @@ class kb_fulltext_mysql extends \sheer\knowledgebase\search\kb_base
 	public function tidy()
 	{
 		// destroy too old cached search results
-		$this->destroy_cache(array());
+		$this->destroy_src_cache();
 
 		$this->config->set('search_last_gc', time(), false);
 	}
@@ -697,7 +724,27 @@ class kb_fulltext_mysql extends \sheer\knowledgebase\search\kb_base
 			$alter_entry[] = 'ADD FULLTEXT (article_title)';
 			$alter_list[] = $alter_entry;
 		}
+// Add in vers 1.0.3 -->
+		if (!isset($this->stats['article_description']))
+		{
+			$alter_entry = array();
+			if ($this->db->get_sql_layer() == 'mysqli' || version_compare($this->db->sql_server_info(true), '4.1.3', '>='))
+			{
+				$alter_entry[] = 'MODIFY article_description varchar(255) COLLATE utf8_unicode_ci DEFAULT \'\' NOT NULL';
+			}
+			else
+			{
+				$alter_entry[] = 'MODIFY article_description text NOT NULL';
+			}
+			$alter_entry[] = 'ADD FULLTEXT (article_description)';
+			$alter_list[] = $alter_entry;
+		}
 
+		if (!isset($this->stats['article_body']))
+		{
+			$this->db->sql_query('ALTER TABLE ' . $this->articles_table . ' ADD FULLTEXT article_body (article_body)');
+		}
+//<--
 		if (!isset($this->stats['article_content']))
 		{
 			$alter_entry = array();
@@ -710,7 +757,8 @@ class kb_fulltext_mysql extends \sheer\knowledgebase\search\kb_base
 				$alter_entry[] = 'MODIFY article_body mediumtext NOT NULL';
 			}
 
-			$alter_entry[] = 'ADD FULLTEXT article_content (article_body, article_title)';
+			$alter_entry[] = 'ADD FULLTEXT article_content (article_body, article_title, article_description)'; // , add article_description in vers 1.0.3
+
 			$alter_list[] = $alter_entry;
 		}
 
@@ -722,6 +770,7 @@ class kb_fulltext_mysql extends \sheer\knowledgebase\search\kb_base
 			}
 		}
 
+		$this->destroy_src_cache();
 		$this->db->sql_query('TRUNCATE TABLE ' . SEARCH_RESULTS_TABLE);
 
 		return false;
@@ -751,7 +800,17 @@ class kb_fulltext_mysql extends \sheer\knowledgebase\search\kb_base
 		{
 			$alter[] = 'DROP INDEX article_title';
 		}
+// Add in vers 1.0.3 -->
+		if (isset($this->stats['article_description']))
+		{
+			$alter[] = 'DROP INDEX article_description';
+		}
 
+		if (isset($this->stats['article_body']))
+		{
+			$alter[] = 'DROP INDEX article_body';
+		}
+//<--
 		if (isset($this->stats['article_content']))
 		{
 			$alter[] = 'DROP INDEX article_content';
@@ -762,6 +821,7 @@ class kb_fulltext_mysql extends \sheer\knowledgebase\search\kb_base
 			$this->db->sql_query('ALTER TABLE ' . $this->articles_table . ' ' . implode(', ', $alter));
 		}
 
+		$this->destroy_src_cache();
 		$this->db->sql_query('TRUNCATE TABLE ' . $this->search_results_table);
 
 		return false;
@@ -777,7 +837,7 @@ class kb_fulltext_mysql extends \sheer\knowledgebase\search\kb_base
 			$this->get_stats();
 		}
 
-		return isset($this->stats['article_title']) && isset($this->stats['article_content']);
+		return isset($this->stats['article_title']) && isset($this->stats['article_content']) && isset($this->stats['article_description']) && isset($this->stats['article_body']);
 	}
 
 	/**
@@ -822,6 +882,17 @@ class kb_fulltext_mysql extends \sheer\knowledgebase\search\kb_base
 				{
 					$this->stats['article_title'] = $row;
 				}
+// Add in vers 1.0.3 -->
+				else if ($row['Key_name'] == 'article_description')
+				{
+					$this->stats['article_description'] = $row;
+				}
+
+				else if ($row['Key_name'] == 'article_body')
+				{
+					$this->stats['article_body'] = $row;
+				}
+//<--
 				else if ($row['Key_name'] == 'article_content')
 				{
 					$this->stats['article_content'] = $row;
