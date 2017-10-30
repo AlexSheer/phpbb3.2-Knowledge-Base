@@ -535,6 +535,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 
 		// try reading the results from cache
 		$total_results = 0;
+
 		if ($this->obtain_ids($search_key, $total_results, $id_ary, $start, $per_page, $sort_dir) == 1)
 		{
 			$search_result['total_matches'] = $total_results;
@@ -561,19 +562,28 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 			)),
 		);
 
-		$title_match = '';
 		$group_by = true;
+
 		// Build some display specific sql strings
 		switch ($fields)
 		{
 			case 'titleonly':
-				$title_match = 'title_match = 1';
+				$title_match = 'title_match = 1 AND descr_match = 0';
 				$group_by = false;
 			break;
 
 			case 'msgonly':
-				$title_match = 'title_match = 0';
+				$title_match = 'title_match = 0 AND descr_match = 0';
 				$group_by = false;
+			break;
+
+			case 'descronly':
+				$title_match = 'title_match = 0 AND descr_match = 1';
+				$group_by = false;
+			break;
+
+			default:
+				$title_match = '';
 			break;
 		}
 
@@ -1078,7 +1088,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 	* @param	int		$poster_id		Article author's user id
 	*/
 
-	public function index($mode, $article_id, &$message, &$subject, $poster_id)
+	public function index($mode, $article_id, &$message, &$subject, &$description, $poster_id)
 	{
 		if (!$this->config['kb_search'])
 		{
@@ -1088,21 +1098,30 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 			return;
 		}
 
-		// Split old and new post/subject to obtain array of 'words'
+		// Split old and new article/title/description to obtain array of 'words'
 		$split_text = $this->split_message($message);
 		$split_title = $this->split_message($subject);
+		// Add in vers 1.0.3 -->
+		$split_descr = $this->split_message($description);
+		//<--
 
-		$cur_words = array('post' => array(), 'title' => array());
+		$cur_words = array('post' => array(), 'title' => array(), 'descr' => array());
 
 		$words = array();
 		if ($mode == 'edit')
 		{
 			$words['add']['post'] = array();
 			$words['add']['title'] = array();
+// Add in vers 1.0.3 -->
+			$words['add']['descr'] = array();
+//<--
 			$words['del']['post'] = array();
 			$words['del']['title'] = array();
+// Add in vers 1.0.3 -->
+			$words['del']['descr'] = array();
+//<--
 
-			$sql = 'SELECT w.word_id, w.word_text, m.title_match
+			$sql = 'SELECT w.word_id, w.word_text, m.title_match, m.descr_match
 				FROM ' . $this->wordlist_table . ' w, ' . $this->wordmatch_table . " m
 				WHERE m.article_id = $article_id
 					AND w.word_id = m.word_id";
@@ -1110,28 +1129,56 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 
 			while ($row = $this->db->sql_fetchrow($result))
 			{
-				$which = ($row['title_match']) ? 'title' : 'post';
+				if ($row['title_match'])
+				{
+					$which = 'title';
+				}
+// Add in vers 1.0.3 -->
+				else if ($row['descr_match'])
+				{
+					$which = 'descr';
+				}
+//<--
+				else
+				{
+					$which = 'post';
+				}
 				$cur_words[$which][$row['word_text']] = $row['word_id'];
 			}
 			$this->db->sql_freeresult($result);
 
 			$words['add']['post'] = array_diff($split_text, array_keys($cur_words['post']));
 			$words['add']['title'] = array_diff($split_title, array_keys($cur_words['title']));
+// Add in vers 1.0.3 -->
+			$words['add']['descr'] = array_diff($split_descr, array_keys($cur_words['descr']));
+//<--
 			$words['del']['post'] = array_diff(array_keys($cur_words['post']), $split_text);
 			$words['del']['title'] = array_diff(array_keys($cur_words['title']), $split_title);
+// Add in vers 1.0.3 -->
+			$words['del']['descr'] = array_diff(array_keys($cur_words['descr']), $split_descr);
+//<--
 		}
 		else
 		{
 			$words['add']['post'] = $split_text;
 			$words['add']['title'] = $split_title;
+// Add in vers 1.0.3 -->
+			$words['add']['descr'] = $split_descr;
+//<--
 			$words['del']['post'] = array();
 			$words['del']['title'] = array();
+// Add in vers 1.0.3 -->
+			$words['del']['descr'] = array();
+//<--
 		}
 		unset($split_text);
 		unset($split_title);
+// Add in vers 1.0.3 -->
+		unset($split_descr);
+//<--
 
 		// Get unique words from the above arrays
-		$unique_add_words = array_unique(array_merge($words['add']['post'], $words['add']['title']));
+		$unique_add_words = array_unique(array_merge($words['add']['post'], $words['add']['title'], $words['add']['descr']));
 
 		// We now have unique arrays of all words to be added and removed and
 		// individual arrays of added and removed words for text and title. What
@@ -1176,6 +1223,9 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 		foreach ($words['del'] as $word_in => $word_ary)
 		{
 			$title_match = ($word_in == 'title') ? 1 : 0;
+// Add in vers 1.0.3 -->
+			$descr_match = ($word_in == 'descr') ? 1 : 0;
+//<--
 
 			if (sizeof($word_ary))
 			{
@@ -1188,6 +1238,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 				$sql = 'DELETE FROM ' .  $this->wordmatch_table . '
 					WHERE ' . $this->db->sql_in_set('word_id', $sql_in) . "
 						AND article_id = $article_id
+						AND descr_match = $descr_match
 						AND title_match = $title_match";
 				$this->db->sql_query($sql);
 
@@ -1205,11 +1256,14 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 		foreach ($words['add'] as $word_in => $word_ary)
 		{
 			$title_match = ($word_in == 'title') ? 1 : 0;
+// Add in vers 1.0.3 -->
+			$descr_match = ($word_in == 'descr') ? 1 : 0;
+//<--
 
 			if (sizeof($word_ary))
 			{
-				$sql = 'INSERT INTO ' . $this->wordmatch_table . ' (article_id, word_id, title_match)
-					SELECT ' . (int) $article_id . ', word_id, ' . (int) $title_match . '
+				$sql = 'INSERT INTO ' . $this->wordmatch_table . ' (article_id, word_id, title_match, descr_match)
+					SELECT ' . (int) $article_id . ', word_id, ' . (int) $title_match . ', '. (int) $descr_match .'
 					FROM ' . $this->wordlist_table . '
 					WHERE ' . $this->db->sql_in_set('word_text', $word_ary);
 				$this->db->sql_query($sql);
@@ -1225,7 +1279,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 		$this->db->sql_transaction('commit');
 
 		// destroy cached search results containing any of the words removed or added
-		$this->destroy_cache(array_unique(array_merge($words['add']['post'], $words['add']['title'], $words['del']['post'], $words['del']['title'])), array($poster_id));
+		$this->destroy_src_cache();
 
 		unset($unique_add_words);
 		unset($words);
@@ -1239,7 +1293,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 	{
 		if (sizeof($article_ids))
 		{
-			$sql = 'SELECT w.word_id, w.word_text, m.title_match
+			$sql = 'SELECT w.word_id, w.word_text, m.title_match, m.descr_match
 				FROM ' . $this->wordmatch_table . ' m, ' . $this->wordlist_table . ' w
 				WHERE ' . $this->db->sql_in_set('m.article_id', $article_ids) . '
 					AND w.word_id = m.word_id';
@@ -1252,6 +1306,12 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 				{
 					$title_word_ids[] = $row['word_id'];
 				}
+// Add in vers 1.0.3 -->
+				if ($row['descr_match'])
+				{
+					$descr_word_ids[] = $row['word_id'];
+				}
+//<--
 				else
 				{
 					$message_word_ids[] = $row['word_id'];
@@ -1268,7 +1328,16 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 						AND word_count > 0';
 				$this->db->sql_query($sql);
 			}
-
+// Add in vers 1.0.3 -->
+			if (sizeof($descr_word_ids))
+			{
+				$sql = 'UPDATE ' . $this->wordlist_table . '
+					SET word_count = word_count - 1
+					WHERE ' . $this->db->sql_in_set('word_id', $descr_word_ids) . '
+						AND word_count > 0';
+				$this->db->sql_query($sql);
+			}
+//<--
 			if (sizeof($message_word_ids))
 			{
 				$sql = 'UPDATE ' . $this->wordlist_table . '
@@ -1286,7 +1355,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 			$this->db->sql_query($sql);
 		}
 
-		$this->destroy_cache(array_unique($word_texts), array_unique($author_ids));
+		$this->destroy_src_cache();
 	}
 
 	/**
@@ -1373,6 +1442,8 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 				$this->db->sql_query('TRUNCATE TABLE ' . $this->wordmatch_table);
 			break;
 		}
+
+		$this->destroy_src_cache();
 	}
 
 	/**
