@@ -531,6 +531,7 @@ class posting
 			'U_KB'					=> $this->helper->route('sheer_knowledgebase_index'),
 			'S_POST_ACTION'			=> $action,
 			'S_VIEWTOPIC'			=> true, // Need for Extension Highslide (bb3mobi/highslide)
+			'S_POST_ARTICLE'		=> true,
 			)
 		);
 
