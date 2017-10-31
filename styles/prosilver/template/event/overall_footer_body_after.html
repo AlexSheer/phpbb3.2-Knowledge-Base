@@ -3,3 +3,36 @@
 <!-- INCLUDEJS @sheer_knowledgebase/reorder.js -->
 <!-- INCLUDEJS @sheer_knowledgebase/copy.js -->
 <!-- ENDIF -->
+<!-- IF S_POST_ARTICLE -->
+<!-- INCLUDEJS @sheer_knowledgebase/jquery.validate.js -->
+<script>
+	$.validator.setDefaults({
+		submitHandler: function() {
+			alert("submitted!");
+		}
+	});
+
+	$().ready(function() {
+		// validate signup form on keyup and submit
+		$("#postform").validate({
+			rules: {
+				subject: "required",
+				descr: "required",
+				message: "required",
+			},
+			messages: {
+				subject: "{L_NO_TITLE}",
+				descr: "{L_NO_DESCR}",
+				message: "{L_NO_TEXT}"
+			}
+		});
+	});
+	</script>
+<style>
+	#postform label.error {
+		margin-left: 10px;
+		width: auto;
+		display: inline;
+	}
+</style>
+<!-- ENDIF -->
