@@ -439,6 +439,11 @@ class functions_kb
 			}
 			$this->db->sql_freeresult($result);
 
+			if (!isset($user_groups))
+			{
+				login_box('', ((isset($this->user->lang['LOGIN_EXPLAIN_' . strtoupper($mode)])) ? $this->user->lang['LOGIN_EXPLAIN_' . strtoupper($mode)] : $this->user->lang['LOGIN_EXPLAIN_APPROVE']));
+			}
+
 			$sql = 'SELECT auth_setting
 				FROM ' . $this->kb_groups_table . '
 				WHERE category_id = ' . (int) $category_id . '
