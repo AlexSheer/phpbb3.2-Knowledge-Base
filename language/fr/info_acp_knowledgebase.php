@@ -120,7 +120,7 @@ $lang = array_merge($lang, array(
 	'kb_u_add'				=> 'Peut créer de nouveaux articles.',
 	'kb_u_edit'				=> 'Peut modifier ses articles.',
 	'kb_u_delete'			=> 'Peut supprimer ses articles.',
-	'kb_u_add_noapprove'	=> 'Peut créer de nouveaux articles sans approbation.',
+	'kb_u_add_noapprove'	=> 'Peut créer / modifier de nouveaux articles sans approbation.',
 // Moderator Permissions
 	'kb_m_edit'				=> 'Peut modifier les articles.',
 	'kb_m_delete'			=> 'Peut supprimer les articles.',
