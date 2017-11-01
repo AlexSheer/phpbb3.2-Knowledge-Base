@@ -87,6 +87,7 @@ class index
 	public function main()
 	{
 		$category_id = $this->request->variable('id', 0);
+
 		$sql = 'SELECT category_id, category_name, category_details, parent_id
 			FROM  ' . $this->categories_table . '
 			WHERE parent_id = 0
@@ -107,15 +108,31 @@ class index
 				WHERE article_category_id = '. (int) $catrow['category_id'] .'
 					' . $sql_where;
 			$res = $this->db->sql_query($sql);
+			$art_count = (int) $this->db->sql_fetchfield('articles');
+			$this->db->sql_freeresult($res);
+
+			$sql = 'SELECT a.article_id, a.article_title, a.article_date, a.author_id, a.author, a.approved, u.user_id, u.user_colour
+				FROM ' . $this->articles_table . ' a, ' . USERS_TABLE . ' u
+					WHERE a.article_category_id = ' . $catrow['category_id'] . '
+					AND a.article_date =
+						(SELECT MAX(article_date) AS max FROM ' . $this->articles_table . '
+							WHERE article_category_id = ' . $catrow['category_id'] . ' ' . $sql_where . ')
+								AND a.author_id = u.user_id';
+			$res = $this->db->sql_query($sql);
 			$art_row = $this->db->sql_fetchrow($res);
 			$this->db->sql_freeresult($res);
 
 			$this->template->assign_block_vars('catrow', array(
 				'U_CATEGORY'		=> $this->helper->route('sheer_knowledgebase_category', array('id' => $catrow['category_id'])),
 				'CAT_NAME'			=> $catrow['category_name'],
-				'CAT_ARTICLES'		=> $art_row['articles'],
+				'CAT_ARTICLES'		=> $art_count,
 				'CAT_DESCRIPTION' 	=> $catrow['category_details'],
 				'SUBCATS'			=> $this->kb->get_cat_list ($catrow['parent_id'], $exclude_cats),
+				'ARTICLE_TITLE'		=> $art_row['article_title'],
+				'U_ARTICLE'			=> (isset($art_row['article_id'])) ? $this->helper->route('sheer_knowledgebase_article', array('k' => $art_row['article_id'])) : '',
+				'ARTICLE_TTIME'		=> ($art_count) ? $this->user->format_date($art_row['article_date']) : '',
+				'ARTICLE_AUTHOR'	=> (isset($art_row['author_id'])) ? get_username_string('full', $art_row['author_id'], $art_row['author'], $art_row['user_colour']) : '',
+				'NEED_APPROVE'		=> ($art_row['approved']) ? false : true,
 				)
 			);
 		}

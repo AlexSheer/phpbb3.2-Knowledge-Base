@@ -79,6 +79,7 @@ $lang = array_merge($lang, array(
 	'FOUND_KB_SEARCH_MATCH'					=> '%d résultat trouvé',
 	'FOUND_KB_SEARCH_MATCHES'				=> '%d résultats trouvés',
 	'KB_PERMISSIONS'						=> 'Permissions',
+	'LAST_ARTICLE'							=> 'Dernier article',
 	'LEAVE_COMMENTS'						=> 'Laisser un commentaire',
 	'LIBRARY'								=> 'Base de connaissances',
 	'LINK_TO_ARTICLE'						=> 'Lien vers l’article (BBCode URL)',

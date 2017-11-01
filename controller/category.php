@@ -141,6 +141,7 @@ class category
 			WHERE parent_id = ' . $cat_id . '
 			ORDER BY left_id ASC';
 		$result = $this->db->sql_query($sql);
+
 		while ($cat_row = $this->db->sql_fetchrow($result))
 		{
 			$exclude_cats = array();
@@ -150,12 +151,36 @@ class category
 			}
 			array_shift($exclude_cats);
 
+			$sql_where = ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_row['category_id'], 'kb_m_approve')) ? '' : 'AND approved = 1';
+			$sql = 'SELECT COUNT(article_id) AS articles
+				FROM ' . $this->articles_table . '
+				WHERE article_category_id = '. (int) $cat_row['category_id'] .'
+					' . $sql_where;
+			$res = $this->db->sql_query($sql);
+			$art_count = (int) $this->db->sql_fetchfield('articles');
+			$this->db->sql_freeresult($res);
+
+			$sql = 'SELECT a.article_id, a.article_title, a.article_date, a.author_id, a.author, a.approved, u.user_id, u.user_colour
+				FROM ' . $this->articles_table . ' a, ' . USERS_TABLE . ' u
+					WHERE a.article_category_id = ' . $cat_row['category_id'] . '
+					AND a.article_date =
+						(SELECT MAX(article_date) AS max FROM ' . $this->articles_table . '
+							WHERE article_category_id = ' . $cat_row['category_id'] . ' ' . $sql_where . ')
+								AND a.author_id = u.user_id';
+			$res = $this->db->sql_query($sql);
+			$art_row = $this->db->sql_fetchrow($res);
+			$this->db->sql_freeresult($res);
 			$this->template->assign_block_vars('cat_row', array(
 				'CAT_ID'	=> $cat_row['category_id'],
 				'CAT_NAME'	=> $cat_row['category_name'],
 				'U_CAT'		=> $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_row['category_id'])),
-				'ARTICLES'	=> $cat_row['number_articles'],
+				'ARTICLES'	=> $art_count,
 				'SUBCATS'	=> $this->kb->get_cat_list ($cat_row['parent_id'], $exclude_cats),
+				'ARTICLE_TITLE'		=> $art_row['article_title'],
+				'U_ARTICLE'			=> (isset($art_row['article_id'])) ? $this->helper->route('sheer_knowledgebase_article', array('k' => $art_row['article_id'])) : '',
+				'ARTICLE_TTIME'		=> ($art_count) ? $this->user->format_date($art_row['article_date']) : '',
+				'ARTICLE_AUTHOR'	=> (isset($art_row['author_id'])) ? get_username_string('full', $art_row['author_id'], $art_row['author'], $art_row['user_colour']) : '',
+				'NEED_APPROVE'		=> ($art_row['approved']) ? false : true,
 				)
 			);
 		}

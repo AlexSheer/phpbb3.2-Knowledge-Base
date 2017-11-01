@@ -153,7 +153,7 @@ class approve
 			{
 				// Add search index
 				$this->phpbb_cache->purge();
-				$kb_search->index('add', $art_id, $kb_article_info['article_body'], $kb_article_info['article_title'], $kb_article_info['author']);
+				$kb_search->index('add', $art_id, $kb_article_info['article_body'], $kb_article_info['article_title'], $kb_article_info['article_description'], $kb_article_info['author']);
 			}
 
 			if (!empty($kb_data['forum_id']) && $kb_data['anounce'])
