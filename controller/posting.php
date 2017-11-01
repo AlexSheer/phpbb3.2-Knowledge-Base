@@ -526,7 +526,7 @@ class posting
 			'S_ATTACH_DATA'			=> (sizeof($attachment_data)) ? json_encode($attachment_data) : '[]',
 			'S_PLUPLOAD_URL'		=> generate_board_url() . '/knowledgebase/posting?id=' . $cat_id . '',
 
-			'CATS_BOX'				=> '<option value="0" disabled="disabled">' . $this->user->lang['CATEGORIES_LIST'] . '</option>' . $this->kb->make_category_select($cat_id, array($cat_id), false, false, false) . '',
+			'CATS_BOX'				=> '<option value="0" disabled="disabled">' . $this->user->lang['CATEGORIES_LIST'] . '</option>' . $this->kb->make_category_select($cat_id, false, false, false, false) . '',
 
 			'U_KB'					=> $this->helper->route('sheer_knowledgebase_index'),
 			'S_POST_ACTION'			=> $action,
