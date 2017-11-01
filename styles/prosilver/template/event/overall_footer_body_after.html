@@ -6,12 +6,6 @@
 <!-- IF S_POST_ARTICLE -->
 <!-- INCLUDEJS @sheer_knowledgebase/jquery.validate.js -->
 <script>
-	$.validator.setDefaults({
-		submitHandler: function() {
-			alert("submitted!");
-		}
-	});
-
 	$().ready(function() {
 		// validate signup form on keyup and submit
 		$("#postform").validate({
