@@ -42,6 +42,7 @@ $lang = array_merge($lang, array(
 	'ACP_LIBRARY_MANAGE'							=> 'Knowledge Base Management',
 	'ACP_LIBRARY_MANAGE_EXPLAIN'					=> 'Each category can have an unlimited number of subcategories. Here you can add, edit, move, search places and move from one category to another. If the number of entries in the category does not coincide with the real, you can synchronize the category.',
 	'ACP_LIBRARY_PERMISSIONS'						=> 'Permissions',
+	'ACP_LIBRARY_PERMISSIONS_MASK'					=> 'Permissions trace',
 	'ACP_LIBRARY_PERMISSIONS_EXPLAIN'				=> 'Here you can change for each user and group access to each category of the library. To assign moderators or administrator rights to use the definition of the relevant page.',
 	'ACP_LIBRARY_PERMISSIONS_NO_CATS'				=> 'To set permissions, you must create at least one category.',
 	'ACP_LIBRARY_SEARCH'							=> 'Search',
@@ -210,4 +211,23 @@ $lang = array_merge($lang, array(
 	'LOG_LIBRARY_PERMISSION_DELETED'	=> 'Remove user/group access to category <strong>%1s</strong><br /> %2s',
 	'LOG_LIBRARY_PERMISSION_ADD'		=> 'Adding or changing user/group access to category <strong>%1s</strong><br /> %2s',
 	'LOG_LIBRARY_CONFIG'				=> '<strong>Reconfigured library</strong>',
+
+	'KB_TRACE_GROUP_NEVER_TOTAL_NO_LOCAL'	=> 'This group’s permission for this category is set to <strong>NEVER</strong> which becomes the new total value because it wasn’t set yet (set to <strong>NO</strong>).',
+	'KB_TRACE_GROUP_NEVER_TOTAL_YES_LOCAL'	=> 'This group’s permission for this category is set to <strong>NEVER</strong> which overwrites the total <strong>YES</strong> to a <strong>NEVER</strong> for this user.',
+	'KB_TRACE_GROUP_NO_LOCAL'				=> 'The permission is <strong>NO</strong> for this group within this category so the old total value is kept.',
+	'KB_TRACE_GROUP_YES_TOTAL_NEVER_LOCAL'	=> 'This group’s permission for this category is set to <strong>YES</strong> but the total <strong>NEVER</strong> cannot be overwritten.',
+	'KB_TRACE_GROUP_YES_TOTAL_NO_LOCAL'		=> 'This group’s permission for this category is set to <strong>YES</strong> which becomes the new total value because it wasn’t set yet (set to <strong>NO</strong>).',
+	'KB_TRACE_GROUP_YES_TOTAL_YES_LOCAL'	=> 'This group’s permission for this category is set to <strong>YES</strong> and the total permission is already set to <strong>YES</strong>, so the total result is kept.',
+
+	'KB_TRACE_USER_FOUNDER'					=> 'The user is a founder, therefore admin permissions are always set to <strong>YES</strong>.',
+	'KB_TRACE_USER_ADMIN'					=> 'The user is a board administrator with permission <strong>Can manage Knowledge Base</strong>, therefore admin permissions are always set to <strong>YES</strong>.',
+
+	'KB_TRACE_USER_KEPT_LOCAL'				=> 'The user’s permission for this category is <strong>NO</strong> so the old total value is kept.',
+	'KB_TRACE_USER_NEVER_TOTAL_NEVER_LOCAL'	=> 'The user’s permission for this category is set to <strong>NEVER</strong> and the total value is set to <strong>NEVER</strong>, so nothing is changed.',
+	'KB_TRACE_USER_NEVER_TOTAL_NO_LOCAL'	=> 'The user’s permission for this category is set to <strong>NEVER</strong> which becomes the total value because it was set to NO.',
+	'KB_TRACE_USER_NEVER_TOTAL_YES_LOCAL'	=> 'The user’s permission for this category is set to <strong>NEVER</strong> and overwrites the previous <strong>YES</strong>.',
+	'KB_TRACE_USER_NO_TOTAL_NO_LOCAL'		=> 'The user’s permission for this category is <strong>NO</strong> and the total value was set to NO so it defaults to <strong>NEVER</strong>.',
+	'KB_TRACE_USER_YES_TOTAL_NEVER_LOCAL'	=> 'The user’s permission for this category is set to <strong>YES</strong> but the total <strong>NEVER</strong> cannot be overwritten.',
+	'KB_TRACE_USER_YES_TOTAL_NO_LOCAL'		=> 'The user’s permission for this category is set to <strong>YES</strong> which becomes the total value because it was set to <strong>NO</strong>.',
+	'KB_TRACE_USER_YES_TOTAL_YES_LOCAL'		=> 'The user’s permission for this category is set to <strong>YES</strong> and the total value is set to <strong>YES</strong>, so nothing is changed.',
 ));
