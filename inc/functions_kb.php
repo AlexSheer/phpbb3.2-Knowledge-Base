@@ -409,79 +409,94 @@ class functions_kb
 		return;
 	}
 
-	public function acl_kb_get($category_id, $auth)
+	public function acl_kb_get ($category_id, $permission)
 	{
-		$sql = 'SELECT auth_option_id
-			FROM ' . $this->options_table . '
-			WHERE auth_option LIKE \'' . $auth . '\'
-			AND is_local = 1';
+		$sql = 'SELECT DISTINCT g.group_name, g.group_id, g.group_type
+			FROM ' . GROUPS_TABLE . ' g
+				LEFT JOIN ' . USER_GROUP_TABLE . ' ug ON (ug.group_id = g.group_id)
+			WHERE ug.user_id = ' . $this->user->data['user_id'] . '
+				AND ug.user_pending = 0
+				AND NOT (ug.group_leader = 1 AND g.group_skip_auth = 1)
+			ORDER BY g.group_type DESC, g.group_id DESC';
 		$result = $this->db->sql_query($sql);
-		$row = $this->db->sql_fetchrow($result);
-		$auth_option_id = $row['auth_option_id'];
+
+		$groups = $user_groups = array();
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$groups[$row['group_id']] = array(
+				'auth_setting'	=> ACL_NO,
+			);
+			$user_groups[] = $row['group_id'];
+		}
 		$this->db->sql_freeresult($result);
 
-		$sql = 'SELECT auth_setting FROM ' . $this->kb_users_table . '
-			WHERE category_id = ' . $category_id . '
-			AND auth_option_id = ' . $auth_option_id . '
-			AND user_id = ' . (int) $this->user->data['user_id'].'';
-		$result = $this->db->sql_query($sql);
-		$row = $this->db->sql_fetchrow($result);
-		$this->db->sql_freeresult($result);
-		if(!$row)
+		$total = ACL_NO;
+
+		if (sizeof($groups))
 		{
-			$sql = 'SELECT group_id
-				FROM ' . USER_GROUP_TABLE . '
-				WHERE user_id = ' . (int) $this->user->data['user_id'] . '';
-			$result = $this->db->sql_query($sql);
-			while ($row = $this->db->sql_fetchrow($result))
-			{
-				$user_groups[] = $row['group_id'];
-			}
-			$this->db->sql_freeresult($result);
+			// Get group auth settings
+			$sql_ary[] = 'SELECT a.group_id, a.category_id, a.auth_setting, a.auth_option_id, ao.auth_option
+					FROM ' . $this->kb_groups_table . ' a, ' . $this->options_table . ' ao
+					WHERE a.auth_option_id = ao.auth_option_id AND ' .  $this->db->sql_in_set('a.group_id', array_map('intval', $user_groups)) . '
+						AND a.category_id = '. $category_id .'
+						AND ao.auth_option = \'' . $permission . '\'
+					ORDER BY a.category_id, ao.auth_option';
 
-			if (!isset($user_groups))
+			foreach ($sql_ary as $sql)
 			{
-				login_box('', ((isset($this->user->lang['LOGIN_EXPLAIN_' . strtoupper($mode)])) ? $this->user->lang['LOGIN_EXPLAIN_' . strtoupper($mode)] : $this->user->lang['LOGIN_EXPLAIN_APPROVE']));
+				$result = $this->db->sql_query($sql);
+
+				while ($row = $this->db->sql_fetchrow($result))
+				{
+					$hold_ary[$row['group_id']][$row['category_id']][$row['auth_option']] = $row['auth_setting'];
+				}
+				$this->db->sql_freeresult($result);
 			}
 
-			$sql = 'SELECT auth_setting
-				FROM ' . $this->kb_groups_table . '
-				WHERE category_id = ' . (int) $category_id . '
-				AND auth_option_id = ' . (int) $auth_option_id . '
-				AND group_id IN(' . implode(',', $user_groups) . ')';
-			$result = $this->db->sql_query($sql);
-			while($row = $this->db->sql_fetchrow($result))
+			if (!empty($hold_ary))
 			{
-				$auth_setting[] = $row['auth_setting'];
+				foreach ($hold_ary as $group_id => $category_ary)
+				{
+					$groups[$group_id]['auth_setting'] = $hold_ary[$group_id][$category_id][$permission];
+				}
+				unset($hold_ary);
 			}
-			$this->db->sql_freeresult($result);
 
-			$sql = 'SELECT auth_setting
-				FROM ' . $this->kb_groups_table . '
-				WHERE category_id = ' . (int) $category_id . '
-				AND auth_option_id = ' . (int) $auth_option_id . '
-				AND group_id = ' . (int) $this->user->data['group_id'] . '';
-			$result = $this->db->sql_query($sql);
-			$row = $this->db->sql_fetchrow($result);
-			$default_auth = $row['auth_setting'];
-			$this->db->sql_freeresult($result);
+			foreach ($groups as $id => $row)
+			{
+				switch ($row['auth_setting'])
+				{
+					case ACL_NO:
+					break;
+
+					case ACL_YES:
+						$total = ($total == ACL_NO) ? ACL_YES : $total;
+					break;
+
+					case ACL_NEVER:
+						$total = ACL_NEVER;
+					break;
+				}
+			}
 		}
-		else
+
+		// Take founder or admin status into account, overwriting the default values
+		if ($this->user->data['user_type'] == USER_FOUNDER || $this->auth->acl_get('a_manage_kb'))
 		{
-			$default_auth = true;
+			$total = ACL_YES;
 		}
+		//print "|$total|<br />";
 
-		(!isset($row['auth_setting'])) ? $auth_setting[] = -1 : $auth_setting[] = $row['auth_setting'];
-		return (in_array (1, $auth_setting) && $default_auth) ? true : false;
+		return ($total && $total > 0) ? true : false;
 	}
 
 	public function gen_kb_auth_level($category_id)
 	{
 		$rules = array(
-			($this->acl_kb_get($category_id, 'kb_u_add') || $this->auth->acl_get('a_manage_kb')) ? $this->user->lang['RULES_KB_ADD_CAN'] : $this->user->lang['RULES_KB_ADD_CANNOT'],
+			($this->acl_kb_get($category_id, 'kb_u_add')) ? $this->user->lang['RULES_KB_ADD_CAN'] : $this->user->lang['RULES_KB_ADD_CANNOT'],
 		);
 
-		if ($this->auth->acl_get('a_manage_kb') || $this->acl_kb_get($category_id, 'kb_m_delete'))
+		if ($this->acl_kb_get($category_id, 'kb_m_delete'))
 		{
 			$rules = array_merge($rules, array(
 				$this->user->lang['RULES_KB_DELETE_MOD_CAN'],
@@ -494,7 +509,7 @@ class functions_kb
 			));
 		}
 
-		if ($this->auth->acl_get('a_manage_kb') || $this->acl_kb_get($category_id, 'kb_m_edit'))
+		if ($this->acl_kb_get($category_id, 'kb_m_edit'))
 		{
 			$rules = array_merge($rules, array(
 				$this->user->lang['RULES_KB_EDIT_MOD_CAN'],
@@ -507,7 +522,7 @@ class functions_kb
 			));
 		}
 
-		if ($this->auth->acl_get('a_manage_kb') || $this->acl_kb_get($category_id, 'kb_m_approve'))
+		if ($this->acl_kb_get($category_id, 'kb_m_approve'))
 		{
 			$rules = array_merge($rules, array(
 				$this->user->lang['RULES_KB_APPROVE_MOD_CAN'],
