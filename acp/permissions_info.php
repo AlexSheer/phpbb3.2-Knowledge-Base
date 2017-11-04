@@ -24,6 +24,11 @@ class permissions_info
 					'auth' => 'ext_sheer/knowledgebase && acl_a_board && acl_a_manage_kb',
 					'cat' => array('ACP_KNOWLEDGE_BASE')
 				),
+				'mask'	=> array(
+					'title' => 'ACP_LIBRARY_PERMISSIONS_MASK',
+					'auth' => 'ext_sheer/knowledgebase && acl_a_board && acl_a_manage_kb',
+					'cat' => array('ACP_KNOWLEDGE_BASE')
+				),
 			),
 		);
 	}
