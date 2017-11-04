@@ -238,25 +238,16 @@ class disapprove extends \phpbb\notification\type\base
 	{
 		global $table_prefix;
 
-		if (!defined ('KB_OPTIONS_TABLE'))
-		{
-			define ('KB_OPTIONS_TABLE', $table_prefix.'kb_options');
-		}
-		if (!defined ('KB_GROUPS_TABLE'))
-		{
-			define ('KB_GROUPS_TABLE', $table_prefix.'kb_groups');
-		}
-		if (!defined ('KB_USERS_TABLE'))
-		{
-			define ('KB_USERS_TABLE', $table_prefix.'kb_users');
-		}
+		$kb_options_table = $table_prefix . 'kb_options';
+		$kb_users_table = $table_prefix . 'kb_users';
+		$kb_groups_table = $table_prefix . 'kb_groups';
 
 		$sql_where = ($category_id) ? ' AND category_id = ' . $category_id . '' : '';
 
 		$moderators = $groups = $exclude = array();
 
 		$sql = 'SELECT auth_option_id
-			FROM ' . KB_OPTIONS_TABLE . '
+			FROM ' . $kb_options_table . '
 			WHERE auth_option LIKE \'' . $auth . '\'
 			AND is_local = 1';
 		$result = $this->db->sql_query($sql);
@@ -264,7 +255,7 @@ class disapprove extends \phpbb\notification\type\base
 		$auth_option_id = $row['auth_option_id'];
 		$this->db->sql_freeresult($result);
 
-		$sql = 'SELECT user_id FROM ' . KB_USERS_TABLE . '
+		$sql = 'SELECT user_id FROM ' . $kb_users_table . '
 			WHERE auth_option_id = ' . $auth_option_id . '
 				AND auth_setting = 1
 				' . $sql_where . '';
@@ -276,7 +267,7 @@ class disapprove extends \phpbb\notification\type\base
 		$this->db->sql_freeresult($result);
 
 		$sql = 'SELECT group_id
-			FROM ' . KB_GROUPS_TABLE . '
+			FROM ' . $kb_groups_table . '
 			WHERE auth_option_id = ' . $auth_option_id . '
 				AND auth_setting = 1
 				' . $sql_where . '';
@@ -289,7 +280,7 @@ class disapprove extends \phpbb\notification\type\base
 		$this->db->sql_freeresult($result);
 
 		$sql = 'SELECT user_id
-			FROM ' . KB_USERS_TABLE . '
+			FROM ' . $kb_users_table . '
 			WHERE auth_setting = 0
 				' . $sql_where . '';
 		$result = $this->db->sql_query($sql);
@@ -314,6 +305,11 @@ class disapprove extends \phpbb\notification\type\base
 				}
 			}
 			$this->db->sql_freeresult($result);
+		}
+
+		if ($this->user->data['user_type'] == USER_FOUNDER)
+		{
+			$moderators[] = $this->user->data['user_id'];
 		}
 		$moderators = array_unique($moderators);
 
