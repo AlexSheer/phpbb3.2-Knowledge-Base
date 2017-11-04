@@ -84,7 +84,7 @@ class category
 		{
 			redirect($this->helper->route('sheer_knowledgebase_index'));
 		}
-		$sql_where = ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve')) ? '' : 'AND a.approved = 1';
+		$sql_where = ($this->kb->acl_kb_get($cat_id, 'kb_m_approve')) ? '' : 'AND a.approved = 1';
 
 		$kb_config = $this->kb->obtain_kb_config();
 		$per_page = $kb_config['articles_per_page'];
@@ -151,7 +151,7 @@ class category
 			}
 			array_shift($exclude_cats);
 
-			$sql_where = ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_row['category_id'], 'kb_m_approve')) ? '' : 'AND approved = 1';
+			$sql_where = ($this->kb->acl_kb_get($cat_row['category_id'], 'kb_m_approve')) ? '' : 'AND approved = 1';
 			$sql = 'SELECT COUNT(article_id) AS articles
 				FROM ' . $this->articles_table . '
 				WHERE article_category_id = '. (int) $cat_row['category_id'] .'
@@ -171,11 +171,11 @@ class category
 			$art_row = $this->db->sql_fetchrow($res);
 			$this->db->sql_freeresult($res);
 			$this->template->assign_block_vars('cat_row', array(
-				'CAT_ID'	=> $cat_row['category_id'],
-				'CAT_NAME'	=> $cat_row['category_name'],
-				'U_CAT'		=> $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_row['category_id'])),
-				'ARTICLES'	=> $art_count,
-				'SUBCATS'	=> $this->kb->get_cat_list ($cat_row['parent_id'], $exclude_cats),
+				'CAT_ID'			=> $cat_row['category_id'],
+				'CAT_NAME'			=> $cat_row['category_name'],
+				'U_CAT'				=> $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_row['category_id'])),
+				'ARTICLES'			=> $art_count,
+				'SUBCATS'			=> $this->kb->get_cat_list ($cat_row['parent_id'], $exclude_cats),
 				'ARTICLE_TITLE'		=> $art_row['article_title'],
 				'U_ARTICLE'			=> (isset($art_row['article_id'])) ? $this->helper->route('sheer_knowledgebase_article', array('k' => $art_row['article_id'])) : '',
 				'ARTICLE_TTIME'		=> ($art_count) ? $this->user->format_date($art_row['article_date']) : '',
@@ -212,8 +212,8 @@ class category
 				'ART_VIEWS'				=> $art_row['views'],
 				'U_DELETE'				=> $this->helper->route('sheer_knowledgebase_posting', array('id' => $cat_id, 'mode' => 'delete', 'k' => $art_id)),
 				'U_EDIT_ART'			=> $this->helper->route('sheer_knowledgebase_posting', array('id' => $cat_id, 'mode' => 'edit', 'k' => $art_id)),
-				'S_CAN_DELETE'			=> ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_delete') || ($this->kb->acl_kb_get($cat_id, 'kb_u_delete') && $this->user->data['user_id'] == $author_id)) ? true : false,
-				'S_CAN_EDIT'			=> ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_edit')   || ($this->kb->acl_kb_get($cat_id, 'kb_u_edit')   && $this->user->data['user_id'] == $author_id)) ? true : false,
+				'S_CAN_DELETE'			=> ($this->kb->acl_kb_get($cat_id, 'kb_m_delete') || ($this->kb->acl_kb_get($cat_id, 'kb_u_delete') && $this->user->data['user_id'] == $author_id)) ? true : false,
+				'S_CAN_EDIT'			=> ($this->kb->acl_kb_get($cat_id, 'kb_m_edit')   || ($this->kb->acl_kb_get($cat_id, 'kb_u_edit')   && $this->user->data['user_id'] == $author_id)) ? true : false,
 				'S_APPROVED'			=> ($art_row['approved']) ? true : false,
 				)
 			);
@@ -225,8 +225,6 @@ class category
 			$this->template->assign_block_vars('no_articles', array('COMMENT' => $this->user->lang['NO_ARTICLES']));
 		}
 
-		$move_allowed = ($this->kb->acl_kb_get($cat_id, 'kb_m_edit') || $this->auth->acl_get('a_manage_kb'));
-
 		$this->template->assign_vars(array(
 			'CATS_DROPBOX'			=> $this->kb->make_category_dropbox($cat_id, false, true, false, false),
 			'CATS_BOX'				=> $this->kb->make_category_select($cat_id, false, true, false, false),
@@ -237,12 +235,12 @@ class category
 			'U_ADD_ARTICLE'			=> $this->helper->route('sheer_knowledgebase_posting', array('id' => $cat_id)),
 			'U_KB'					=> $this->helper->route('sheer_knowledgebase_index'),
 			'U_KB_SEARCH'			=> $this->helper->route('sheer_knowledgebase_library_search'),
-			'S_CAN_ADD'				=> ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_u_add')) ? true : false,
+			'S_CAN_ADD'				=> ($this->kb->acl_kb_get($cat_id, 'kb_u_add')) ? true : false,
 			'S_ACTION'				=> $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id)),
 			'S_IS_SEARCH'			=> ($this->config['kb_search']) ? true : false,
 			'S_KB_SEARCH_ACTION'	=> $this->helper->route('sheer_knowledgebase_library_search'),
 			'S_KNOWLEDGEBASE'		=> true,
-			'S_CAN_MOVE'			=> ($move_allowed) ? true : false,
+			'S_CAN_MOVE'			=> ($this->kb->acl_kb_get($cat_id, 'kb_m_edit')) ? true : false,
 			'CURRENT_PAGE_NUMBER'	=> $current_page_number,
 			)
 		);
