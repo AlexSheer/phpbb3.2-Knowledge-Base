@@ -19,25 +19,15 @@ class permissions_module
 		global $config, $db, $template, $request, $cache, $phpbb_root_path, $phpEx, $auth, $user, $phpbb_ext_kb, $phpbb_log, $phpbb_container;
 		$user->add_lang('acp/permissions');
 
-		$config_table		= $phpbb_container->getParameter('tables.kb_config_table');
-		$articles_table		= $phpbb_container->getParameter('tables.articles_table');
-		$categories_table	= $phpbb_container->getParameter('tables.categories_table');
-		$options_table		= $phpbb_container->getParameter('tables.kb_options_table');
-		$kb_groups_table	= $phpbb_container->getParameter('tables.kb_groups_table');
-		$kb_users_table		= $phpbb_container->getParameter('tables.kb_users_table');
-		$kb_logs_table		= $phpbb_container->getParameter('tables.logs_table');
-		$attachments_table	= $phpbb_container->getParameter('tables.kb_attachments_table');
-		$controller_helper	= $phpbb_container->get('controller.helper');
-
-
-		define ('KB_CAT_TABLE', $categories_table);
-		define ('KB_OPTIONS_TABLE', $options_table);
-		define ('KB_USERS_TABLE', $kb_users_table);
-		define ('KB_GROUPS_TABLE', $kb_groups_table);
-		if (!defined('KB_LOG_TABLE'))
-		{
-			define ('KB_LOG_TABLE', $kb_logs_table);
-		}
+		$this->config_table			= $phpbb_container->getParameter('tables.kb_config_table');
+		$this->articles_table		= $phpbb_container->getParameter('tables.articles_table');
+		$this->categories_table		= $phpbb_container->getParameter('tables.categories_table');
+		$this->options_table		= $phpbb_container->getParameter('tables.kb_options_table');
+		$this->kb_groups_table		= $phpbb_container->getParameter('tables.kb_groups_table');
+		$this->kb_users_table		= $phpbb_container->getParameter('tables.kb_users_table');
+		$this->kb_logs_table		= $phpbb_container->getParameter('tables.logs_table');
+		$this->attachments_table	= $phpbb_container->getParameter('tables.kb_attachments_table');
+		$controller_helper			= $phpbb_container->get('controller.helper');
 
 		include_once($phpbb_root_path . 'includes/functions_user.' . $phpEx);
 
@@ -52,18 +42,34 @@ class permissions_module
 			$phpbb_log,
 			$phpbb_root_path,
 			$phpEx,
-			$config_table,
-			$articles_table,
-			$categories_table,
-			$options_table,
-			$kb_groups_table,
-			$kb_users_table,
-			$kb_logs_table,
-			$attachments_table
+			$this->config_table,
+			$this->articles_table,
+			$this->categories_table,
+			$this->options_table,
+			$this->kb_groups_table,
+			$this->kb_users_table,
+			$this->kb_logs_table,
+			$this->attachments_table
 		);
 
 		$this->tpl_name = 'acp_permissions_body';
-		$this->page_title = $user->lang('ACP_LIBRARY_PERMISSIONS');
+		$this->mode = $mode;
+
+		if ($this->mode == 'mask')
+		{
+			$this->page_title = $user->lang('ACP_LIBRARY_PERMISSIONS_MASK');
+			$this->title = $user->lang['ACL_VIEW'];
+			$this->title_explain = $user->lang['ACL_VIEW_EXPLAIN'];
+			$this->title_edit_permissions = $this->title_add_permissions = $user->lang['VIEW_PERMISSIONS'];
+		}
+		else
+		{
+			$this->page_title = $user->lang('ACP_LIBRARY_PERMISSIONS');
+			$this->title = $user->lang['ACP_LIBRARY_PERMISSIONS'];
+			$this->title_explain = $user->lang['ACP_LIBRARY_PERMISSIONS_EXPLAIN'];
+			$this->title_edit_permissions = $user->lang['EDIT_PERMISSIONS'];
+			$this->title_add_permissions = $user->lang['ADD_PERMISSIONS'];
+		}
 
 		$category_id 	= (isset($category_id)) ? $request->variable('category_id', $category_id) : $request->variable('category_id', array(0));
 		$user_id 		= $request->variable('user_id', array(0));
@@ -76,11 +82,28 @@ class permissions_module
 		$action			= (isset($action)) ? $request->variable('action', $action) : $request->variable('action', '');
 		$delete			= $request->variable('delete', false);
 
+		if ($action == 'trace')
+		{
+			$permission = $request->variable('auth', '');
+			$user_id = $request->variable('user_id', 0);
+			$category_id = $request->variable('category_id', 0);
+
+			$this->tpl_name = 'permission_trace';
+
+			if ($user_id && $auth->acl_get('a_viewauth'))
+			{
+				$this->page_title = sprintf($user->lang['TRACE_PERMISSION'], $user->lang[$permission]);
+				$this->permission_trace($user_id, $category_id, $permission);
+				return;
+			}
+			trigger_error('NO_MODE', E_USER_ERROR);
+		}
+
 		if ($all_cats)
 		{
 			$category_id = array();
 			$sql = 'SELECT category_id
-				FROM '. KB_CAT_TABLE;
+				FROM '. $this->categories_table;
 			$result = $db->sql_query($sql);
 			while ($row = $db->sql_fetchrow($result))
 			{
@@ -150,10 +173,10 @@ class permissions_module
 			break;
 
 			default:
-				$cats_box = $phpbb_ext_kb->make_category_select(0, false, false, false, false);
+				$cats_box = $phpbb_ext_kb->make_category_select(0, false, true, false, false);
 				$template->assign_vars(array(
-					'L_TITLE'					=> $user->lang['ACP_LIBRARY_PERMISSIONS'],
-					'L_EXPLAIN'					=> $user->lang['ACP_LIBRARY_PERMISSIONS_EXPLAIN'],
+					'L_TITLE'					=> $this->title,
+					'L_EXPLAIN'					=> $this->title_explain,
 					'S_SELECT_CATEGORY'			=> true, //($cats_box) ? true : false,
 					'CATS_BOX'					=> $cats_box,
 					'S_KB_PERMISSIONS_ACTION' 	=> $this->u_action . '&amp;action=setting_group_local',
@@ -165,7 +188,7 @@ class permissions_module
 		if (sizeof($category_id))
 		{
 			$sql = 'SELECT category_name
-				FROM ' . KB_CAT_TABLE . '
+				FROM ' . $this->categories_table . '
 				WHERE ' . $db->sql_in_set('category_id', $category_id) . '
 				ORDER BY left_id ASC';
 			$result = $db->sql_query($sql);
@@ -193,8 +216,8 @@ class permissions_module
 		if (empty($category_id))
 		{
 			$template->assign_vars(array(
-				'L_TITLE'			=> $user->lang['ACP_LIBRARY_PERMISSIONS'],
-				'L_EXPLAIN'			=> $user->lang['ACP_LIBRARY_PERMISSIONS_EXPLAIN'],
+				'L_TITLE'			=> $this->title,
+				'L_EXPLAIN'			=> $this->title_explain,
 				'S_SELECT_CATEGORY'	=> true)
 			);
 			return array();
@@ -202,7 +225,7 @@ class permissions_module
 
 		$s_defined_group_options = $items['group_ids_options'];
 		$s_defined_user_options = $items['user_ids_options'];
-		$this->page_title = 'ACP_LIBRARY_PERMISSIONS';
+		$this->page_title = ($this->mode == 'mask') ? 'ACP_LIBRARY_PERMISSIONS_MASK' : 'ACP_LIBRARY_PERMISSIONS';
 
 		$s_hidden_fields = array(
 			'category_id'		=> $category_id,
@@ -210,8 +233,8 @@ class permissions_module
 		);
 
 		$template->assign_vars(array(
-			'L_TITLE'					=> $user->lang['ACP_LIBRARY_PERMISSIONS'],
-			'L_EXPLAIN'					=> $user->lang['ACP_LIBRARY_PERMISSIONS_EXPLAIN'],
+			'L_TITLE'					=> $this->title,
+			'L_EXPLAIN'					=> $this->title_explain,
 			'S_SELECT'					=> true,
 			'S_CAN_SELECT_USER'			=> true,
 			'S_CAN_SELECT_GROUP'		=> true,
@@ -221,6 +244,9 @@ class permissions_module
 			'S_DEFINED_USER_OPTIONS'	=> $s_defined_user_options,
 			'S_KB_PERMISSIONS_ACTION' 	=> $this->u_action . '&amp;action=settings',
 			'S_HIDDEN_FIELDS'			=> build_hidden_fields($s_hidden_fields),
+			'MASK_MODE'					=> ($this->mode == 'mask') ? true : false,
+			'L_EDIT_PERMISSIONS'		=> $this->title_edit_permissions,
+			'L_ADD_PERMISSIONS'			=> $this->title_add_permissions,
 			)
 		);
 		return $items;
@@ -240,7 +266,7 @@ class permissions_module
 		$option_ids = array();
 
 		$sql = 'SELECT auth_option_id
-			FROM ' . KB_OPTIONS_TABLE . '
+			FROM ' . $this->options_table . '
 			WHERE auth_option ' . $db->sql_like_expression($permission_type . $db->get_any_char());
 		$result = $db->sql_query($sql);
 
@@ -257,7 +283,7 @@ class permissions_module
 
 		// Not ideal, due to the filesort, non-use of indexes, etc.
 		$sql = 'SELECT DISTINCT u.user_id, u.username, u.username_clean, u.user_regdate
-			FROM ' . USERS_TABLE . ' u, ' . KB_USERS_TABLE . " a
+			FROM ' . USERS_TABLE . ' u, ' . $this->kb_users_table . " a
 			WHERE u.user_id = a.user_id
 				$sql_where
 				$sql_category_id
@@ -274,7 +300,7 @@ class permissions_module
 		$db->sql_freeresult($result);
 
 		$sql = 'SELECT DISTINCT g.group_type, g.group_name, g.group_id
-			FROM ' . GROUPS_TABLE . ' g, ' . KB_GROUPS_TABLE . " a
+			FROM ' . GROUPS_TABLE . ' g, ' . $this->kb_groups_table . " a
 			WHERE g.group_id = a.group_id
 				$sql_where
 				$sql_category_id
@@ -298,10 +324,16 @@ class permissions_module
 		);
 	}
 
-
-	function get_mask($group_id, $category_id, $user_id, $mode)
+	function get_mask($group_id, $category_id, $user_id, $user_mode)
 	{
 		global $db, $template, $user, $request;
+
+		if (!empty($group_id))
+		{
+			$user_mode = 'group';
+		}
+
+		$view_user_mask = ($this->mode == 'mask' && $user_mode != 'group') ? true : false;
 
 		if (empty($group_id) && empty($user_id))
 		{
@@ -309,18 +341,11 @@ class permissions_module
 			return;
 		}
 
-		(isset($type)) ? $type = $request->variable('type', $type) : $type = $request->variable('type', 'u_');
 		$types = array('u_' => $user->lang['ACL_TYPE_U_'], 'm_' => $user->lang['ACL_TYPE_M_']);
-		$s_type = '';
-		foreach($types as $key => $value)
-		{
-			$selected = ($key == $type) ? 'selected="selected"' : '';
-			$s_type .= '<option value="' . $key . '"' . $selected . '>' . $value . '</option>';
-		}
 
 		$apply_all_permissions = $request->variable('apply_all_permissions', false);
 
-		if (!empty($user_id) && $mode != 'group')
+		if (!empty($user_id) && $user_mode != 'group')
 		{
 			$where = $db->sql_in_set('user_id', $user_id, false);
 			if ($where == 'user_id = 0')
@@ -336,9 +361,9 @@ class permissions_module
 				$user_name = $users['username'];
 				$group_ids[] = $groups[$user_name] = $users['user_id'];
 			}
-			if (!$mode)
+			if (!$user_mode)
 			{
-				$mode = 'user';
+				$user_mode = 'user';
 			}
 		}
 		else
@@ -349,36 +374,23 @@ class permissions_module
 			$result = $db->sql_query($sql);
 			while ($group = $db->sql_fetchrow($result))
 			{
-				$group_name = $user->lang['G_' . $group['group_name']];
+				$group_name = ($user->lang['G_' . $group['group_name']]) ? $user->lang['G_' . $group['group_name']] : $group['group_name'];
 				$group_ids[] = $groups[$group_name] = $group['group_id'];
 			}
-			if (!$mode)
+			if (!$user_mode)
 			{
-				$mode = 'group';
+				$user_mode = 'group';
 			}
 		}
 		$db->sql_freeresult($result);
 
 		$sql = 'SELECT *
-			FROM '.KB_OPTIONS_TABLE.'
-			WHERE auth_option_id <> 0
-				AND auth_option LIKE \'%' . $type . '%\'';
-		$result = $db->sql_query($sql);
-
-		while ($row = $db->sql_fetchrow($result))
-		{
-			$auth_option =  $row['auth_option'];
-			$options[$auth_option] = $row['auth_option_id'];
-		}
-		$db->sql_freeresult($result);
-
-		$sql = 'SELECT *
-			FROM ' . KB_CAT_TABLE . '
+			FROM ' . $this->categories_table . '
 			WHERE ' . $db->sql_in_set('category_id', $category_id, false) . '';
 		$result = $db->sql_query($sql);
 
-		$table = ($mode == 'user') ? KB_USERS_TABLE : KB_GROUPS_TABLE;
-		$id_field = $mode . '_id';
+		$table = ($user_mode == 'user') ? $this->kb_users_table : $this->kb_groups_table;
+		$id_field = $user_mode . '_id';
 
 		while ($row = $db->sql_fetchrow($result)) // categories
 		{
@@ -386,6 +398,7 @@ class permissions_module
 			$template->assign_block_vars('p_mask', array(
 				'CATEGORY_ID'	=> $cat_id,
 				'CATEGORY_NAME'	=> $row['category_name'],
+				'S_VIEW'		=> ($this->mode == 'mask') ? true : false,
 				)
 			);
 
@@ -394,67 +407,129 @@ class permissions_module
 				$template->assign_block_vars('p_mask.g_mask', array(
 					'GROUP_ID'		=> $group_id,
 					'GROUP_NAME'	=> $key,
+					'PADDING'		=> '',
 					)
 				);
 
-				$submit = $request->variable('submit', array(array(0)));
-				$inherit = $request->variable('inherit', array(array(0)));
-
-				foreach ($options as $name => $option)
+				foreach($types as $key => $value)
 				{
-					$sql1 = 'SELECT auth_setting
-						FROM ' . $table . '
-						WHERE ' . $id_field . ' = ' . $group_id . '
-							AND auth_option_id = ' . $option . '
-							AND category_id = ' . $cat_id . '';
-					$result1 = $db->sql_query($sql1);
-					$auth = $db->sql_fetchrow($result1);
-					$auth_setting[$option] = $auth['auth_setting'];
+					$submit = $request->variable('submit', array(array(0)));
+					$inherit = $request->variable('inherit', array(array(0)));
+
+					$sql = 'SELECT *
+						FROM ' . $this->options_table . '
+						WHERE auth_option_id <> 0
+							AND auth_option LIKE \'%' . $key . '%\'';
+					$res = $db->sql_query($sql);
+
+					while ($row = $db->sql_fetchrow($res))
+					{
+						$auth_option =  $row['auth_option'];
+						$options[$auth_option] = $row['auth_option_id'];
+					}
+					$db->sql_freeresult($res);
+
+					foreach ($options as $name => $option)
+					{
+						if ($view_user_mask)
+						{
+							$auth_setting[$option] = $auth[$option] = $this->permission_trace($group_id, $cat_id, $name);
+							$_options[$name] = $this->permission_trace($group_id, $cat_id, $name);
+						}
+						else
+						{
+							$sql1 = 'SELECT auth_setting
+								FROM ' . $table . '
+								WHERE ' . $id_field . ' = ' . $group_id . '
+									AND auth_option_id = ' . $option . '
+									AND category_id = ' . $cat_id . '';
+							$result1 = $db->sql_query($sql1);
+							$auth = $db->sql_fetchrow($result1);
+
+							if (!isset($auth['auth_setting']))
+							{
+								$auth['auth_setting'] = '';
+							}
+							$_options[$name] = $auth['auth_setting'];
+						}
+					}
 
 					$option_settings = $request->variable('setting', array(0 => array(0 => array('' => 0))));
 
-					if ($auth)
+					$groups_ary[$group_id] = $_options;
+					$hold_ary[$cat_id] = $groups_ary;
+
+					$res = array_diff(array_count_values($_options), array('1'));
+					$index = key($res);
+					$v = $res[$index];
+					if (sizeof($_options) == $v)
 					{
-						switch ($auth_setting[$option])
+						if ($index === 1)
 						{
-							case 1:
-								$_yes = true;
-								$_no = false;
-								$_never = false;
-							break;
-							case 0:
-								$_yes = false;
-								$_no = false;
-								$_never = true;
-							break;
-							default:
+							$all_yes = true;
+							$all_never = false;
+							$all_no = false;
+						}
+						else if ($index === 0)
+						{
+							$all_yes = false;
+							$all_never = true;
+							$all_no = false;
+						}
+						else if ($index === '')
+						{
+							$all_yes = false;
+							$all_never = false;
+							$all_no = true;
 						}
 					}
 					else
 					{
-						$_yes = false;
-						$_no = true;
-						$_never = false;
+						$all_yes = $all_never = $all_no = false;
 					}
 
-					if (!isset($auth['auth_setting']))
-					{
-						$auth['auth_setting'] = -1; // permission not set
-					}
-
-					$_options[$name] = $auth['auth_setting'];
-
-					$template->assign_block_vars('p_mask.g_mask.o_mask', array(
-						'S_FIELD_NAME'	=> $name,
-						'L_FIELD_NAME'	=> $user->lang[$name],
-						'S_YES'			=> ($_yes) ? true : false,
-						'S_NO'			=> ($_no) ? true : false,
-						'S_NEVER'		=> ($_never) ? true : false,
+					$template->assign_block_vars('p_mask.g_mask.category', array(
+						'PERMISSION_TYPE'	=> $value,
+						'S_YES'				=> $all_yes,
+						'S_NEVER'			=> $all_never,
+						'S_NO'				=> $all_no,
 						)
 					);
+
+					foreach ($_options as $name => $option)
+					{
+						if (!isset($_options[$name]) || $_options[$name] === '')
+						{
+							$_yes = false;
+							$_no = true;
+							$_never = false;
+						}
+						else if ($option)
+						{
+							$_yes = true;
+							$_no = false;
+							$_never = false;
+						}
+						else
+						{
+							$_yes = false;
+							$_no = false;
+							$_never = true;
+						}
+
+						$template->assign_block_vars('p_mask.g_mask.category.mask', array(
+							'S_FIELD_NAME'	=> $name,
+							'L_FIELD_NAME'	=> $user->lang[$name],
+							'S_YES'			=> ($_yes) ? true : false,
+							'S_NO'			=> ($_no) ? true : false,
+							'S_NEVER'		=> ($_never) ? true : false,
+							'U_TRACE'		=> ($user_mode == 'user') ? $this->u_action . '&amp;action=trace&amp;user_id=' . $group_id . '&amp;auth=' . $name . '&amp;category_id=' . $cat_id : '',
+							)
+						);
+					}
+					unset ($_options);
+					unset($options);
 				}
-				$groups_ary[$group_id] =  $_options;
-				$hold_ary[$cat_id] = $groups_ary;
 			}
 		}
 		$db->sql_freeresult($result);
@@ -468,7 +543,7 @@ class permissions_module
 					$select[$key][$second] = $option_settings[$key][$second];
 				}
 			}
-			$this->apply_all_permissions($select, $mode);
+			$this->apply_all_permissions($select, $user_mode);
 		}
 
 		if($apply_all_permissions && !empty($inherit))
@@ -480,33 +555,33 @@ class permissions_module
 					$select[$key][$second] = $option_settings[$key][$second];
 				}
 			}
-			$this->apply_all_permissions($select, $mode);
+			$this->apply_all_permissions($select, $user_mode);
 		}
 
 		$s_hidden_fields = array(
 			'category_id'	=> $category_id,
 			'group_id'		=> $group_ids,
 			'user_id'		=> $group_ids,
-			'p_mode'		=> $mode,
+			'p_mode'		=> $user_mode,
 		);
 
 		$template->assign_vars(array(
-			'L_TITLE'					=> $user->lang['ACL_SET'],
-			'L_EXPLAIN'					=> $user->lang['ACL_SET_EXPLAIN'],
+			'L_TITLE'					=> ($this->mode == 'mask') ? $user->lang['ACP_LIBRARY_PERMISSIONS_MASK'] : $user->lang['ACL_SET'],
+			'L_EXPLAIN'					=> $this->title_explain,
 			'S_VIEWING_PERMISSIONS'		=> true,
-			'S_TYPE'					=> $s_type,
+			'S_VIEWING_MASK'			=> ($this->mode == 'mask') ? true : false,
 			'S_HIDDEN_FIELDS'			=> build_hidden_fields($s_hidden_fields),
 			)
 		);
 		return;
 	}
 
-	function apply_all_permissions($hold_ary, $mode)
+	function apply_all_permissions($hold_ary, $user_mode)
 	{
 		global $db, $user, $phpbb_admin_path, $phpEx;
 
 		$sql = 'SELECT auth_option, auth_option_id
-			FROM ' . KB_OPTIONS_TABLE;
+			FROM ' . $this->options_table;
 		$result = $db->sql_query($sql);
 		while($row = $db->sql_fetchrow($result))
 		{
@@ -514,8 +589,8 @@ class permissions_module
 			$auth_option_ids[$auth_option] = $row['auth_option_id'];
 		}
 
-		$table = ($mode == 'user') ? KB_USERS_TABLE : KB_GROUPS_TABLE;
-		$id_field = $mode . '_id';
+		$table = ($user_mode == 'user') ? $this->kb_users_table : $this->kb_groups_table;
+		$id_field = $user_mode . '_id';
 		$group_id = $user_id = $category_id = array();
 
 		foreach($hold_ary as $cat => $value)
@@ -537,7 +612,7 @@ class permissions_module
 					{
 						$sql = 'SELECT * FROM ' . $table . '
 							WHERE ' . $id_field . ' = ' . $group . '
-							AND category_id = '. $cat . '
+							AND category_id = ' . $cat . '
 							AND auth_option_id = ' . $auth_option_ids[$opt_name] . '';
 
 						$result = $db->sql_query($sql);
@@ -559,7 +634,7 @@ class permissions_module
 						}
 					}
 
-					if ($mode == 'user')
+					if ($user_mode == 'user')
 					{
 						$user_id[] = $group;
 					}
@@ -585,13 +660,13 @@ class permissions_module
 		{
 			return;
 		}
-		$phpbb_log->set_log_table(KB_LOG_TABLE);
-		(empty($group_id)) ? $mode = 'user' : $mode = 'group';
-		$table = ($mode == 'user') ? KB_USERS_TABLE : KB_GROUPS_TABLE;
-		$id_field = $mode . '_id';
-		$where = ($mode == 'user') ? $user_id : $group_id;
+		$phpbb_log->set_log_table($this->kb_logs_table);
+		(empty($group_id)) ? $user_mode = 'user' : $user_mode = 'group';
+		$table = ($user_mode == 'user') ? $this->kb_users_table : $this->kb_groups_table;
+		$id_field = $user_mode . '_id';
+		$where = ($user_mode == 'user') ? $user_id : $group_id;
 
-		$sql = 'DELETE FROM ' .$table . '
+		$sql = 'DELETE FROM ' . $table . '
 			WHERE ' . $id_field . ' IN (' . implode(',', $where) . ')
 				AND category_id IN (' . implode(',', $category_id).')';
 		$db->sql_query($sql);
@@ -607,10 +682,10 @@ class permissions_module
 	{
 		global $db, $user, $phpbb_log;
 
-		$phpbb_log->set_log_table(KB_LOG_TABLE);
-		(empty($group_id)) ? $mode = 'user' : $mode = 'group';
+		$phpbb_log->set_log_table($this->kb_logs_table);
+		(empty($group_id)) ? $user_mode = 'user' : $user_mode = 'group';
 		$sql = 'SELECT category_name
-			FROM ' . KB_CAT_TABLE . '
+			FROM ' . $this->categories_table . '
 			WHERE ' . $db->sql_in_set('category_id', $category_id) . '
 			ORDER BY left_id ASC';
 		$result = $db->sql_query($sql);
@@ -622,7 +697,7 @@ class permissions_module
 		}
 		$db->sql_freeresult($result);
 
-		if ($mode == 'user')
+		if ($user_mode == 'user')
 		{
 			$gr_name =  'username';
 			$tbl = USERS_TABLE;
@@ -640,7 +715,7 @@ class permissions_module
 		$result = $db->sql_query($sql);
 		while($row = $db->sql_fetchrow($result))
 		{
-			$names[] = ($mode == 'user') ? $row['username'] :  $user->lang('G_' . $row['group_name'] . '');
+			$names[] = ($user_mode == 'user') ? $row['username'] :  $user->lang('G_' . $row['group_name'] . '');
 		}
 
 		$db->sql_freeresult($result);
@@ -650,6 +725,324 @@ class permissions_module
 			foreach($category_names as $key => $category_name)
 			{
 				$phpbb_log->add('admin', $user->data['user_id'], $user->data['user_ip'], $log_type, time(), array($category_name, $name));
+			}
+		}
+	}
+
+	/**
+	* Display a complete trace tree for the selected permission to determine where settings are set/unset
+	*/
+	function permission_trace($user_id, $category_id, $permission)
+	{
+		global $db, $template, $user, $auth, $request, $phpbb_container;
+
+		if ($user_id != $user->data['user_id'])
+		{
+			$userdata = $auth->obtain_user_data($user_id);
+		}
+		else
+		{
+			$userdata = $user->data;
+		}
+
+		if (!$userdata)
+		{
+			trigger_error('NO_USERS', E_USER_ERROR);
+		}
+
+		/** @var \phpbb\group\helper $group_helper */
+		$group_helper = $phpbb_container->get('group_helper');
+
+		$category_name = false;
+
+		if ($category_id)
+		{
+			$sql = 'SELECT category_name
+				FROM ' . $this->categories_table . "
+				WHERE category_id = $category_id";
+			$result = $db->sql_query($sql, 3600);
+			$cat_name = $db->sql_fetchfield('category_name');
+			$db->sql_freeresult($result);
+		}
+
+		$back = $request->variable('back', 0);
+
+		$template->assign_vars(array(
+			'PERMISSION'			=> $user->lang($permission),
+			'PERMISSION_USERNAME'	=> $userdata['username'],
+			'FORUM_NAME'			=> $cat_name,
+			)
+		);
+
+		$template->assign_block_vars('trace', array(
+			'WHO'				=> $user->lang['DEFAULT'],
+			'INFORMATION'		=> $user->lang['TRACE_DEFAULT'],
+			'S_SETTING_NO'		=> true,
+			'S_TOTAL_NO'		=> true)
+		);
+
+		$sql = 'SELECT DISTINCT g.group_name, g.group_id, g.group_type
+			FROM ' . GROUPS_TABLE . ' g
+				LEFT JOIN ' . USER_GROUP_TABLE . ' ug ON (ug.group_id = g.group_id)
+			WHERE ug.user_id = ' . $user_id . '
+				AND ug.user_pending = 0
+				AND NOT (ug.group_leader = 1 AND g.group_skip_auth = 1)
+			ORDER BY g.group_type DESC, g.group_id DESC';
+		$result = $db->sql_query($sql);
+
+		$groups = array();
+		while ($row = $db->sql_fetchrow($result))
+		{
+			$groups[$row['group_id']] = array(
+				'auth_setting'		=> ACL_NO,
+				'group_name'		=> $group_helper->get_name($row['group_name']),
+			);
+		}
+		$db->sql_freeresult($result);
+
+		$total = ACL_NO;
+		$add_key = (($category_id) ? '_LOCAL' : '');
+
+		if (sizeof($groups))
+		{
+			// Get group auth settings
+			$hold_ary = $this->kb_acl_group_raw_data(array_keys($groups), $permission, $category_id);
+
+			foreach ($hold_ary as $group_id => $category_ary)
+			{
+				$groups[$group_id]['auth_setting'] = $hold_ary[$group_id][$category_id][$permission];
+			}
+			unset($hold_ary);
+
+			foreach ($groups as $id => $row)
+			{
+				switch ($row['auth_setting'])
+				{
+					case ACL_NO:
+						$information = $user->lang['KB_TRACE_GROUP_NO' . $add_key];
+					break;
+
+					case ACL_YES:
+						$information = ($total == ACL_YES) ? $user->lang['KB_TRACE_GROUP_YES_TOTAL_YES' . $add_key] : (($total == ACL_NEVER) ? $user->lang['KB_TRACE_GROUP_YES_TOTAL_NEVER' . $add_key] : $user->lang['KB_TRACE_GROUP_YES_TOTAL_NO' . $add_key]);
+						$total = ($total == ACL_NO) ? ACL_YES : $total;
+					break;
+
+					case ACL_NEVER:
+						$information = ($total == ACL_YES) ? $user->lang['KB_TRACE_GROUP_NEVER_TOTAL_YES' . $add_key] : (($total == ACL_NEVER) ? $user->lang['KB_TRACE_GROUP_NEVER_TOTAL_NEVER' . $add_key] : $user->lang['KB_TRACE_GROUP_NEVER_TOTAL_NO' . $add_key]);
+						$total = ACL_NEVER;
+					break;
+				}
+
+				$template->assign_block_vars('trace', array(
+					'WHO'			=> $row['group_name'],
+					'INFORMATION'	=> $information,
+
+					'S_SETTING_NO'		=> ($row['auth_setting'] == ACL_NO) ? true : false,
+					'S_SETTING_YES'		=> ($row['auth_setting'] == ACL_YES) ? true : false,
+					'S_SETTING_NEVER'	=> ($row['auth_setting'] == ACL_NEVER) ? true : false,
+					'S_TOTAL_NO'		=> ($total == ACL_NO) ? true : false,
+					'S_TOTAL_YES'		=> ($total == ACL_YES) ? true : false,
+					'S_TOTAL_NEVER'		=> ($total == ACL_NEVER) ? true : false)
+				);
+			}
+		}
+
+		// Get user specific permission... globally or for this category
+		$hold_ary = $this->kb_acl_user_raw_data($user_id, $permission, $category_id);
+		$auth_setting = (!sizeof($hold_ary)) ? ACL_NO : $hold_ary[$user_id][$category_id][$permission];
+
+		switch ($auth_setting)
+		{
+			case ACL_NO:
+				$information = ($total == ACL_NO) ? $user->lang['KB_TRACE_USER_NO_TOTAL_NO' . $add_key] : $user->lang['KB_KB_TRACE_USER_KEPT' . $add_key];
+				$total = ($total == ACL_NO) ? ACL_NEVER : $total;
+			break;
+
+			case ACL_YES:
+				$information = ($total == ACL_YES) ? $user->lang['KB_TRACE_USER_YES_TOTAL_YES' . $add_key] : (($total == ACL_NEVER) ? $user->lang['KB_TRACE_USER_YES_TOTAL_NEVER' . $add_key] : $user->lang['KB_TRACE_USER_YES_TOTAL_NO' . $add_key]);
+				$total = ($total == ACL_NO) ? ACL_YES : $total;
+			break;
+
+			case ACL_NEVER:
+				$information = ($total == ACL_YES) ? $user->lang['KB_TRACE_USER_NEVER_TOTAL_YES' . $add_key] : (($total == ACL_NEVER) ? $user->lang['KB_TRACE_USER_NEVER_TOTAL_NEVER' . $add_key] : $user->lang['KB_TRACE_USER_NEVER_TOTAL_NO' . $add_key]);
+				$total = ACL_NEVER;
+			break;
+		}
+
+		$template->assign_block_vars('trace', array(
+			'WHO'			=> $userdata['username'],
+			'INFORMATION'	=> $information,
+
+			'S_SETTING_NO'		=> ($auth_setting == ACL_NO) ? true : false,
+			'S_SETTING_YES'		=> ($auth_setting == ACL_YES) ? true : false,
+			'S_SETTING_NEVER'	=> ($auth_setting == ACL_NEVER) ? true : false,
+			'S_TOTAL_NO'		=> false,
+			'S_TOTAL_YES'		=> ($total == ACL_YES) ? true : false,
+			'S_TOTAL_NEVER'		=> ($total == ACL_NEVER) ? true : false)
+		);
+
+		// Take founder or admin status into account, overwriting the default values
+		if ($userdata['user_type'] == USER_FOUNDER || (!empty($auth->acl_get_list($userdata['user_id'], 'a_manage_kb'))))
+		{
+			$information = ($userdata['user_type'] == USER_FOUNDER) ? $user->lang['KB_TRACE_USER_FOUNDER'] : $user->lang['KB_TRACE_USER_ADMIN'];
+			$template->assign_block_vars('trace', array(
+				'WHO'			=> $userdata['username'],
+				'INFORMATION'	=> $information,
+
+				'S_SETTING_NO'		=> ($auth_setting == ACL_NO) ? true : false,
+				'S_SETTING_YES'		=> ($auth_setting == ACL_YES) ? true : false,
+				'S_SETTING_NEVER'	=> ($auth_setting == ACL_NEVER) ? true : false,
+				'S_TOTAL_NO'		=> false,
+				'S_TOTAL_YES'		=> true,
+				'S_TOTAL_NEVER'		=> false)
+			);
+
+			$total = ACL_YES;
+		}
+
+		// Total value...
+		$template->assign_vars(array(
+			'S_RESULT_NO'		=> ($total == ACL_NO) ? true : false,
+			'S_RESULT_YES'		=> ($total == ACL_YES) ? true : false,
+			'S_RESULT_NEVER'	=> ($total == ACL_NEVER) ? true : false,
+		));
+
+		return ($total) ? $total : 0;
+	}
+
+	/**
+	* Get raw group based permission settings
+	*/
+	function kb_acl_group_raw_data($group_id = false, $opts = false, $category_id = false)
+	{
+		global $db;
+
+		$sql_group = ($group_id !== false) ? ((!is_array($group_id)) ? 'group_id = ' . (int) $group_id : $db->sql_in_set('group_id', array_map('intval', $group_id))) : '';
+		$sql_category = ($category_id !== false) ? ((!is_array($category_id)) ? 'AND a.category_id = ' . (int) $category_id : 'AND ' . $db->sql_in_set('a.category_id', array_map('intval', $category_id))) : '';
+
+		$sql_opts = '';
+		$hold_ary = $sql_ary = array();
+
+		if ($opts !== false)
+		{
+			$this->build_auth_option_statement('ao.auth_option', $opts, $sql_opts);
+		}
+
+		// Grab group settings - non-role specific...
+		$sql_ary[] = 'SELECT a.group_id, a.category_id, a.auth_setting, a.auth_option_id, ao.auth_option
+			FROM ' . $this->kb_groups_table . ' a, ' . $this->options_table . ' ao
+			WHERE a.auth_option_id = ao.auth_option_id ' .
+				(($sql_group) ? 'AND a.' . $sql_group : '') . "
+				$sql_category
+				$sql_opts
+			ORDER BY a.category_id, ao.auth_option";
+
+		foreach ($sql_ary as $sql)
+		{
+			$result = $db->sql_query($sql);
+
+			while ($row = $db->sql_fetchrow($result))
+			{
+				$hold_ary[$row['group_id']][$row['category_id']][$row['auth_option']] = $row['auth_setting'];
+			}
+			$db->sql_freeresult($result);
+		}
+
+		return $hold_ary;
+	}
+
+	/**
+	* Get raw user based permission settings
+	*/
+	function kb_acl_user_raw_data($user_id = false, $opts = false, $category_id = false)
+	{
+		global $db;
+
+		$sql_user = ($user_id !== false) ? ((!is_array($user_id)) ? 'user_id = ' . (int) $user_id : $db->sql_in_set('user_id', array_map('intval', $user_id))) : '';
+		$sql_category = ($category_id !== false) ? ((!is_array($category_id)) ? 'AND a.category_id = ' . (int) $category_id : 'AND ' . $db->sql_in_set('a.category_id', array_map('intval', $category_id))) : '';
+
+		$sql_opts = '';
+		$hold_ary = $sql_ary = array();
+
+		if ($opts !== false)
+		{
+			$this->build_auth_option_statement('ao.auth_option', $opts, $sql_opts);
+		}
+
+		// Grab user settings - non-role specific...
+		$sql_ary[] = 'SELECT a.user_id, a.category_id, a.auth_setting, a.auth_option_id, ao.auth_option
+			FROM ' . $this->kb_users_table . ' a, ' . $this->options_table . ' ao
+			WHERE a.auth_option_id = ao.auth_option_id ' .
+				(($sql_user) ? 'AND a.' . $sql_user : '') . "
+				$sql_category
+				$sql_opts
+			ORDER BY a.category_id, ao.auth_option";
+
+		foreach ($sql_ary as $sql)
+		{
+			$result = $db->sql_query($sql);
+
+			while ($row = $db->sql_fetchrow($result))
+			{
+				$hold_ary[$row['user_id']][$row['category_id']][$row['auth_option']] = $row['auth_setting'];
+			}
+			$db->sql_freeresult($result);
+		}
+
+		return $hold_ary;
+	}
+
+	/**
+	* Fill auth_option statement for later querying based on the supplied options
+	*/
+	function build_auth_option_statement($key, $auth_options, &$sql_opts)
+	{
+		global $db;
+
+		if (!is_array($auth_options))
+		{
+			if (strpos($auth_options, '%') !== false)
+			{
+				$sql_opts = "AND $key " . $db->sql_like_expression(str_replace('%', $db->get_any_char(), $auth_options));
+			}
+			else
+			{
+				$sql_opts = "AND $key = '" . $db->sql_escape($auth_options) . "'";
+			}
+		}
+		else
+		{
+			$is_like_expression = false;
+
+			foreach ($auth_options as $option)
+			{
+				if (strpos($option, '%') !== false)
+				{
+					$is_like_expression = true;
+				}
+			}
+
+			if (!$is_like_expression)
+			{
+				$sql_opts = 'AND ' . $db->sql_in_set($key, $auth_options);
+			}
+			else
+			{
+				$sql = array();
+
+				foreach ($auth_options as $option)
+				{
+					if (strpos($option, '%') !== false)
+					{
+						$sql[] = $key . ' ' . $db->sql_like_expression(str_replace('%', $db->get_any_char(), $option));
+					}
+					else
+					{
+						$sql[] = $key . " = '" . $db->sql_escape($option) . "'";
+					}
+				}
+
+				$sql_opts = 'AND (' . implode(' OR ', $sql) . ')';
 			}
 		}
 	}
