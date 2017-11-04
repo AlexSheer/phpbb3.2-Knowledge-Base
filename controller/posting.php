@@ -146,7 +146,7 @@ class posting
 		$art_id	= $this->request->variable('k', 0);
 		$mode	= $this->request->variable('mode', '');
 
-		if (!$this->auth->acl_get('a_manage_kb') && !$this->kb->acl_kb_get($cat_id, 'kb_u_add'))
+		if (!$this->kb->acl_kb_get($cat_id, 'kb_u_add'))
 		{
 			trigger_error('RULES_KB_ADD_CANNOT');
 		}
@@ -170,15 +170,13 @@ class posting
 
 			$edit_allowed = ($this->kb->acl_kb_get($cat_id, 'kb_m_edit') || (
 				$this->user->data['user_id'] == $article_author_id &&
-				$this->kb->acl_kb_get($cat_id, 'kb_u_edit') ||
-				$this->auth->acl_get('a_manage_kb')
-			));
+				$this->kb->acl_kb_get($cat_id, 'kb_u_edit'))
+			);
 
 			$delete_allowed = ($this->kb->acl_kb_get($cat_id, 'kb_m_delete') || (
 				$this->user->data['user_id'] == $article_author_id &&
-				$this->kb->acl_kb_get($cat_id, 'kb_u_delete') ||
-				$this->auth->acl_get('a_manage_kb')
-			));
+				$this->kb->acl_kb_get($cat_id, 'kb_u_delete'))
+			);
 		}
 
 		if ($this->config['kb_search_type'])
@@ -312,7 +310,7 @@ class posting
 					'article_body'			=> $article_text,
 					'views'					=> 0,
 					'author'				=> $this->user->data['username'],
-					'approved'				=> ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_u_add_noapprove')) ? 1 : 0,
+					'approved'				=> ($this->kb->acl_kb_get($cat_id, 'kb_u_add_noapprove')) ? 1 : 0,
 				);
 
 				$root = $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id));
@@ -393,7 +391,7 @@ class posting
 						WHERE category_id = ' . (int) $cat_id;
 					$this->db->sql_query($sql);
 
-					if ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_u_add_noapprove'))
+					if ($this->kb->acl_kb_get($cat_id, 'kb_u_add_noapprove'))
 					{
 						$redirect = $this->helper->route('sheer_knowledgebase_article', array('k' => $new));
 
