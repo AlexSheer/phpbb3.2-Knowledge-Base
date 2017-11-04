@@ -115,9 +115,12 @@ class approve
 
 		$redirect = $this->routing->route('sheer_knowledgebase_category', array('id' => $kb_article_info['article_category_id']));
 
-		if (!$this->kb->acl_kb_get($kb_article_info['article_category_id'], 'kb_m_approve') && !$this->auth->acl_get('a_manage_kb'))
+		if ($this->user->data['user_type'] != USER_FOUNDER)
 		{
-			trigger_error('RULES_KB_APPROVE_MOD_CANNOT');
+			if (!$this->kb->acl_kb_get($kb_article_info['article_category_id'], 'kb_m_approve') && !$this->auth->acl_get('a_manage_kb'))
+			{
+				trigger_error('RULES_KB_APPROVE_MOD_CANNOT');
+			}
 		}
 
 		if ($kb_article_info['approved'])
