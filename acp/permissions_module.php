@@ -680,10 +680,15 @@ class permissions_module
 
 	function add_kb_log($group_id, $user_id, $category_id, $log_type)
 	{
-		global $db, $user, $phpbb_log;
+		global $db, $user, $phpbb_log, $phpbb_container;
+
+		/** @var \phpbb\group\helper $group_helper */
+		$group_helper = $phpbb_container->get('group_helper');
 
 		$phpbb_log->set_log_table($this->kb_logs_table);
-		(empty($group_id)) ? $user_mode = 'user' : $user_mode = 'group';
+
+		$user_mode = (empty($group_id)) ? 'user' : 'group';
+
 		$sql = 'SELECT category_name
 			FROM ' . $this->categories_table . '
 			WHERE ' . $db->sql_in_set('category_id', $category_id) . '
@@ -715,7 +720,7 @@ class permissions_module
 		$result = $db->sql_query($sql);
 		while($row = $db->sql_fetchrow($result))
 		{
-			$names[] = ($user_mode == 'user') ? $row['username'] :  $user->lang('G_' . $row['group_name'] . '');
+			$names[] = ($user_mode == 'user') ? $row['username'] : $group_helper->get_name($row['group_name']);
 		}
 
 		$db->sql_freeresult($result);
