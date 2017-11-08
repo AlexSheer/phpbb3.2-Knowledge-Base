@@ -57,7 +57,6 @@ class kb_file
 		$this->phpbb_root_path	= $phpbb_root_path;
 		$this->php_ext			= $php_ext;
 		$this->attachments_table= $attachments_table;
-		//keyshaneverass@mail.com
 	}
 
 	public function main()
@@ -75,7 +74,7 @@ class kb_file
 		}
 
 		$upload_path = 'ext/sheer/knowledgebase/files';
-		require($phpbb_root_path . 'includes/functions_download' . '.' . $this->php_ext);
+		require($this->phpbb_root_path . 'includes/functions_download' . '.' . $this->php_ext);
 
 		$sql = 'SELECT attach_id, is_orphan, physical_filename, real_filename, extension, mimetype, filesize
 			FROM ' . $this->attachments_table . "
