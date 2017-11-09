@@ -382,7 +382,7 @@ class kb_fulltext_mysql extends \sheer\knowledgebase\search\kb_base
 			$terms,
 			$sort_days,
 			$sort_key,
-			$topic_id,
+			false,
 			implode(',', $ex_fid_ary),
 			true,
 			implode(',', $author_ary)
@@ -460,7 +460,7 @@ class kb_fulltext_mysql extends \sheer\knowledgebase\search\kb_base
 		$sql_where_options .= ' AND p.approved = 1 ';
 
 		$sql = "SELECT $sql_select
-			FROM $sql_from" . $this->articles_table . " p
+			FROM " . $this->articles_table . " p
 			WHERE MATCH ($sql_match) AGAINST ('" . $this->db->sql_escape(htmlspecialchars_decode($this->search_query)) . "' IN BOOLEAN MODE)
 				$sql_where_options
 			ORDER BY $sql_sort";
