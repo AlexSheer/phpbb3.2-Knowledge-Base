@@ -686,11 +686,17 @@ class functions_kb
 			}
 			$replace['from'][] = $matches[0][$num];
 			$replace['to'][] = (isset($attachments[$index])) ? $replacement : sprintf($this->user->lang['MISSING_INLINE_ATTACHMENT'], $matches[2][array_search($index, $matches[1])]);
+			$unset_tpl[] = $index;
 		}
 
 		if (isset($replace['from']))
 		{
 			$text = str_replace($replace['from'], $replace['to'], $text);
+		}
+
+		foreach ($attachments as $num => $attach)
+		{
+			unset($attachments[$unset_tpl[$num]]);
 		}
 
 		if(sizeof($attachments))
