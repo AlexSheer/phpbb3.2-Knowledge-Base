@@ -216,10 +216,11 @@ class posting
 
 			if (confirm_box(true))
 			{
-				$this->kb->kb_delete_article($art_id, $article_title);
+				$art_info = $this->kb->get_kb_article_info($art_id);
+				$this->kb->kb_delete_article($art_id, $art_info['article_title']);
 				if ($kb_search)
 				{
-					$author_ids[] = $author_id;
+					$author_ids[] = $art_info['author_id'];
 					$kb_search->index_remove($art_id, $author_ids);
 				}
 				$msg = $this->user->lang['ARTICLE_DELETED'];
@@ -360,7 +361,7 @@ class posting
 					// Upd search index
 					if ($kb_search)
 					{
-						$kb_search->index('edit', $art_id, $article_text, $article_title, $article_description, $author_id);
+						$kb_search->index('edit', $art_id, $article_text, $article_title, $article_description, $article_author_id);
 					}
 
 					$this->insert_attachments($attachment_data, $art_id);
@@ -513,7 +514,7 @@ class posting
 			'S_BBCODE_FLASH'		=> $flash_status,
 			'S_BBCODE_QUOTE'		=> true,
 			'S_EDIT_POST'			=> ($mode == 'edit') ? true : false,
-			'S_CAN_DELETE'			=> ($delete_allowed) ? true : false,
+			'S_CAN_DELETE'			=> (isset($delete_allowed) && $delete_allowed) ? true : false,
 
 			'S_FORM_ENCTYPE'		=> ($this->kb_data['allow_attachments']) ? ' enctype="multipart/form-data"' : '',
 			'S_PLUPLOAD'			=> ($this->kb_data['allow_attachments']) ? true: false,
