@@ -312,6 +312,7 @@ class functions_kb
 			WHERE article_id = ' . (int) $id;
 		$this->db->sql_query($sql);
 
+		$ids = array();
 		$sql = 'SELECT attach_id, physical_filename, thumbnail
 			FROM ' . $this->attachments_table . '
 			WHERE article_id = ' . $id;
@@ -322,9 +323,11 @@ class functions_kb
 			$ids[] = $row['attach_id'];
 		}
 		$this->db->sql_freeresult($result);
-		if (sizeof($ids))
+
+		if (!empty($ids))
 		{
-			$upload_dir = 'ext/sheer/knowledgebase/files/';
+			$upload_dir = $this->phpbb_root_path . 'ext/sheer/knowledgebase/files/';
+
 			foreach ($attachment_data as $attachment)
 			{
 				@unlink($upload_dir . $attachment['physical_filename']);
@@ -622,7 +625,7 @@ class functions_kb
 			'notify_set'			=> '',
 			'enable_indexing'		=> (bool) true,
 			'message'				=> htmlspecialchars_decode($topic_text),
-			'message_md5'			=> md5($message_parser->message),
+			'message_md5'			=> md5(time()),
 			'bbcode_bitfield'		=> $bitfield,
 			'bbcode_uid'			=> substr(md5(rand()), 0, 8),
 			'post_edit_locked'		=> 0,
@@ -683,16 +686,11 @@ class functions_kb
 			}
 			$replace['from'][] = $matches[0][$num];
 			$replace['to'][] = (isset($attachments[$index])) ? $replacement : sprintf($this->user->lang['MISSING_INLINE_ATTACHMENT'], $matches[2][array_search($index, $matches[1])]);
-			$unset_tpl[] = $index;
 		}
 
 		if (isset($replace['from']))
 		{
 			$text = str_replace($replace['from'], $replace['to'], $text);
-		}
-		foreach ($attachments as $num => $attach)
-		{
-			unset($attachments[$unset_tpl[$num]]);
 		}
 
 		if(sizeof($attachments))
