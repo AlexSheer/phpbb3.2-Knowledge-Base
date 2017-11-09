@@ -53,6 +53,14 @@
 			<dt><label for="articles_per_page">{L_PER_PAGE}{L_COLON}</label></dt>
 			<dd><label><input class="post" type="number" max="20" min="5" maxlength="12" size="12" name="articles_per_page" value="{PER_PAGE}" /></dd>
 		</dl>
+		<dl>
+			<dt><label for="sort_type">{L_SORT_TYPE}{L_COLON}</label><br /><span>{L_SORT_TYPE_EXPLAIN}</span></dt>
+			<dd>
+				<label><input type="radio" class="radio" id="sort_type" name="sort_type" value="0"<!-- IF S_FORCIBLY --> checked="checked"<!-- ENDIF --> /> {L_FORCIBLY}</label>
+				<label><input type="radio" class="radio" name="sort_type" value="1"<!-- IF S_SELECTABLE --> checked="checked"<!-- ENDIF --> /> {L_SELECTABLE}</label>
+				<label><input type="radio" class="radio" name="sort_type" value="-1"<!-- IF S_ALFABET --> checked="checked"<!-- ENDIF --> /> {L_ALFABET}</label>
+			</dd>
+		</dl>
 	</fieldset>
 	<br />
 	<fieldset>
@@ -68,9 +76,9 @@
 			<label><input type="radio" class="radio" name="thumbnail" value="0"<!-- IF not S_YES_THUMBNAIL --> checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
 		</dl>
 		<dl>
-				<dt><label for="max_attachments">{L_MAX_ATTACHMENTS}{L_COLON}</label></dt>
-				<dd><input id="max_attachments" max="999" name="max_attachments" value="{MAX_ATTACHMENTS}" type="number"></dd>
-			</dl>
+			<dt><label for="max_attachments">{L_MAX_ATTACHMENTS}{L_COLON}</label></dt>
+			<dd><input id="max_attachments" max="999" name="max_attachments" value="{MAX_ATTACHMENTS}" type="number"></dd>
+		</dl>
 		<dl>
 			<dt><label for="extgroup_filesize">{L_ATTACH_MAX_FILESIZE}{L_COLON}</label><br /><span>{L_ATTACH_MAX_FILESIZE_EXPLAIN}</span></dt>
 			<dd><input type="number" id="extgroup_filesize" min="0" max="999999999999999" step="any" name="max_filesize" value="{EXTGROUP_FILESIZE}" /> <select name="size_select">{S_EXT_GROUP_SIZE_OPTIONS}</select></dd>
