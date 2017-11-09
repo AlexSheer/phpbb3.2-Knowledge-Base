@@ -229,7 +229,7 @@ class library_search
 
 			if ($author && $keywords)
 			{
-				$kb_search->split_keywords($keywords, $terms);
+				$kb_search->split_keywords($keywords, $search_terms);
 				$search_result = $kb_search->keyword_search($show_results, $search_fields, $search_terms, $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $category_id, $author_id_ary, $author, $id_ary, $start, $per_page);
 			}
 			else if ($author)
@@ -238,7 +238,7 @@ class library_search
 			}
 			else
 			{
-				$kb_search->split_keywords($keywords, $terms);
+				$kb_search->split_keywords($keywords, $search_terms);
 				$search_result = $kb_search->keyword_search($show_results, $search_fields, $search_terms, $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $category_id, $author_id_ary, $author, $id_ary, $start, $per_page);
 			}
 
@@ -264,20 +264,39 @@ class library_search
 					$article_id = $row['article_id'];
 					$article_info = $this->kb->get_kb_article_info ($article_id);
 					$category_id = $article_info['article_category_id'];
-					$message = $row['article_body'];
-					$message = generate_text_for_display($message, $row['bbcode_uid'], $row['bbcode_bitfield'], 3, true);
-					$message = get_context($message, array_filter(explode('|', $hilit), 'strlen'), $return_chars);
-					$message =  strtr($message, array('&lt;' => '<', '&gt;' => '>'));
 
-					if ($hilit)
+					if ($show_results == 'posts')
 					{
-						$message = preg_replace('#(?!<.*)(?<!\w)(' . $hilit . ')(?!\w|[^<>]*(?:</s(?:cript|tyle))?>)#is', '<span class="posthilit">\1</span>', $message);
+						$text_only_message = $message = $row['article_body'];
+						if ($row['bbcode_uid'])
+						{
+							$text_only_message = str_replace('[*:' . $row['bbcode_uid'] . ']', '&sdot;&nbsp;', $text_only_message);
+
+							// no BBCode in text only message
+							strip_bbcode($text_only_message, $row['bbcode_uid']);
+							$row['article_body'] = get_context($text_only_message, array_filter(explode('|', $hilit), 'strlen'), $return_chars);
+							$row['article_body'] = bbcode_nl2br($row['article_body']);
+
+						}
+						if ($return_chars == -1 || utf8_strlen($text_only_message) < ($return_chars + 3))
+						{
+							$row['bbcode_bitfield'] = false;
+							$parse_flags = ($row['bbcode_bitfield'] ? OPTION_FLAG_BBCODE : 0) | OPTION_FLAG_SMILIES;
+							$row['article_body'] = generate_text_for_display($message, $row['bbcode_uid'], $row['bbcode_bitfield'], $parse_flags, false);
+							$row['article_body'] =  strtr($row['article_body'], array('&lt;' => '<', '&gt;' => '>'));
+						}
+
+						if ($hilit)
+						{
+							$row['article_body'] = preg_replace('#(?!<.*)(?<!\w)(' . $hilit . ')(?!\w|[^<>]*(?:</s(?:cript|tyle))?>)#is', '<span class="posthilit">\1</span>', $row['article_body']);
+							$row['article_title'] = preg_replace('#(?!<.*)(?<!\w)(' . $hilit . ')(?!\w|[^<>]*(?:</s(?:cript|tyle))?>)#isu', '<span class="posthilit">$1</span>', $row['article_title']);
+						}
 					}
 
 					$category = $this->kb->get_cat_info($row['article_category_id']);
 
 					$this->template->assign_block_vars('searchrow', array(
-						'MESSAGE'	=> $message,
+						'MESSAGE'	=> $row['article_body'],
 						'DATE'		=> $this->user->format_date($row['article_date']),
 						'TITLE'		=> $row['article_title'],
 						'U_VIEW'	=> $this->helper->route('sheer_knowledgebase_article', array('k' => $article_id)),
