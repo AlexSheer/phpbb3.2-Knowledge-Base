@@ -150,7 +150,7 @@ class config_module
 					$extension_list[$group_name] = array();
 				}
 
-				if (sizeof($disabled_list[$group_name]))
+				if (!empty($disabled_list[$group_name]))
 				{
 					$extension_list[$group_name] = array_merge($extension_list[$group_name], $disabled_list[$group_name]);
 				}
@@ -194,6 +194,10 @@ class config_module
 			'S_YES_ATTACH'				=> (isset($new['allow_attachments']) && $default_config['allow_attachments']) ? true : false,
 			'S_YES_THUMBNAIL'			=> (isset($new['thumbnail']) && $default_config['thumbnail']) ? true : false,
 			'S_FORUM_POST'				=> (isset($default_config['anounce']) && $default_config['anounce']) ? make_forum_select($new['forum_id'], 0, true, true, false) : make_forum_select(0, false, true, true, false),
+			'S_FORCIBLY'				=> (isset($new['sort_type']) && $default_config['sort_type'] == 0) ? true : false,
+			'S_ALFABET'					=> (isset($new['sort_type']) && $default_config['sort_type'] == -1) ? true : false,
+			'S_SELECTABLE'				=> (isset($new['sort_type']) && $default_config['sort_type'] == 1) ? true : false,
+
 			'S_ACTION'					=> $this->u_action,
 		));
 	}
