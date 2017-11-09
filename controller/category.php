@@ -107,6 +107,7 @@ class category
 		$s_can_move = (!$sort_type && $this->kb->acl_kb_get($cat_id, 'kb_m_edit')) ? true : false;
 
 		$sql_where = ($this->kb->acl_kb_get($cat_id, 'kb_m_approve')) ? '' : 'AND a.approved = 1';
+		$pagination_ary = array('id' => $cat_id);
 
 		if ($sort_type == 1)
 		{
@@ -132,6 +133,7 @@ class category
 			$direction = (($sort_dir == 'd') ? 'ASC' : 'DESC');
 			$order_by = ' ORDER BY ' . $sort_by_sql[$sort_key] . ' ';
 			$order_by .= $direction;
+			$pagination_ary = array('id' => $cat_id, 'sd' => $sort_dir, 'sk' => $sort_key);
 		}
 		else if ($sort_type == -1)
 		{
@@ -172,7 +174,7 @@ class category
 		$article_count = $row['article_count'];
 		$this->db->sql_freeresult($result);
 
-		$pagination_url = $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id));
+		$pagination_url = $this->helper->route('sheer_knowledgebase_category', $pagination_ary);
 		if ($article_count)
 		{
 			$this->pagination->generate_template_pagination($pagination_url, 'pagination', 'start', $article_count, $per_page, $start);
@@ -266,7 +268,7 @@ class category
 				'ORDER_ID'				=> $art_row['display_order'],
 				'U_ARTICLE'				=> $this->helper->route('sheer_knowledgebase_article', array('k' => $art_row['article_id'])),
 				'ARTICLE_TITLE'			=> $art_row['article_title'],
-				'ARTICLE_AUTHOR'		=> get_username_string('full', $art_row['author_id'], $art_row['username'], $art_row['user_colour']),//$author_kb_art,
+				'ARTICLE_AUTHOR'		=> get_username_string('full', $art_row['author_id'], $art_row['username'], $art_row['user_colour']),
 				'ARTICLE_DESCRIPTION'	=> $art_row['article_description'],
 				'ARTICLE_DATE'			=> $this->user->format_date($art_row['article_date']),
 				'ART_VIEWS'				=> $art_row['views'],
