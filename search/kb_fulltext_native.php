@@ -117,6 +117,13 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 		$this->articles_table = $table_prefix . 'kb_articles';
 		$this->wordmatch_table = $table_prefix . 'kb_src_wrdmtch';
 		$this->wordlist_table = $table_prefix . 'kb_src_wrdlist';
+
+		$this->utf8_hangul_first	= "\xEA\xB0\x80";
+		$this->utf8_hangul_last		= "\xED\x9E\xA3";
+		$this->utf8_cjk_first		= "\xE4\xB8\x80";
+		$this->utf8_cjk_last		= "\xE9\xBE\xBB";
+		$this->utf8_cjk_b_first		= "\xF0\xA0\x80\x80";
+		$this->utf8_cjk_b_last		= "\xF0\xAA\x9B\x96";
 	}
 
 	/**
@@ -722,7 +729,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 
 		if ($sort_days)
 		{
-			$sql_where[] = 'p.post_time >= ' . (time() - ($sort_days * 86400));
+			$sql_where[] = 'p.article_date >= ' . (time() - ($sort_days * 86400));
 		}
 
 		$sql_array['WHERE'] = implode(' AND ', $sql_where);
@@ -1062,9 +1069,9 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 				* Note: this could be optimized. If the codepoint is lower than Hangul's range
 				* we know that it will also be lower than CJK ranges
 				*/
-				if ((strncmp($word, UTF8_HANGUL_FIRST, 3) < 0 || strncmp($word, UTF8_HANGUL_LAST, 3) > 0)
-					&& (strncmp($word, UTF8_CJK_FIRST, 3) < 0 || strncmp($word, UTF8_CJK_LAST, 3) > 0)
-					&& (strncmp($word, UTF8_CJK_B_FIRST, 4) < 0 || strncmp($word, UTF8_CJK_B_LAST, 4) > 0))
+				if ((strncmp($word, $this->utf8_hangul_first, 3) < 0 || strncmp($word, $this->utf8_hangul_last, 3) > 0)
+					&& (strncmp($word, $this->utf8_cjk_first, 3) < 0 || strncmp($word, $this->utf8_cjk_last, 3) > 0)
+					&& (strncmp($word, $this->utf8_cjk_b_first, 4) < 0 || strncmp($word, $this->utf8_cjk_b_last, 4) > 0))
 				{
 					$word = strtok(' ');
 					continue;
@@ -1618,9 +1625,9 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 			$utf_char = substr($text, $pos, $utf_len);
 			$pos += $utf_len;
 
-			if (($utf_char >= UTF8_HANGUL_FIRST && $utf_char <= UTF8_HANGUL_LAST)
-				|| ($utf_char >= UTF8_CJK_FIRST && $utf_char <= UTF8_CJK_LAST)
-				|| ($utf_char >= UTF8_CJK_B_FIRST && $utf_char <= UTF8_CJK_B_LAST))
+			if (($utf_char >= $this->utf8_hangul_first && $utf_char <= $this->utf8_hangul_last)
+				|| ($utf_char >= $this->utf8_cjk_first && $utf_char <= $this->utf8_cjk_last)
+				|| ($utf_char >= $this->utf8_cjk_b_first && $utf_char <= $this->utf8_cjk_b_last))
 			{
 				/**
 				* All characters within these ranges are valid
