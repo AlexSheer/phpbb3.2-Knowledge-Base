@@ -160,7 +160,7 @@ class article
 		}
 		$views = $row['views'];
 		$article = $row['article_id'];
-		$text = generate_text_for_display($row['article_body'], $row['bbcode_uid'], $row['bbcode_bitfield'], 3, true);
+		$text = generate_text_for_display($row['article_body'], $row['bbcode_uid'], false, 3, true);
 
 		$sql = 'SELECT *
 			FROM ' . $this->attachments_table . '
@@ -177,7 +177,7 @@ class article
 		$update_count = array();
 
 		// Parse attacments
-		if (sizeof($attachments))
+		if (isset($attachments) && sizeof($attachments))
 		{
 			$this->kb->parse_att($text, $attachments);
 		}
@@ -197,7 +197,7 @@ class article
 			'U_ARTICLE'				=> '[url=' . generate_board_url() . '/knowledgebase/article?k=' . $art_id . ']' . $row['article_title'] . '[/url]',
 			'U_DIRECT_LINK'			=> generate_board_url() . '/knowledgebase/article?k=' . $art_id,
 			'COMMENTS'				=> ($comment_topic_id) ? '' . $this->user->lang['COMMENTS'] . '' . $this->user->lang['COLON'] . ' ' . $count . '' : '',
-			'U_COMMENTS'			=> $temp_url,
+			'U_COMMENTS'			=> ($comment_topic_id) ? $temp_url : '',
 			'S_CAN_EDIT'			=> ($this->kb->acl_kb_get($cat_id, 'kb_m_edit')   || ($this->user->data['user_id'] == $row['author_id'] && $this->kb->acl_kb_get($cat_id, 'kb_u_edit')   || $this->auth->acl_get('a_manage_kb'))) ? true : false,
 			'S_CAN_DELETE'			=> ($this->kb->acl_kb_get($cat_id, 'kb_m_delete') || ($this->user->data['user_id'] == $row['author_id'] && $this->kb->acl_kb_get($cat_id, 'kb_u_delete') || $this->auth->acl_get('a_manage_kb'))) ? true : false,
 			'S_CAN_APPROOVE'		=> ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve')) ? true : false,
