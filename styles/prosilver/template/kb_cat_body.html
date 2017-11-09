@@ -79,7 +79,13 @@
 	</div>
 
 	<h2>{CATEGORY}</h2>
-
+	<!-- IF S_ALFABET -->
+	<div class="panel">
+		<div class="inner" style="margin-bottom:6px; text-align:center; padding-top: 4px;">
+			{ALFA_URLS}&nbsp;&nbsp;&nbsp;<a href="{U_RESET_FILTER}"><strong style="color:#A00">[{L_RESET_FILTER}]</strong></a>
+		</div>
+	</div>
+	<!-- ENDIF -->
 	<div class="forumbg" id="forumbg">
 		<div class="inner">
 			<ul class="topiclist">
@@ -92,7 +98,7 @@
 					</dl>
 				</li>
 			</ul>
-		<ul class="topiclist topics"<!-- IF S_CAN_MOVE--> id="sortable"<!-- ENDIF -->>
+		<ul class="topiclist topics"<!-- IF S_CAN_MOVE --> id="sortable"<!-- ENDIF -->>
 		<!-- BEGIN art_row -->
 			<li class="row<!-- IF art_row.S_ROW_COUNT is even --> bg1<!-- ELSE --> bg2<!-- ENDIF -->" id="{art_row.ID}">
 				<dl class="row-item">
@@ -106,7 +112,7 @@
 					<dd class="views">{art_row.ART_VIEWS}</dd>
 					<dd>
 						<ul class="post-buttons">
-						<!-- IF S_CAN_MOVE-->				<li id="move"><a href="#"	title="{L_MOVE_DRAGNDROP}"			class="button button-icon-only"><i class="icon fa-arrows fa-fw" aria-hidden="true" style="color: #00801D;"></i></i><span class="sr-only">{L_MOVE}</span></a></li></li><!-- ENDIF -->
+						<!-- IF S_CAN_MOVE --><li id="move"><a href="#"	title="{L_MOVE_DRAGNDROP}"			class="button button-icon-only"><i class="icon fa-arrows fa-fw" aria-hidden="true" style="color: #00801D;"></i></i><span class="sr-only">{L_MOVE}</span></a></li></li><!-- ENDIF -->
 						<!-- IF art_row.S_CAN_DELETE -->	<li><a href="{art_row.U_DELETE}"	title="{L_DELETE}"			class="button button-icon-only"><i class="icon fa-times fa-fw" aria-hidden="true" style="color: #AA0000;"></i></i><span class="sr-only">{L_DELETE}</span></a></li><!-- ENDIF -->
 						<!-- IF art_row.S_CAN_EDIT -->		<li><a href="{art_row.U_EDIT_ART}"	title="{L_EDIT}"			class="button button-icon-only"><i class="icon fa-pencil fa-fw" aria-hidden="true"></i><span class="sr-only">{L_EDIT}</span></a></li><!-- ENDIF -->
 						<!-- IF not art_row.S_APPROVED -->	<li><a href="{art_row.U_ARTICLE}"	title="{L_NEED_APPROOVE}"	class="button button-icon-only"><i class="icon fa-check fa-fw" aria-hidden="true"></i><span class="sr-only">{L_NEED_APPROOVE}</span></a></li><!-- ENDIF -->
@@ -129,6 +135,19 @@
 		</ul>
 	</div>
 </div>
+<div class="action-bar bar-bottom">
+	<!-- IF S_CAN_ADD -->
+		<div class="buttons">
+			<a href="{U_ADD_ARTICLE}" class="button" title="{L_ADD_ARTICLE}">
+				<span>{L_ADD_ARTICLE}</span> <i class="icon fa-file-text-o fa-fw" aria-hidden="true"></i>
+			</a>
+		</div>
+		<!-- ENDIF -->
+		<!-- IF S_SORT_OPTIONS and not S_IS_BOT -->
+			<form method="post" action="{S_ACTION}">
+			<!-- INCLUDE display_options.html -->
+			</form>
+		<!-- ENDIF -->
 	<div class="pagination">
 		{TOTAL_ITEMS}
 		<!-- IF .pagination -->
@@ -154,10 +173,12 @@
 		</div>
 	</div>
 	<!-- ENDIF -->
+</div>
 	<div class="stat-block permissions">
 		<h3>{L_KB_PERMISSIONS}</h3>
 		<p><!-- BEGIN rules -->{rules.RULE}<br /><!-- END rules --></p>
 	</div>
+
 </div>
 
 <!-- INCLUDE overall_footer.html -->
