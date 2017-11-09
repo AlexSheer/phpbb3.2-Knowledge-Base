@@ -191,7 +191,7 @@ class search_module
 	function index($id, $mode)
 	{
 		global $db, $user, $auth, $template, $cache, $phpbb_log, $request;
-		global $config, $phpbb_root_path, $phpbb_admin_path, $phpEx;
+		global $config, $phpbb_root_path, $phpbb_admin_path, $phpEx, $table_prefix;
 
 		$phpbb_log->set_log_table($this->kb_log_table);
 		$this->kb_articles_table = $table_prefix . 'kb_articles';
