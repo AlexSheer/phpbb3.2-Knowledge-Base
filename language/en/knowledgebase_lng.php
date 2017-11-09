@@ -18,6 +18,8 @@ if (empty($lang) || !is_array($lang))
 }
 
 $lang = array_merge($lang, array(
+	'ALFABET'								=> 'A-B-C-D-E-F-G-H-I-J-K-L-M-N-O-P-Q-R-S-T-U-V-W-X-Y-Z',
+	'ALFABET_NAV'							=> '<strong>Alphabetical order navigation</strong>: ',
 	'ADD_ARTICLE'							=> 'Add article',
 	'APPROVE'								=> 'Approve',
 	'ARTICLE'								=> 'Article',
@@ -83,6 +85,7 @@ $lang = array_merge($lang, array(
 	'NO_TITLE'								=> 'You did not specify article title',
 	'PRINT'									=> 'Print',
 	'READ_FULL'								=> 'Read full article',
+	'RESET_FILTER'							=> 'Reset filter',
 	'RETURN_ARTICLE'						=> '%sBack to article%s',
 	'RETURN_CAT'							=> '%sBack to category%s',
 	'RETURN_LIBRARY'						=> '%sReturn to Knowledge Base%s',
