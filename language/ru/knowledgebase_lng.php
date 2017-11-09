@@ -19,6 +19,8 @@ if (empty($lang) || !is_array($lang))
 }
 
 $lang = array_merge($lang, array(
+	'ALFABET'								=> 'А-Б-В-Г-Д-Е-Ж-З-И-Й-К-Л-М-Н-О-П-Р-С-Т-У-Ф-Х-Ц-Ч-Ш-Щ-Э-Ю-Я',
+	'ALFABET_NAV'							=> '<strong>Навигация по алфавиту</strong>: ',
 	'ADD_ARTICLE'							=> 'Добавить статью',
 	'APPROVE'								=> 'Одобрить',
 	'ARTICLE'								=> 'Статья',
@@ -84,6 +86,7 @@ $lang = array_merge($lang, array(
 	'NO_TITLE'								=> 'Вы не указали название статьи',
 	'PRINT'									=> 'Версия для печати',
 	'READ_FULL'								=> 'Прочитать статью полностью',
+	'RESET_FILTER'							=> 'сбросить фильтр',
 	'RETURN_ARTICLE'						=> '%sПерейти к статье%s',
 	'RETURN_CAT'							=> '%sВернуться в категорию%s',
 	'RETURN_LIBRARY'						=> '%sВернутся в Библиотеку%s',
