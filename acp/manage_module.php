@@ -18,23 +18,17 @@ class manage_module
 	{
 		global $config, $db, $template, $request, $cache, $phpbb_root_path, $phpEx, $auth, $user, $phpbb_ext_kb, $phpbb_admin_path, $phpbb_log, $phpbb_container;
 
-		$config_table				= $phpbb_container->getParameter('tables.kb_config_table');
-		$articles_table				= $phpbb_container->getParameter('tables.articles_table');
-		$categories_table			= $phpbb_container->getParameter('tables.categories_table');
+		$this->config_table			= $phpbb_container->getParameter('tables.kb_config_table');
+		$this->articles_table		= $phpbb_container->getParameter('tables.articles_table');
+		$this->categories_table		= $phpbb_container->getParameter('tables.categories_table');
 		$this->options_table		= $phpbb_container->getParameter('tables.kb_options_table');
 		$this->kb_groups_table		= $phpbb_container->getParameter('tables.kb_groups_table');
 		$this->kb_users_table		= $phpbb_container->getParameter('tables.kb_users_table');
-		$kb_logs_table				= $phpbb_container->getParameter('tables.logs_table');
-		$attachments_table			= $phpbb_container->getParameter('tables.kb_attachments_table');
+		$this->kb_logs_table		= $phpbb_container->getParameter('tables.logs_table');
+		$this->attachments_table	= $phpbb_container->getParameter('tables.kb_attachments_table');
 		$controller_helper			= $phpbb_container->get('controller.helper');
 
-		define ('ARTICLES_TABLE', $articles_table);
-		define ('KB_CAT_TABLE', $categories_table);
-		define ('KB_GROUPS_TABLE', $kb_groups_table);
-		if (!defined('KB_LOG_TABLE'))
-		{
-			define ('KB_LOG_TABLE', $kb_logs_table);
-		}
+		define ('KB_CAT_TABLE', $this->categories_table);
 
 		$phpbb_ext_kb = new \sheer\knowledgebase\inc\functions_kb(
 			$config,
@@ -47,14 +41,14 @@ class manage_module
 			$phpbb_log,
 			$phpbb_root_path,
 			$phpEx,
-			$config_table,
-			$articles_table,
-			$categories_table,
+			$this->config_table,
+			$this->articles_table,
+			$this->categories_table,
 			$this->options_table,
 			$this->kb_groups_table,
 			$this->kb_users_table,
-			$kb_logs_table,
-			$attachments_table
+			$this->kb_logs_table,
+			$this->attachments_table
 		);
 		$this->tpl_name = 'acp_knowledgebase_body';
 		$this->page_title = $user->lang('ACP_LIBRARY_MANAGE');
@@ -66,7 +60,7 @@ class manage_module
 		$this->parent_id	= $request->variable('parent_id', 0);
 		$copy_perm_from_id	= $request->variable('cat_perm_from', 0);
 
-		$phpbb_log->set_log_table(KB_LOG_TABLE);
+		$phpbb_log->set_log_table($this->kb_logs_table);
 
 		if ($update)
 		{
@@ -83,7 +77,7 @@ class manage_module
 						break;
 					}
 					$auth->acl_clear_prefetch();
-					$cache->destroy('sql', KB_CAT_TABLE);
+					$cache->destroy('sql', $this->categories_table);
 					meta_refresh(3, $this->u_action . '&amp;parent_id=' . $this->parent_id);
 					trigger_error($user->lang['CATEGORY_DELETED'] . adm_back_link($this->u_action . '&amp;parent_id=' . $this->parent_id));
 				break;
@@ -103,7 +97,7 @@ class manage_module
 					$errors = $this->update_category_data($category_data, $copy_perm_from_id);
 					if (!sizeof($errors))
 					{
-						$cache->destroy('sql', KB_CAT_TABLE);
+						$cache->destroy('sql', $this->categories_table);
 						$message = ($action == 'add') ? sprintf($user->lang['CATEGORY_ADDED'], '<a href="' . append_sid("{$phpbb_admin_path}index.$phpEx", 'i=-sheer-knowledgebase-acp-permissions_module&mode=permissions&action=setting_group_local&category_id[]='. $category_data['category_id'] .'') . '">', '</a>') : $user->lang['CATEGORY_EDITED'];
 						meta_refresh(3, $this->u_action . '&amp;parent_id=' . $this->parent_id);
 						trigger_error($message . adm_back_link($this->u_action . '&amp;parent_id=' . $this->parent_id));
@@ -121,7 +115,7 @@ class manage_module
 					trigger_error($user->lang['CAT_NO_EXISTS'] . adm_back_link($this->u_action . '&amp;parent_id=' . $this->parent_id), E_USER_WARNING);
 				}
 				$sql = 'SELECT *
-					FROM ' . KB_CAT_TABLE . "
+					FROM ' . $this->categories_table . "
 					WHERE category_id = $category_id";
 				$result = $db->sql_query($sql);
 				$row = $db->sql_fetchrow($result);
@@ -134,7 +128,7 @@ class manage_module
 				if ($move_category_name !== false)
 				{
 					$phpbb_log->add('admin', $user->data['user_id'], $user->data['user_ip'],'LOG_CATS_' . strtoupper($action), time(), array($row['category_name'], $move_category_name));
-					$cache->destroy('sql', KB_CAT_TABLE);
+					$cache->destroy('sql', $this->categories_table);
 				}
 			break;
 			case 'add':
@@ -187,7 +181,7 @@ class manage_module
 				);
 
 				$sql = 'SELECT category_id
-					FROM ' . KB_CAT_TABLE . '
+					FROM ' . $this->categories_table . '
 					WHERE  category_id <> ' . $category_id;
 				$result = $db->sql_query_limit($sql, 1);
 				$postable_category_exists = false;
@@ -237,7 +231,7 @@ class manage_module
 				}
 				$cats_list = $phpbb_ext_kb->make_category_select($category_data['parent_id'], $sub_cats_id);
 				$sql = 'SELECT category_id
-					FROM ' . KB_CAT_TABLE . '
+					FROM ' . $this->categories_table . '
 					WHERE  category_id <> ' . $category_id;
 				$result = $db->sql_query_limit($sql, 1);
 				if ($db->sql_fetchrow($result))
@@ -265,7 +259,7 @@ class manage_module
 				if (!sizeof($errors))
 				{
 					$phpbb_log->add('admin', $user->data['user_id'], $user->data['user_ip'], 'LOG_CATS_' . strtoupper($action), time(), array($category_data['category_name']));
-					$cache->destroy('sql', KB_CAT_TABLE);
+					$cache->destroy('sql', $this->categories_table);
 					meta_refresh(3, $this->u_action . '&amp;parent_id=' . $this->parent_id);
 					trigger_error('SYNC_OK');
 				}
@@ -302,7 +296,7 @@ class manage_module
 		// Jumpbox
 		$cats_box = $phpbb_ext_kb->make_category_select($this->parent_id, false, false, false, false);
 		$sql = 'SELECT *
-			FROM ' . KB_CAT_TABLE . "
+			FROM ' . $this->categories_table . "
 			WHERE parent_id = $this->parent_id
 			ORDER BY left_id";
 		$result = $db->sql_query($sql);
@@ -391,7 +385,7 @@ class manage_module
 			if ($category_data_sql['parent_id'])
 			{
 				$sql = 'SELECT left_id, right_id
-					FROM ' . KB_CAT_TABLE . '
+					FROM ' . $this->categories_table . '
 					WHERE category_id = ' . $category_data_sql['parent_id'];
 				$result = $db->sql_query($sql);
 				$row = $db->sql_fetchrow($result);
@@ -401,12 +395,12 @@ class manage_module
 					trigger_error($user->lang['PARENT_NOT_EXIST'] . adm_back_link($this->u_action . '&amp;parent_id=' . $this->parent_id), E_USER_WARNING);
 				}
 
-				$sql = 'UPDATE ' . KB_CAT_TABLE . '
+				$sql = 'UPDATE ' . $this->categories_table . '
 					SET left_id = left_id + 2, right_id = right_id + 2
 					WHERE left_id > ' . $row['right_id'];
 				$db->sql_query($sql);
 
-				$sql = 'UPDATE ' . KB_CAT_TABLE . '
+				$sql = 'UPDATE ' . $this->categories_table . '
 					SET right_id = right_id + 2
 					WHERE ' . $row['left_id'] . ' BETWEEN left_id AND right_id';
 				$db->sql_query($sql);
@@ -417,7 +411,7 @@ class manage_module
 			else
 			{
 				$sql = 'SELECT MAX(right_id) AS right_id
-					FROM ' . KB_CAT_TABLE;
+					FROM ' . $this->categories_table;
 				$result = $db->sql_query($sql);
 				$row = $db->sql_fetchrow($result);
 				$db->sql_freeresult($result);
@@ -426,7 +420,7 @@ class manage_module
 				$category_data_sql['right_id'] = $row['right_id'] + 2;
 			}
 
-			$sql = 'INSERT INTO ' . KB_CAT_TABLE . ' ' . $db->sql_build_array('INSERT', $category_data_sql);
+			$sql = 'INSERT INTO ' . $this->categories_table . ' ' . $db->sql_build_array('INSERT', $category_data_sql);
 			$db->sql_query($sql);
 			$new_category_id = $category_data['category_id'] = $db->sql_nextid();
 			$phpbb_log->add('admin', $user->data['user_id'], $user->data['user_ip'], 'LOG_CATS_ADD', time(), array($category_data['category_name']));
@@ -465,7 +459,7 @@ class manage_module
 			if ($row['category_name'] != $category_data_sql['category_name'])
 			{
 				// the category name has changed, clear the parents list of all cats (for safety)
-				$sql = 'UPDATE ' . KB_CAT_TABLE . "
+				$sql = 'UPDATE ' . $this->categories_table . "
 					SET category_parents = ''";
 				$db->sql_query($sql);
 			}
@@ -474,7 +468,7 @@ class manage_module
 			$category_id = $category_data_sql['category_id'];
 			unset($category_data_sql['category_id']);
 
-			$sql = 'UPDATE ' . KB_CAT_TABLE . '
+			$sql = 'UPDATE ' . $this->categories_table . '
 				SET ' . $db->sql_build_array('UPDATE', $category_data_sql) . '
 				WHERE category_id = ' . $category_id;
 			$db->sql_query($sql);
@@ -534,7 +528,7 @@ class manage_module
 		$errors = array();
 		// count the number of articles in the sender
 		$sql = 'SELECT number_articles
-			FROM ' . KB_CAT_TABLE . '
+			FROM ' . $this->categories_table . '
 			WHERE category_id = ' . $from_id;
 		$result = $db->sql_query($sql);
 		$row = $db->sql_fetchrow($result);
@@ -546,7 +540,8 @@ class manage_module
 		$db->sql_freeresult($result);
 		$from_id_articles = $row['number_articles'];
 		// and recipient
-		$sql = 'SELECT number_articles FROM ' . KB_CAT_TABLE . '
+		$sql = 'SELECT number_articles
+			FROM ' . $this->categories_table . '
 			WHERE category_id = ' . $to_id;
 		$result = $db->sql_query($sql);
 		$row = $db->sql_fetchrow($result);
@@ -558,23 +553,25 @@ class manage_module
 		$db->sql_freeresult($result);
 		$to_id_articles = $row['number_articles'];
 
-		$sql = 'SELECT MAX(display_order) AS ord FROM ' . ARTICLES_TABLE . ' WHERE article_category_id = ' . $to_id;
+		$sql = 'SELECT MAX(display_order) AS ord
+			FROM ' . $this->articles_table . '
+			WHERE article_category_id = ' . $to_id;
 		$result = $db->sql_query($sql);
 		$order = (int) $db->sql_fetchfield('ord');
 		$db->sql_freeresult($result);
 
-		$sql = 'UPDATE ' . ARTICLES_TABLE . ' SET display_order = display_order + ' . $order . '
+		$sql = 'UPDATE ' . $this->articles_table . ' SET display_order = display_order + ' . $order . '
 			WHERE article_category_id = ' . $from_id ;
 		$db->sql_query($sql);
 
 		// change the id of articles
-		$sql = 'UPDATE ' . ARTICLES_TABLE . '
+		$sql = 'UPDATE ' . $this->articles_table . '
 			SET article_category_id = ' . $to_id . '
 			WHERE article_category_id = ' . $from_id;
 		$db->sql_query($sql);
 		// change the number of articles in the receiver
 		$to_id_articles = $to_id_articles + $from_id_articles;
-		$sql = 'UPDATE ' . KB_CAT_TABLE . '
+		$sql = 'UPDATE ' . $this->categories_table . '
 			SET number_articles = ' . $to_id_articles . '
 			WHERE category_id = ' . $to_id;
 		$db->sql_query($sql);
@@ -608,7 +605,7 @@ class manage_module
 				$log_action_posts = 'MOVE_POSTS';
 
 				$sql = 'SELECT category_name
-					FROM ' . KB_CAT_TABLE . '
+					FROM ' . $this->categories_table . '
 					WHERE category_id = ' . $posts_to_id;
 				$result = $db->sql_query($sql);
 				$row = $db->sql_fetchrow($result);
@@ -649,7 +646,7 @@ class manage_module
 
 			$diff = sizeof($category_ids) * 2;
 
-			$sql = 'DELETE FROM ' . KB_CAT_TABLE . '
+			$sql = 'DELETE FROM ' . $this->categories_table . '
 				WHERE ' . $db->sql_in_set('category_id', $category_ids);
 			$db->sql_query($sql);
 		}
@@ -664,7 +661,7 @@ class manage_module
 				$log_action_cats = 'MOVE_CATS';
 
 				$sql = 'SELECT category_name
-					FROM ' . KB_CAT_TABLE . '
+					FROM ' . $this->categories_table . '
 					WHERE category_id = ' . $sub_cats_to_id;
 				$result = $db->sql_query($sql);
 				$row = $db->sql_fetchrow($result);
@@ -679,7 +676,7 @@ class manage_module
 					$sub_cats_to_name = $row['category_name'];
 
 					$sql = 'SELECT category_id
-						FROM ' . KB_CAT_TABLE . "
+						FROM ' . $this->categories_table . "
 						WHERE parent_id = $category_id";
 					$result = $db->sql_query($sql);
 
@@ -691,13 +688,13 @@ class manage_module
 
 					$category_data = $phpbb_ext_kb->get_cat_info($category_id);
 
-					$sql = 'UPDATE ' . KB_CAT_TABLE . "
+					$sql = 'UPDATE ' . $this->categories_table . "
 						SET parent_id = $sub_cats_to_id
 						WHERE parent_id = $category_id";
 					$db->sql_query($sql);
 
 					$diff = 2;
-					$sql = 'DELETE FROM ' . KB_CAT_TABLE . "
+					$sql = 'DELETE FROM ' . $this->categories_table . "
 						WHERE category_id = $category_id";
 					$db->sql_query($sql);
 				}
@@ -711,18 +708,18 @@ class manage_module
 		else
 		{
 			$diff = 2;
-			$sql = 'DELETE FROM ' . KB_CAT_TABLE . "
+			$sql = 'DELETE FROM ' . $this->categories_table . "
 				WHERE category_id = $category_id";
 			$db->sql_query($sql);
 		}
 
 		// Resync tree
-		$sql = 'UPDATE ' . KB_CAT_TABLE . "
+		$sql = 'UPDATE ' . $this->categories_table . "
 			SET right_id = right_id - $diff
 			WHERE left_id < {$category_data['right_id']} AND right_id > {$category_data['right_id']}";
 		$db->sql_query($sql);
 
-		$sql = 'UPDATE ' . KB_CAT_TABLE . "
+		$sql = 'UPDATE ' . $this->categories_table . "
 			SET left_id = left_id - $diff, right_id = right_id - $diff
 			WHERE left_id > {$category_data['right_id']}";
 		$db->sql_query($sql);
@@ -800,14 +797,14 @@ class manage_module
 		}
 
 		// Resync parents
-		$sql = 'UPDATE ' . KB_CAT_TABLE . "
+		$sql = 'UPDATE ' . $this->categories_table . "
 			SET right_id = right_id - $diff, category_parents = ''
 			WHERE left_id < " . $from_data['right_id'] . "
 				AND right_id > " . $from_data['right_id'];
 		$db->sql_query($sql);
 
 		// Resync righthand side of tree
-		$sql = 'UPDATE ' . KB_CAT_TABLE . "
+		$sql = 'UPDATE ' . $this->categories_table . "
 			SET left_id = left_id - $diff, right_id = right_id - $diff, category_parents = ''
 			WHERE left_id > " . $from_data['right_id'];
 		$db->sql_query($sql);
@@ -818,14 +815,14 @@ class manage_module
 			$to_data = $phpbb_ext_kb->get_cat_info($to_id);
 
 			// Resync new parents
-			$sql = 'UPDATE ' . KB_CAT_TABLE . "
+			$sql = 'UPDATE ' . $this->categories_table . "
 				SET right_id = right_id + $diff, category_parents = ''
 				WHERE " . $to_data['right_id'] . ' BETWEEN left_id AND right_id
 					AND ' . $db->sql_in_set('category_id', $moved_ids, true);
 			$db->sql_query($sql);
 
 			// Resync the righthand side of the tree
-			$sql = 'UPDATE ' . KB_CAT_TABLE . "
+			$sql = 'UPDATE ' . $this->categories_table . "
 				SET left_id = left_id + $diff, right_id = right_id + $diff, category_parents = ''
 				WHERE left_id > " . $to_data['right_id'] . '
 					AND ' . $db->sql_in_set('category_id', $moved_ids, true);
@@ -846,7 +843,7 @@ class manage_module
 		else
 		{
 			$sql = 'SELECT MAX(right_id) AS right_id
-				FROM ' . KB_CAT_TABLE . '
+				FROM ' . $this->categories_table . '
 				WHERE ' . $db->sql_in_set('category_id', $moved_ids, true);
 			$result = $db->sql_query($sql);
 			$row = $db->sql_fetchrow($result);
@@ -855,7 +852,7 @@ class manage_module
 			$diff = '+ ' . ($row['right_id'] - $from_data['left_id'] + 1);
 		}
 
-		$sql = 'UPDATE ' . KB_CAT_TABLE . "
+		$sql = 'UPDATE ' . $this->categories_table . "
 			SET left_id = left_id $diff, right_id = right_id $diff, category_parents = ''
 			WHERE " . $db->sql_in_set('category_id', $moved_ids);
 		$db->sql_query($sql);
@@ -882,7 +879,7 @@ class manage_module
 		// remove topics
 		$topics = array();
 		$sql = 'SELECT topic_id, article_id
-			FROM '. ARTICLES_TABLE .'
+			FROM '. $this->articles_table .'
 			WHERE article_category_id = '.$cat_id.'';
 		$result = $db->sql_query($sql);
 
@@ -895,7 +892,7 @@ class manage_module
 
 		// remove articles
 		$sql = 'DELETE
-			FROM '. ARTICLES_TABLE .'
+			FROM '. $this->articles_table .'
 			WHERE article_category_id = '.$cat_id.'';
 		$db->sql_query($sql);
 
@@ -914,7 +911,7 @@ class manage_module
 		global $db;
 
 		$sql = 'SELECT category_id, category_name, left_id, right_id
-			FROM ' . KB_CAT_TABLE . "
+			FROM ' . $this->categories_table . "
 			WHERE parent_id = {$category_row['parent_id']}
 				AND " . (($action == 'move_up') ? "right_id < {$category_row['right_id']} ORDER BY right_id DESC" : "left_id > {$category_row['left_id']} ORDER BY left_id ASC");
 		$result = $db->sql_query_limit($sql, $steps);
@@ -954,7 +951,7 @@ class manage_module
 			$move_up_right = $target['right_id'];
 		}
 
-		$sql = 'UPDATE ' . KB_CAT_TABLE . "
+		$sql = 'UPDATE ' . $this->categories_table . "
 			SET left_id = left_id + CASE
 				WHEN left_id BETWEEN {$move_up_left} AND {$move_up_right} THEN -{$diff_up}
 				ELSE {$diff_down}
@@ -977,7 +974,7 @@ class manage_module
 
 		$errors = array();
 		$sql = 'SELECT category_id, number_articles
-			FROM ' . KB_CAT_TABLE . '
+			FROM ' . $this->categories_table . '
 			WHERE category_id = ' . (int) $cat_id;
 		$result = $db->sql_query($sql);
 		$is = $articles = 0;
@@ -994,7 +991,7 @@ class manage_module
 		}
 
 		$sql = 'SELECT article_category_id
-			FROM ' . ARTICLES_TABLE . '
+			FROM ' . $this->articles_table . '
 			WHERE article_category_id = ' . (int) $cat_id;
 		$result = $db->sql_query($sql);
 		while ($row = $db->sql_fetchrow($result))
@@ -1003,7 +1000,7 @@ class manage_module
 		}
 		$db->sql_freeresult($result);
 
-		$sql = 'UPDATE ' . KB_CAT_TABLE . '
+		$sql = 'UPDATE ' . $this->categories_table . '
 			SET number_articles = '. $articles . '
 			WHERE category_id = ' . (int) $cat_id;
 		$db->sql_query($sql);
