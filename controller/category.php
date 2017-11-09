@@ -84,10 +84,6 @@ class category
 		{
 			redirect($this->helper->route('sheer_knowledgebase_index'));
 		}
-		$sql_where = ($this->kb->acl_kb_get($cat_id, 'kb_m_approve')) ? '' : 'AND a.approved = 1';
-
-		$kb_config = $this->kb->obtain_kb_config();
-		$per_page = $kb_config['articles_per_page'];
 
 		$sql = 'SELECT category_id, category_name
 			FROM ' . $this->categories_table . '
@@ -99,6 +95,70 @@ class category
 		if (empty($row))
 		{
 			trigger_error ('CAT_NO_EXISTS');
+		}
+
+		$kb_config = $this->kb->obtain_kb_config();
+		$per_page = $kb_config['articles_per_page'];
+		$sort_type = $kb_config['sort_type'];
+
+		$order_by = ' ORDER BY a.display_order ASC';
+		$s_sort_key = $s_sort_dir = '';
+		$alfabet = array();
+		$s_can_move = (!$sort_type && $this->kb->acl_kb_get($cat_id, 'kb_m_edit')) ? true : false;
+
+		$sql_where = ($this->kb->acl_kb_get($cat_id, 'kb_m_approve')) ? '' : 'AND a.approved = 1';
+
+		if ($sort_type == 1)
+		{
+			$sort_dir	= $this->request->variable('sd', 'a');
+			$sort_key	= $this->request->variable('sk', 't');
+
+			$sort_key_text = array('a' => $this->user->lang['AUTHOR'], 't' => $this->user->lang['POST_TIME'], 's' => $this->user->lang['SUBJECT'], 'v' => $this->user->lang['VIEWS']);
+			$sort_by_sql = array('a' => 'a.author', 't' => 'a.article_date', 's' => 'LOWER(a.article_title)', 'v' => 'a.views');
+			$sort_dir_text = array('a' => $this->user->lang['ASCENDING'], 'd' => $this->user->lang['DESCENDING']);
+
+			foreach ($sort_key_text as $key => $value)
+			{
+				$selected = ($sort_key == $key) ? ' selected="selected"' : '';
+				$s_sort_key .= '<option value="' . $key . '"' . $selected . '>' . $value . '</option>';
+			}
+
+			foreach ($sort_dir_text as $key => $value)
+			{
+				$selected = ($sort_dir == $key) ? ' selected="selected"' : '';
+				$s_sort_dir .= '<option value="' . $key . '"' . $selected . '>' . $value . '</option>';
+			}
+
+			$direction = (($sort_dir == 'd') ? 'ASC' : 'DESC');
+			$order_by = ' ORDER BY ' . $sort_by_sql[$sort_key] . ' ';
+			$order_by .= $direction;
+		}
+		else if ($sort_type == -1)
+		{
+			$alfabet = explode('-', $this->user->lang['ALFABET']);
+			$order_by = ' ORDER BY LOWER(a.article_title) ASC';
+			$first_letter = $this->request->variable('l', '', true);
+			$url = $this->user->lang['ALFABET_NAV'];
+			foreach($alfabet as $key => $letter)
+			{
+				if ($first_letter === $letter)
+				{
+					$b_letter = '<span style="color:#FFFFFF; font-weight: bold;background: #A00;padding: 2px;">' . $letter . '</span>';
+				}
+				else
+				{
+					$b_letter = $letter;
+				}
+				$url .= '<a href="' . $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id, 'l' => $letter)) . '">' . $b_letter . '</a> - ';
+			}
+			$url = substr($url, 0, -3);
+			$sql_where .= 'AND a.article_title LIKE "' . $this->db->sql_escape($first_letter) . '%" COLLATE utf8_general_ci';
+
+			$this->template->assign_vars(array(
+				'ALFA_URLS'			=> $url,
+				'U_RESET_FILTER'	=> $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id)),
+				)
+			);
 		}
 
 		$category_name = $row['category_name'];
@@ -151,11 +211,11 @@ class category
 			}
 			array_shift($exclude_cats);
 
-			$sql_where = ($this->kb->acl_kb_get($cat_row['category_id'], 'kb_m_approve')) ? '' : 'AND approved = 1';
+			$where = ($this->kb->acl_kb_get($cat_row['category_id'], 'kb_m_approve')) ? '' : 'AND approved = 1';
 			$sql = 'SELECT COUNT(article_id) AS articles
 				FROM ' . $this->articles_table . '
 				WHERE article_category_id = '. (int) $cat_row['category_id'] .'
-					' . $sql_where;
+					' . $where;
 			$res = $this->db->sql_query($sql);
 			$art_count = (int) $this->db->sql_fetchfield('articles');
 			$this->db->sql_freeresult($res);
@@ -194,8 +254,8 @@ class category
 			FROM ' . $this->articles_table . ' a, ' . USERS_TABLE . ' u
 			WHERE a.article_category_id = ' . (int) $cat_id . '
 			' . $sql_where . '
-			AND u.user_id = a.author_id
-			ORDER BY a.display_order ASC';
+			AND u.user_id = a.author_id'
+			. $order_by;
 
 		$result = $this->db->sql_query_limit($sql, $per_page, $start);
 		while($art_row = $this->db->sql_fetchrow($result))
@@ -240,8 +300,12 @@ class category
 			'S_IS_SEARCH'			=> ($this->config['kb_search']) ? true : false,
 			'S_KB_SEARCH_ACTION'	=> $this->helper->route('sheer_knowledgebase_library_search'),
 			'S_KNOWLEDGEBASE'		=> true,
-			'S_CAN_MOVE'			=> ($this->kb->acl_kb_get($cat_id, 'kb_m_edit')) ? true : false,
+			'S_CAN_MOVE'			=> $s_can_move,
 			'CURRENT_PAGE_NUMBER'	=> $current_page_number,
+			'S_SORT_OPTIONS'		=> ($s_sort_key) ? $s_sort_key : '',
+			'S_ORDER_SELECT'		=> ($s_sort_dir) ? $s_sort_dir : '',
+			'S_ALFABET'				=> (!empty($alfabet)) ? true : false,
+			'L_SORT'				=> $this->user->lang['SUBMIT'],
 			)
 		);
 
