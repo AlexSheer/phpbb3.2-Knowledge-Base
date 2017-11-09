@@ -76,7 +76,7 @@ class kb_file
 		$upload_path = 'ext/sheer/knowledgebase/files';
 		require($this->phpbb_root_path . 'includes/functions_download' . '.' . $this->php_ext);
 
-		$sql = 'SELECT attach_id, is_orphan, physical_filename, real_filename, extension, mimetype, filesize
+		$sql = 'SELECT attach_id, is_orphan, physical_filename, real_filename, extension, mimetype, filesize, filetime
 			FROM ' . $this->attachments_table . "
 			WHERE attach_id = $attach_id";
 		$result = $this->db->sql_query($sql);
