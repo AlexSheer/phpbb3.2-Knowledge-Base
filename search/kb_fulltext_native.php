@@ -1300,6 +1300,8 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 	{
 		if (sizeof($article_ids))
 		{
+			$descr_word_ids = $message_word_ids = array();
+
 			$sql = 'SELECT w.word_id, w.word_text, m.title_match, m.descr_match
 				FROM ' . $this->wordmatch_table . ' m, ' . $this->wordlist_table . ' w
 				WHERE ' . $this->db->sql_in_set('m.article_id', $article_ids) . '
