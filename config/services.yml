@@ -119,6 +119,7 @@ services:
             - '@config'
             - '@dbal.conn'
             - '@user'
+            - '@auth'
             - '%core.root_path%'
             - '%tables.kb_attachments_table%'
         tags:
