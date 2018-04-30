@@ -58,14 +58,20 @@
 		</div>
 	</div>
 
-	<form method="post" name="jumpbox" action="{S_ACTION}" onsubmit="if(document.jumpbox.id.value == -1){return false;}">
-		<fieldset style="float:right; margin: 5px 0px" class="jumpbox">
-			<label for="id" accesskey="j">{L_GO}{L_COLON}</label>
-			<select name="id" onchange="if(this.options[this.selectedIndex].value != -1){ document.forms['jumpbox'].submit() }">
-			{CATS_BOX}</select>
-			<input type="submit" value="{L_GO}" class="button2">
-		</fieldset>
-	</form>
+	<!-- IF CATS_DROPBOX -->
+	<div class="jumpbox dropdown-container dropdown-container-right dropdown-up dropdown-left dropdown-button-control" id="jumpbox">
+			<span title="{L_GO}" class="button button-secondary dropdown-trigger dropdown-select dropdown-toggle">
+				<span>{L_GO}</span>
+				<span class="caret"><i class="icon fa-sort-down fa-fw" aria-hidden="true"></i></span>
+			</span>
+		<div class="dropdown">
+			<div class="pointer"><div class="pointer-inner"></div></div>
+			<ul class="dropdown-contents">
+				{CATS_DROPBOX}
+			</ul>
+		</div>
+	</div>
+	<!-- ENDIF -->
 
 <!-- IF .postrow -->
 	<table class="table1" cellspacing="1">
