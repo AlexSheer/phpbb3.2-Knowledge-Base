@@ -71,13 +71,13 @@ class permissions_module
 			$this->title_add_permissions = $user->lang['ADD_PERMISSIONS'];
 		}
 
-		$category_id 	= (isset($category_id)) ? $request->variable('category_id', $category_id) : $request->variable('category_id', array(0));
-		$user_id 		= $request->variable('user_id', array(0));
-		$group_id 		= $request->variable('group_id', array(0));
-		$username 		= $request->variable('username', array(''), true);
+		$category_id	= (isset($category_id)) ? $request->variable('category_id', $category_id) : $request->variable('category_id', array(0));
+		$user_id		= $request->variable('user_id', array(0));
+		$group_id		= $request->variable('group_id', array(0));
+		$username		= $request->variable('username', array(''), true);
 		$usernames 		= $request->variable('usernames', '', true);
-		$all_cats 		= $request->variable('all_cats', 0);
-		$mode 			= $request->variable('p_mode', '');
+		$all_cats		= $request->variable('all_cats', 0);
+		$mode			= $request->variable('p_mode', '');
 		$submit			= $request->variable('submit', false);
 		$action			= (isset($action)) ? $request->variable('action', $action) : $request->variable('action', '');
 		$delete			= $request->variable('delete', false);
@@ -139,7 +139,7 @@ class permissions_module
 		switch ($action)
 		{
 			case 'settings':
-				$settings = $this->get_mask($group_id, $category_id, $user_id, $mode);
+				$settings = $this->get_mask((sizeof($group_id)) ? $group_id : false, $category_id, (sizeof($user_id)) ? $user_id : false, $mode);
 			break;
 
 			case 'delete':
@@ -242,7 +242,8 @@ class permissions_module
 			'U_FIND_USERNAME'			=> append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=searchuser&amp;form=add_user&amp;field=username&amp;select_single=true'),
 			'S_DEFINED_GROUP_OPTIONS'	=> $s_defined_group_options,
 			'S_DEFINED_USER_OPTIONS'	=> $s_defined_user_options,
-			'S_KB_PERMISSIONS_ACTION' 	=> $this->u_action . '&amp;action=settings',
+			'S_KB_PERMISSIONS_ACTION'	=> $this->u_action . '&amp;action=settings',
+			'S_KB_PERMISSIONS_ACTION_USR'=> $this->u_action . '&amp;action=settings&amp;p_mode=user',
 			'S_HIDDEN_FIELDS'			=> build_hidden_fields($s_hidden_fields),
 			'MASK_MODE'					=> ($this->mode == 'mask') ? true : false,
 			'L_EDIT_PERMISSIONS'		=> $this->title_edit_permissions,
@@ -328,10 +329,7 @@ class permissions_module
 	{
 		global $db, $template, $user, $request;
 
-		if (!empty($group_id))
-		{
-			$user_mode = 'group';
-		}
+		$user_mode			= $request->variable('p_mode', '');
 
 		$view_user_mask = ($this->mode == 'mask' && $user_mode != 'group') ? true : false;
 
@@ -859,7 +857,7 @@ class permissions_module
 		switch ($auth_setting)
 		{
 			case ACL_NO:
-				$information = ($total == ACL_NO) ? $user->lang['KB_TRACE_USER_NO_TOTAL_NO' . $add_key] : $user->lang['KB_KB_TRACE_USER_KEPT' . $add_key];
+				$information = ($total == ACL_NO) ? $user->lang['KB_TRACE_USER_NO_TOTAL_NO' . $add_key] : $user->lang['KB_TRACE_USER_KEPT' . $add_key];
 				$total = ($total == ACL_NO) ? ACL_NEVER : $total;
 			break;
 
