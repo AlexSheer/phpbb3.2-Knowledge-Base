@@ -81,6 +81,11 @@ class article
 
 	public function show()
 	{
+		if (!$this->auth->acl_get('u_kb_view') || !$this->auth->acl_get('a_manage_kb'))
+		{
+			trigger_error($this->user->lang['NOT_AUTHORISED']);
+		}
+
 		$art_id = $this->request->variable('k', 0);
 		$mode = $this->request->variable('mode', '');
 		$download_path = $this->config['upload_path'];
@@ -122,7 +127,7 @@ class article
 
 		$this->template->assign_vars(array(
 			'ARTICLE_CATEGORY'	=>  '<a href="' . $this->helper->route('sheer_knowledgebase_category', array('id' => $catrow['category_id'])) . '">' . $catrow['category_name'] . '</a>',
-
+			'CATS_DROPBOX'		=> $this->kb->make_category_dropbox($cat_id, false, true, false, false),
 			'CATS_BOX'			=> '<option value="0">' . $this->user->lang['CATEGORIES_LIST'] . '</option>' . $this->kb->make_category_select($cat_id, false, true, false, false) . '',
 			'S_ACTION'			=> $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id)),
 			)
