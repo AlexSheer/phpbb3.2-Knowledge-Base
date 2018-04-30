@@ -32,6 +32,9 @@ class listener implements EventSubscriberInterface
 	/** @var \phpbb\user $user User object */
 	protected $user;
 
+	/** @var \phpbb\auth\auth */
+	protected $auth;
+
 	//** @var string phpbb_root_path */
 	protected $phpbb_root_path;
 
@@ -72,6 +75,7 @@ class listener implements EventSubscriberInterface
 		\phpbb\config\config $config,
 		\phpbb\db\driver\driver_interface $db,
 		\phpbb\user $user,
+		\phpbb\auth\auth $auth,
 		$phpbb_root_path,
 		$attachments_table
 	)
@@ -81,6 +85,7 @@ class listener implements EventSubscriberInterface
 		$this->config				= $config;
 		$this->db					= $db;
 		$this->user					= $user;
+		$this->auth					= $auth;
 		$this->phpbb_root_path		= $phpbb_root_path;
 		$this->attachments_table	= $attachments_table;
 	}
@@ -98,7 +103,7 @@ class listener implements EventSubscriberInterface
 	public function add_page_header_link($event)
 	{
 		$this->template->assign_vars(array(
-			'U_LIBRARY'			=> $this->helper->route('sheer_knowledgebase_index'),
+			'U_LIBRARY'			=> ($this->auth->acl_get('u_kb_view') || $this->auth->acl_get('a_manage_kb')) ? $this->helper->route('sheer_knowledgebase_index') : '',
 		));
 	}
 
@@ -107,6 +112,7 @@ class listener implements EventSubscriberInterface
 		$permissions = $event['permissions'];
 		$categories = $event['categories'];
 		$permissions['a_manage_kb']	= array('lang' => 'ACL_A_MANAGE_KB', 'cat' => 'knowledgebase');
+		$permissions['u_kb_view']	= array('lang' => 'ACL_U_KB_VIEW', 'cat' => 'knowledgebase');
 		$event['permissions'] = $permissions;
 		$event['categories'] = array_merge($categories, array('knowledgebase' => 'KNOWLEDGEBASE'));
 	}
