@@ -130,6 +130,11 @@ class posting
 
 	public function post_article()
 	{
+		if (!$this->auth->acl_get('u_kb_view') || !$this->auth->acl_get('a_manage_kb'))
+		{
+			trigger_error($this->user->lang['NOT_AUTHORISED']);
+		}
+
 		$this->user->add_lang('posting');
 		$this->phpbb_log->set_log_table($this->logs_table);
 		$this->user->add_lang(array('plupload', 'posting'));
