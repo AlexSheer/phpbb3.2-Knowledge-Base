@@ -372,7 +372,7 @@ class permissions_module
 			$result = $db->sql_query($sql);
 			while ($group = $db->sql_fetchrow($result))
 			{
-				$group_name = ($user->lang['G_' . $group['group_name']]) ? $user->lang['G_' . $group['group_name']] : $group['group_name'];
+				$group_name = isset($user->lang['G_' . $group['group_name']]) ? $user->lang['G_' . $group['group_name']] : $group['group_name'];
 				$group_ids[] = $groups[$group_name] = $group['group_id'];
 			}
 			if (!$user_mode)
