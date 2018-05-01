@@ -86,7 +86,7 @@ class index
 
 	public function main()
 	{
-		if (!$this->auth->acl_get('u_kb_view') || !$this->auth->acl_get('a_manage_kb'))
+		if (!$this->auth->acl_get('u_kb_view') && !$this->auth->acl_get('a_manage_kb'))
 		{
 			trigger_error($this->user->lang['NOT_AUTHORISED']);
 		}
