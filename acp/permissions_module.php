@@ -331,7 +331,7 @@ class permissions_module
 
 		$user_mode			= $request->variable('p_mode', '');
 
-		$view_user_mask = ($this->mode == 'mask' && $user_mode != 'group') ? true : false;
+		$view_user_mask = ($this->mode == 'mask' && $user_mode == 'user') ? true : false;
 
 		if (empty($group_id) && empty($user_id))
 		{
@@ -477,7 +477,7 @@ class permissions_module
 						else if ($index === '')
 						{
 							$all_yes = false;
-							$all_never = false;
+							$all_never = true;
 							$all_no = true;
 						}
 					}
@@ -500,7 +500,7 @@ class permissions_module
 						{
 							$_yes = false;
 							$_no = true;
-							$_never = false;
+							$_never = true;
 						}
 						else if ($option)
 						{
@@ -525,7 +525,7 @@ class permissions_module
 							)
 						);
 					}
-					unset ($_options);
+					unset($_options);
 					unset($options);
 				}
 			}
@@ -544,7 +544,7 @@ class permissions_module
 			$this->apply_all_permissions($select, $user_mode);
 		}
 
-		if($apply_all_permissions && !empty($inherit))
+		if ($apply_all_permissions && !empty($inherit))
 		{
 			foreach ($inherit as $key => $value)
 			{
@@ -591,7 +591,7 @@ class permissions_module
 		$id_field = $user_mode . '_id';
 		$group_id = $user_id = $category_id = array();
 
-		foreach($hold_ary as $cat => $value)
+		foreach ($hold_ary as $cat => $value)
 		{
 			foreach($value as $group => $settings)
 			{
@@ -716,16 +716,16 @@ class permissions_module
 		$sql = 'SELECT ' . $gr_name . ' FROM ' . $tbl . '
 				WHERE ' . $where;
 		$result = $db->sql_query($sql);
-		while($row = $db->sql_fetchrow($result))
+		while ($row = $db->sql_fetchrow($result))
 		{
 			$names[] = ($user_mode == 'user') ? $row['username'] : $group_helper->get_name($row['group_name']);
 		}
 
 		$db->sql_freeresult($result);
 
-		foreach($names as $namekey => $name)
+		foreach ($names as $namekey => $name)
 		{
-			foreach($category_names as $key => $category_name)
+			foreach ($category_names as $key => $category_name)
 			{
 				$phpbb_log->add('admin', $user->data['user_id'], $user->data['user_ip'], $log_type, time(), array($category_name, $name));
 			}
