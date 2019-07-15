@@ -206,7 +206,7 @@ class approve
 			)
 		);
 
-		page_header('' . $this->user->lang('LIBRARY'). ' &raquo; ' . $this->user->lang('APPROVE_ARTICLE') . '');
+		page_header('' . $this->user->lang('LIBRARY'). ' &raquo; ' . $this->user->lang('APPROVE') . '');
 		$this->template->set_filenames(array(
 			'body' => 'kb_approve_body.html'));
 
