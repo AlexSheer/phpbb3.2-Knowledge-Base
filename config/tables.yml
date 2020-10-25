@@ -1,10 +1,10 @@
 parameters:
-    tables.articles_table: %core.table_prefix%kb_articles
-    tables.categories_table: %core.table_prefix%kb_categories
-    tables.logs_table: %core.table_prefix%kb_log
-    tables.kb_config_table: %core.table_prefix%kb_config
-    tables.kb_options_table: %core.table_prefix%kb_options
-    tables.kb_groups_table: %core.table_prefix%kb_groups
-    tables.kb_users_table: %core.table_prefix%kb_users
-    tables.kb_attachments_table: %core.table_prefix%kb_attachments
+    tables.articles_table: '%core.table_prefix%kb_articles'
+    tables.categories_table: '%core.table_prefix%kb_categories'
+    tables.logs_table: '%core.table_prefix%kb_log'
+    tables.kb_config_table: '%core.table_prefix%kb_config'
+    tables.kb_options_table: '%core.table_prefix%kb_options'
+    tables.kb_groups_table: '%core.table_prefix%kb_groups'
+    tables.kb_users_table: '%core.table_prefix%kb_users'
+    tables.kb_attachments_table: '%core.table_prefix%kb_attachments'
 
