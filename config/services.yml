@@ -1,5 +1,5 @@
 imports:
-    - { resource: tables.yml }
+    - { resource: 'tables.yml' }
 services:
     sheer.knowledgebase.controller.index:
         class: sheer\knowledgebase\controller\index
@@ -158,7 +158,7 @@ services:
         scope: prototype # scope MUST be prototype for this to work!
         parent: notification.type.base
         calls:
-            - [set_user_loader, [@user_loader]]
+            - [set_user_loader, ['@user_loader']]
         tags:
             - { name: notification.type }
 
@@ -167,7 +167,7 @@ services:
         scope: prototype # scope MUST be prototype for this to work!
         parent: notification.type.base
         calls:
-            - [set_user_loader, [@user_loader]]
+            - [set_user_loader, ['@user_loader']]
         tags:
             - { name: notification.type }
 
@@ -176,7 +176,7 @@ services:
         scope: prototype # scope MUST be prototype for this to work!
         parent: notification.type.base
         calls:
-            - [set_user_loader, [@user_loader]]
+            - [set_user_loader, ['@user_loader']]
         tags:
             - { name: notification.type }
 
@@ -214,4 +214,4 @@ services:
             - '@dbal.conn'
             - '@request'
             - '@sheer.knowledgebase.inc'
-            - '%tables.articles_table%'
+            - '%tables.articles_table%' 
