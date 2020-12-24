@@ -203,7 +203,7 @@ class posting
 		$preview	= (isset($_POST['preview'])) ? 1 : 0;
 		$cancel		= (isset($_POST['cancel']))  ? true : false;
 		$delete		= (isset($_POST['delete'])) ? true : false;
-		$edit		= ($mode == 'edit') ?true : false;
+		$edit		= ($mode == 'edit') ? true : false;
 
 		$action = $this->helper->route('sheer_knowledgebase_posting', array('id' => $cat_id));
 
@@ -290,7 +290,7 @@ class posting
 		}
 		else
 		{
-			trigger_error($user->lang['CAT_NO_EXISTS']);
+			trigger_error($this->user->lang['CAT_NO_EXISTS']);
 		}
 
 		include($this->phpbb_root_path . 'includes/functions_posting.' . $this->php_ext);
@@ -525,6 +525,7 @@ class posting
 			'S_PLUPLOAD'			=> ($this->kb_data['allow_attachments']) ? true: false,
 			'FILESIZE'				=> $this->kb_data['max_filesize'],
 			'CHUNK_SIZE'			=> $this->plupload->get_chunk_size(),
+			'FILTERS'				=> $this->plupload->generate_filter_string($this->phpbb_cache, 0),
 			'MAX_ATTACHMENTS'		=> (!$this->auth->acl_get('a_manage_kb')) ? $this->kb_data['max_attachments'] : 0,
 			'ATTACH_ORDER'			=> 'desc',
 			'S_ATTACH_DATA'			=> (sizeof($attachment_data)) ? json_encode($attachment_data) : '[]',
