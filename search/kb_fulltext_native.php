@@ -1298,7 +1298,7 @@ class kb_fulltext_native extends \sheer\knowledgebase\search\kb_base
 	*/
 	public function index_remove($article_ids, $author_ids)
 	{
-		if (sizeof($article_ids))
+		if (sizeof(array($article_ids)))
 		{
 			$descr_word_ids = $message_word_ids = array();
 
