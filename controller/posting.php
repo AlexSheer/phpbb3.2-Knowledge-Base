@@ -523,6 +523,7 @@ class posting
 
 			'S_FORM_ENCTYPE'		=> ($this->kb_data['allow_attachments']) ? ' enctype="multipart/form-data"' : '',
 			'S_PLUPLOAD'			=> ($this->kb_data['allow_attachments']) ? true: false,
+			'S_RESIZE'				=> $this->plupload->generate_resize_string(),
 			'FILESIZE'				=> $this->kb_data['max_filesize'],
 			'CHUNK_SIZE'			=> $this->plupload->get_chunk_size(),
 			'FILTERS'				=> $this->plupload->generate_filter_string($this->phpbb_cache, 0),
@@ -530,6 +531,7 @@ class posting
 			'ATTACH_ORDER'			=> 'desc',
 			'S_ATTACH_DATA'			=> (sizeof($attachment_data)) ? json_encode($attachment_data) : '[]',
 			'S_PLUPLOAD_URL'		=> generate_board_url() . '/knowledgebase/posting?id=' . $cat_id . '',
+			'L_TOO_MANY_ATTACHMENTS'=> $this->user->lang('TOO_MANY_ATTACHMENTS', $this->kb_data['max_attachments']),
 
 			'CATS_BOX'				=> '<option value="0" disabled="disabled">' . $this->user->lang['CATEGORIES_LIST'] . '</option>' . $this->kb->make_category_select($cat_id, false, false, false, false) . '',
 
