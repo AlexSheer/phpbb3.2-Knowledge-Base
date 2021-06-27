@@ -126,6 +126,10 @@ class index
 			$res = $this->db->sql_query($sql);
 			$art_row = $this->db->sql_fetchrow($res);
 			$this->db->sql_freeresult($res);
+			if (empty($art_row))
+			{
+				$art_row['approved'] = false;
+			}
 
 			$this->template->assign_block_vars('catrow', array(
 				'U_CATEGORY'		=> $this->helper->route('sheer_knowledgebase_category', array('id' => $catrow['category_id'])),
@@ -133,7 +137,7 @@ class index
 				'CAT_ARTICLES'		=> $art_count,
 				'CAT_DESCRIPTION' 	=> $catrow['category_details'],
 				'SUBCATS'			=> $this->kb->get_cat_list ($catrow['parent_id'], $exclude_cats),
-				'ARTICLE_TITLE'		=> $art_row['article_title'],
+				'ARTICLE_TITLE'		=> isset($art_row['article_title']) ? $art_row['article_title']: '',
 				'U_ARTICLE'			=> (isset($art_row['article_id'])) ? $this->helper->route('sheer_knowledgebase_article', array('k' => $art_row['article_id'])) : '',
 				'ARTICLE_TTIME'		=> ($art_count) ? $this->user->format_date($art_row['article_date']) : '',
 				'ARTICLE_AUTHOR'	=> (isset($art_row['author_id'])) ? get_username_string('full', $art_row['author_id'], $art_row['author'], $art_row['user_colour']) : '',
@@ -149,7 +153,7 @@ class index
 		));
 
 		$this->template->assign_vars(array(
-			'S_ACTION'				=> $this->helper->route('sheer_knowledgebase_category', array('id' => $catrow['category_id'])),
+			//'S_ACTION'				=> $this->helper->route('sheer_knowledgebase_category', array('id' => $catrow['category_id'])),
 			'U_KB_SEARCH'			=> $this->helper->route('sheer_knowledgebase_library_search'),
 			'S_IS_SEARCH'			=> ($this->config['kb_search']) ? true : false,
 			'S_KB_SEARCH_ACTION'	=> $this->helper->route('sheer_knowledgebase_library_search'),
