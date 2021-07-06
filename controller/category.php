@@ -159,7 +159,7 @@ class category
 				$url .= '<a href="' . $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id, 'l' => $letter)) . '">' . $b_letter . '</a> - ';
 			}
 			$url = substr($url, 0, -3);
-			$sql_where .= 'AND a.article_title LIKE "' . $this->db->sql_escape($first_letter) . '%" COLLATE utf8_general_ci';
+			$sql_where .= ' AND a.article_title LIKE "' . $this->db->sql_escape($first_letter) . '%"';
 
 			$this->template->assign_vars(array(
 				'ALFA_URLS'			=> $url,
