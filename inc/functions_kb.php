@@ -483,12 +483,26 @@ class functions_kb
 			}
 		}
 
+		// Grab user settings - non-role specific...
+		$sql = 'SELECT a.user_id, a.category_id, a.auth_setting, a.auth_option_id, ao.auth_option
+			FROM ' . $this->kb_users_table . ' a, ' . $this->options_table . ' ao
+			WHERE a.auth_option_id = ao.auth_option_id
+				AND a.user_id = ' . $this->user->data['user_id'] . ' AND a.category_id = 1 AND ao.auth_option = \'' . $permission . '\'';
+
+		$result = $this->db->sql_query($sql);
+		$auth_option = $this->db->sql_fetchfield('auth_option_id');
+
+		if ($auth_option == 1)
+		{
+			$total  = ACL_YES;
+		}
+		$this->db->sql_freeresult($result);
+
 		// Take founder or admin status into account, overwriting the default values
 		if ($this->user->data['user_type'] == USER_FOUNDER || $this->auth->acl_get('a_manage_kb'))
 		{
 			$total = ACL_YES;
 		}
-		//print "|$total|<br />";
 
 		return ($total && $total > 0) ? true : false;
 	}
