@@ -3,8 +3,8 @@
     "type": "phpbb-extension",
     "description": "Knowledgebase",
     "homepage": "https://phpbbguru.net",
-    "version": "1.0.7",
-    "time": "2017-04-30",
+    "version": "1.0.8",
+    "time": "2022-01-10",
     "license": "GPL-2.0",
     "authors": [
         {
