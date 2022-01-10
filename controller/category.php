@@ -268,6 +268,7 @@ class category
 		while($art_row = $this->db->sql_fetchrow($result))
 		{
 			$art_id		= $art_row['article_id'];
+			$author_id	= $art_row['author_id'];
 			$this->template->assign_block_vars('art_row', array(
 				'ID'					=> $art_id,
 				'ORDER_ID'				=> $art_row['display_order'],
