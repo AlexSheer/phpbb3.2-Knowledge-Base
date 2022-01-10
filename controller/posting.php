@@ -409,7 +409,7 @@ class posting
 
 						if (!empty($this->kb_data['forum_id']) && $this->kb_data['anounce'])
 						{
-							$this->kb->submit_article($cat_id, $fid, $article_title, $article_description, $this->user->data['username'], $category_name, $new);
+							$this->kb->submit_article($cat_id, $fid, c, $article_description, $this->user->data['username'], $category_name, $new);
 						}
 
 						$msg = $this->user->lang['ARTICLE_SUBMITTED'];
@@ -421,8 +421,13 @@ class posting
 						$redirect = $this->helper->route('sheer_knowledgebase_category', array('id' => $cat_id));
 
 						// Add notification
-						$sql_data['article_id'] = $new;
-						$this->notification_helper->add_notification($sql_data, 'sheer.knowledgebase.notification.type.need_approval');
+						$data = array(
+								'id'					=> $new,
+								'article_category_id'	=> $cat_id,
+								'author_id'				=> $this->user->data['user_id'],
+								'title'					=> $article_title,
+							);
+							$this->notification_helper->add_notification($data, 'sheer.knowledgebase.notification.type.need_approval');
 					}
 
 					$this->phpbb_cache->destroy('sql', $this->categories_table);
