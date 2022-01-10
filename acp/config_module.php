@@ -27,8 +27,9 @@ class config_module
 		$phpbb_log->set_log_table($table_prefix . 'kb_log');
 
 		$upload_dir = $phpbb_root_path . 'ext/sheer/knowledgebase/files/';
+		$index = $upload_dir . 'index.htm';
 
-		if (!file_exists($phpbb_root_path . $upload_dir))
+		if (!file_exists($index))
 		{
 			@mkdir($upload_dir, 0777);
 			@mkdir($upload_dir . 'plupload/', 0777);
