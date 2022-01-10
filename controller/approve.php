@@ -179,9 +179,17 @@ class approve
 			$this->phpbb_log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], $log_type, time(), array($kb_article_info['article_title'], $kb_category_info['category_name'], $kb_article_info['author']));
 			// Send notification
 			$message = ($approve) ? 'ARTICLE_APPROVED_SUCESS' : 'ARTICLE_DISAPPROVED_SUCESS';
-			$kb_article_info['moderator_id'] = $this->user->data['user_id'];
+
 			$notification_type = ($approve) ? 'sheer.knowledgebase.notification.type.approve' : 'sheer.knowledgebase.notification.type.disapprove';
-			$this->helper->add_notification($kb_article_info, $notification_type);
+
+			$data = array(
+				'id'		=> $art_id,
+				'user'		=> $kb_article_info['author_id'],
+				'author_id'	=> $this->user->data['user_id'],
+				'title'		=> $kb_article_info['article_title'],
+			);
+
+			$this->helper->add_notification($data, $notification_type);
 			$sql = 'SELECT notification_type_id
 				FROM ' . NOTIFICATION_TYPES_TABLE . '
 				WHERE notification_type_name
