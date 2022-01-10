@@ -155,7 +155,8 @@ services:
 
     sheer.knowledgebase.notification.type.need_approval:
         class: sheer\knowledgebase\notification\need_approval
-        scope: prototype # scope MUST be prototype for this to work!
+        shared: false # scope MUST be prototype for this to work!
+        shared: false
         parent: notification.type.base
         calls:
             - [set_user_loader, ['@user_loader']]
@@ -164,7 +165,8 @@ services:
 
     sheer.knowledgebase.notification.type.approve:
         class: sheer\knowledgebase\notification\approve
-        scope: prototype # scope MUST be prototype for this to work!
+        shared: false # scope MUST be prototype for this to work!
+        shared: false
         parent: notification.type.base
         calls:
             - [set_user_loader, ['@user_loader']]
@@ -173,7 +175,8 @@ services:
 
     sheer.knowledgebase.notification.type.disapprove:
         class: sheer\knowledgebase\notification\disapprove
-        scope: prototype # scope MUST be prototype for this to work!
+        shared: false # scope MUST be prototype for this to work!
+        shared: false
         parent: notification.type.base
         calls:
             - [set_user_loader, ['@user_loader']]
@@ -214,4 +217,4 @@ services:
             - '@dbal.conn'
             - '@request'
             - '@sheer.knowledgebase.inc'
-            - '%tables.articles_table%' 
+            - '%tables.articles_table%'
