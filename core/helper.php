@@ -45,7 +45,7 @@ class helper
 		$notification_type_id = $this->notification_manager->get_notification_type_id($notification_type_name);
 		$sql = 'SELECT notification_id FROM ' . NOTIFICATIONS_TABLE . '
 			WHERE notification_type_id = ' . (int) $notification_type_id . '
-				AND item_id = ' . (int) $article_data['article_id'];
+				AND item_id = ' . (int) $article_data['id'];
 		$result = $this->db->sql_query($sql);
 		$item_id = $this->db->sql_fetchfield('notification_id');
 		$this->db->sql_freeresult($result);
