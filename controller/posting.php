@@ -409,7 +409,7 @@ class posting
 
 						if (!empty($this->kb_data['forum_id']) && $this->kb_data['anounce'])
 						{
-							$this->kb->submit_article($cat_id, $fid, c, $article_description, $this->user->data['username'], $category_name, $new);
+							$this->kb->submit_article($cat_id, $fid, $article_title, $article_description, $this->user->data['username'], $category_name, $new);
 						}
 
 						$msg = $this->user->lang['ARTICLE_SUBMITTED'];
