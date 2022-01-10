@@ -262,7 +262,7 @@ class admin_controller
 
 			if (sizeof($delete_files))
 			{
-				$sql = 'SELECT attach_id, physical_filename
+				$sql = 'SELECT attach_id, physical_filename, real_filename
 					FROM ' . $this->attachments_table . '
 					WHERE ' . $this->db->sql_in_set('attach_id', $delete_files) . '';
 				$result = $this->db->sql_query($sql);
@@ -270,7 +270,7 @@ class admin_controller
 				{
 					$attachments_list[] = $attach_row['physical_filename'];
 					$attachments_ids[] = $attach_row['attach_id'];
-					$delete_files[$row['attach_id']] = $row['real_filename'];
+					$delete_files[$attach_row['attach_id']] = $attach_row['real_filename'];
 				}
 
 				foreach ($attachments_list as $key => $attachments)
