@@ -71,27 +71,27 @@ class approve extends \phpbb\notification\type\base
 	/**
 	* Get the id of the item
 	*
-	* @param array $need_approval_data
+	* @param array $data
 	*/
-	public static function get_item_id($need_approval_data)
+	public static function get_item_id($data)
 	{
-		return (int) $need_approval_data['article_id'];
+		return (int) $data['id'];
 	}
 
 	/**
 	* Get the id of the parent
 	*
-	* @param array $need_approval_data
+	* @param array $data
 	*/
-	public static function get_item_parent_id($need_approval_data)
+	public static function get_item_parent_id($data)
 	{
-		return (int) $need_approval_data['article_category_id'];
+		return (int) $data['user'];
 	}
 
 	/**
 	* Find the users who want to receive notifications
 	*
-	* @param array $need_approval_data
+	* @param array $data
 	* @param array $options Options for finding users for notification
 	*
 	* @return array
@@ -102,8 +102,7 @@ class approve extends \phpbb\notification\type\base
 			'ignore_users'		=> array(),
 		), $options);
 
-		$users = array((int) $need_approval_data['author_id']);
-
+		$users = array((int) $need_approval_data['user']);
 		return $this->check_user_notification_options($users, $options);
 	}
 
@@ -112,7 +111,7 @@ class approve extends \phpbb\notification\type\base
 	*/
 	public function get_avatar()
 	{
-		return $this->user_loader->get_avatar($this->get_data('moderator_id'));
+		return $this->user_loader->get_avatar($this->get_data('author_id'));
 	}
 
 	/**
@@ -122,7 +121,7 @@ class approve extends \phpbb\notification\type\base
 	*/
 	public function get_title()
 	{
-		$username = $this->user_loader->get_username($this->get_data('moderator_id'), 'no_profile');
+		$username = $this->user_loader->get_username($this->get_data('author_id'), 'no_profile');
 		return $this->user->lang('NOTIFICATION_ARTICLE_APPROVE', $username);
 	}
 
@@ -133,7 +132,7 @@ class approve extends \phpbb\notification\type\base
 	*/
 	public function users_to_query()
 	{
-		return array($this->get_data('moderator_id'));
+		return array($this->get_data('author_id'));
 	}
 
 	/**
@@ -143,7 +142,7 @@ class approve extends \phpbb\notification\type\base
 	*/
 	public function get_url()
 	{
-		return append_sid($this->phpbb_root_path . 'knowledgebase/article?k='.$this->item_id.'');
+		return append_sid($this->phpbb_root_path . 'knowledgebase/article?k=' . $this->item_id . '');
 	}
 
 	/**
@@ -161,7 +160,7 @@ class approve extends \phpbb\notification\type\base
 	*/
 	public function get_email_template()
 	{
-		return '@sheer_knowledgebase/article_approve';
+		return '@sheer_knowledgebase/approve';
 	}
 
 	/**
@@ -173,7 +172,7 @@ class approve extends \phpbb\notification\type\base
 	{
 		return $this->user->lang(
 			'NOTIFICATION_REFERENCE',
-			censor_text($this->get_data('article_title'))
+			censor_text($this->get_data('title'))
 		);
 	}
 
@@ -203,8 +202,8 @@ class approve extends \phpbb\notification\type\base
 		$username = $this->user_loader->get_username($this->get_data('author_id'), 'username');
 		return array(
 				'USERNAME'			=> htmlspecialchars_decode($username),
-				'MODERATOR'			=> htmlspecialchars_decode($this->user_loader->get_username($this->get_data('moderator_id'), 'username')),
-				'ARTICLE_TITLE'		=> htmlspecialchars_decode(censor_text($this->get_data('article_title'))),
+				'MODERATOR'			=> htmlspecialchars_decode($this->user_loader->get_username($this->get_data('author_id'), 'username')),
+				'ARTICLE_TITLE'		=> htmlspecialchars_decode(censor_text($this->get_data('title'))),
 				'U_VIEW_ARTICLE'	=> generate_board_url() . '/knowledgebase/article?k=' . $this->item_id . '',
 		);
 		return array();
@@ -214,17 +213,17 @@ class approve extends \phpbb\notification\type\base
 	* Function for preparing the data for insertion in an SQL query
 	* (The service handles insertion)
 	*
-	* @param array $need_approval_data Data from insert_need_approval
+	* @param array $data Data from insert_need_approval
 	* @param array $pre_create_data Data from pre_create_insert_array()
 	*
 	* @return array Array of data ready to be inserted into the database
 	*/
-	public function create_insert_array($need_approval_data, $pre_create_data = array())
+	public function create_insert_array($data, $pre_create_data = array())
 	{
-		$this->set_data('moderator_id', $need_approval_data['moderator_id']);
-		$this->set_data('author_id', $need_approval_data['author_id']);
-		$this->set_data('article_title', $need_approval_data['article_title']);
-		parent::create_insert_array($need_approval_data, $pre_create_data);
+		$this->set_data('author_id', $data['author_id']);
+		$this->set_data('title', $data['title']);
+		$this->set_data('user', $data['user']);
+		parent::create_insert_array($data, $pre_create_data);
 	}
 
 	/** @var \phpbb\user_loader */
