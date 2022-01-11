@@ -61,6 +61,7 @@ $lang = array_merge($lang, array(
 	'ATTACHMENTS_EXPLAIN'							=> 'Allows to see and delete attachment files in articles.',
 	'CATEGORYES'									=> 'Categories',
 	'CATEGORY_ADDED'								=> 'Category successfully added. Now you can s%set permission%s to this category.',
+	'CATEGORY_ADDED_WITH_PERM'						=> 'Category successfully added.',
 	'CATEGORY_DELETED'								=> 'Category deleted successfully.',
 	'CATEGORY_EDITED'								=> 'Category successfully edited',
 	'CATEGOTY_LIST'									=> 'Categories list',
