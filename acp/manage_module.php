@@ -97,8 +97,9 @@ class manage_module
 					$errors = $this->update_category_data($category_data, $copy_perm_from_id);
 					if (!sizeof($errors))
 					{
+						$category_added = ($copy_perm_from_id) ? $user->lang['CATEGORY_ADDED_WITH_PERM'] : $user->lang['CATEGORY_ADDED'];
 						$cache->destroy('sql', $this->categories_table);
-						$message = ($action == 'add') ? sprintf($user->lang['CATEGORY_ADDED'], '<a href="' . append_sid("{$phpbb_admin_path}index.$phpEx", 'i=-sheer-knowledgebase-acp-permissions_module&mode=permissions&action=setting_group_local&category_id[]='. $category_data['category_id'] .'') . '">', '</a>') : $user->lang['CATEGORY_EDITED'];
+						$message = ($action == 'add') ? sprintf($category_added, '<a href="' . append_sid("{$phpbb_admin_path}index.$phpEx", 'i=-sheer-knowledgebase-acp-permissions_module&mode=permissions&action=setting_group_local&category_id[]='. $category_data['category_id'] .'') . '">', '</a>') : $user->lang['CATEGORY_EDITED'];
 						meta_refresh(3, $this->u_action . '&amp;parent_id=' . $this->parent_id);
 						trigger_error($message . adm_back_link($this->u_action . '&amp;parent_id=' . $this->parent_id));
 					}
@@ -480,6 +481,7 @@ class manage_module
 
 		if ($copy_perm_from_id)
 		{
+			$options = array();
 			if (isset($new_category_id))
 			{
 				$category_id = $new_category_id;
