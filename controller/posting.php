@@ -327,6 +327,7 @@ class posting
 					$sql_data['author']					= $article_author;
 					$sql_data['views']					= $views;
 					$sql_data['article_date']			= $article_date;
+					$sql_data['approved ']				= 1;
 					$sql_data['edit_date']				= time();
 					$redirect = $this->helper->route('sheer_knowledgebase_article', array('k' => $art_id));
 
@@ -375,7 +376,7 @@ class posting
 					$msg .= '<br /><br />' . sprintf($this->user->lang['RETURN_ARTICLE'], '<a href="' . $redirect . '">', '</a>');
 					$msg .= '<br /><br />' . sprintf($this->user->lang['RETURN_CAT'], '<a href="' . $root . '">', '</a>');
 					$this->phpbb_log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_LIBRARY_EDIT_ARTICLE', time(), array($article_title, $category_name));
-					meta_refresh(3, $redirect);
+					//meta_refresh(3, $redirect);
 					trigger_error($msg);
 				}
 				else
