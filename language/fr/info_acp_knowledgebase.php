@@ -65,6 +65,7 @@ $lang = array_merge($lang, array(
 	'ATTACHMENTS_EXPLAIN'							=> 'Depuis cette page il est possible de voir et supprimer les fichiers joints dans les articles.',
 	'CATEGORYES'									=> 'Catégories',
 	'CATEGORY_ADDED'								=> 'Catégorie créée avec succès ! À présent il est possible de définir %sses permissions%s.',
+	'CATEGORY_ADDED_WITH_PERM'						=> 'Catégorie créée avec succès !',
 	'CATEGORY_DELETED'								=> 'Catégorie supprimée avec succès !',
 	'CATEGORY_EDITED'								=> 'Catégorie modifiée avec succès !',
 	'CATEGOTY_LIST'									=> 'Liste des catégories',
