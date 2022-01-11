@@ -712,7 +712,10 @@ class functions_kb
 		{
 			foreach ($attachments as $num => $attach)
 			{
-				unset($attachments[$unset_tpl[$num]]);
+				if (array_key_exists($num, $unset_tpl))
+				{
+					unset($attachments[$unset_tpl[$num]]);
+				}
 			}
 		}
 
